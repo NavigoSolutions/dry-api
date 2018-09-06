@@ -207,7 +207,7 @@ public class JsonExecutor<TContext extends AppContext, TCallContext extends Call
 			executionContext.setOutputPathsTree(outputPathsTree);
 			
 			outputBuilder.allowedOutputFields(outputPathsTree);
-				
+
 			outputBuilder
 				.status(ResponseStatus.success)
 				.outputJson(objectMapper.writeValueAsString(output));

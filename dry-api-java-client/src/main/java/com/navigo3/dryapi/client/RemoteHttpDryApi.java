@@ -198,7 +198,7 @@ public class RemoteHttpDryApi {
 
 					JsonResponse responseObj = batchResponse.getResponses().get(0);
 					
-					JsonUtils.prettyPrint(responseObj);
+//					JsonUtils.prettyPrint(responseObj);
 					
 					if (batchResponse.getOverallSuccess()) {
 						if (task.getOnlyValidate()) {
