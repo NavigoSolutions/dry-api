@@ -1,6 +1,8 @@
 package com.navigo3.dryapi.sample.impls;
 
 import com.navigo3.dryapi.core.context.AppContext;
+import com.navigo3.dryapi.core.util.ExceptionUtils;
+import com.navigo3.dryapi.core.util.ExceptionUtils.SupplierWithException;
 
 public class TestAppContext implements AppContext {
 	
@@ -15,4 +17,12 @@ public class TestAppContext implements AppContext {
 		return isDevelopmentInstance;
 	}
 
+	@Override
+	public void destroy() {
+	}
+
+	@Override
+	public <T> T transaction(SupplierWithException<T> block) {
+		return ExceptionUtils.withRuntimeException(block);
+	}
 }

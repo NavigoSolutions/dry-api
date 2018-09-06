@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.security.logic.Everyone;
-import com.navigo3.dryapi.core.validation.ValidationResult;
+import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
 import com.navigo3.dryapi.sample.defs.math.integer.ImmutableIntegerResult;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
@@ -25,7 +25,7 @@ public class SolveEverythingImpl extends MethodImplementation<TopAddressInput, I
 	}
 
 	@Override
-	public Optional<ValidationResult> validate(TopAddressInput input) {
+	public Optional<ValidationData> validate(TopAddressInput input) {
 		return Optional.empty();
 	}
 

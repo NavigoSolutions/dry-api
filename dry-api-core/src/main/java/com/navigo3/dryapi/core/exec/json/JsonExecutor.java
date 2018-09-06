@@ -23,9 +23,9 @@ import com.navigo3.dryapi.core.util.OptionalUtils;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
-import com.navigo3.dryapi.core.validation.ImmutableValidationResult;
+import com.navigo3.dryapi.core.validation.ImmutableValidationData;
+import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.core.validation.ValidationItem.Severity;
-import com.navigo3.dryapi.core.validation.ValidationResult;
 
 public class JsonExecutor<TContext extends AppContext, TCallContext extends CallContext> {
 
@@ -152,12 +152,12 @@ public class JsonExecutor<TContext extends AppContext, TCallContext extends Call
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void validate(TContext context, JsonRequest request, Builder outputBuilder, Object input, MethodImplementation instance, Runnable onSuccess) {
 		try {
-			Optional<ValidationResult> validationResult = instance.validate(input);
+			Optional<ValidationData> validationResult = instance.validate(input);
 			
 			Validate.notNull(validationResult);
 			
 			outputBuilder
-				.validation(validationResult.orElse(ImmutableValidationResult.builder().build()));
+				.validation(validationResult.orElse(ImmutableValidationData.builder().build()));
 			
 			if (request.getRequestType()==RequestType.validate) {
 				outputBuilder

@@ -4,9 +4,10 @@ import java.util.Optional;
 
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
+import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.util.Validate;
-import com.navigo3.dryapi.core.validation.ValidationResult;
+import com.navigo3.dryapi.core.validation.ValidationData;
 
 public abstract class MethodImplementation<TInput, TOutput, TContext extends AppContext, TCallContext extends CallContext> {
 
@@ -28,7 +29,7 @@ public abstract class MethodImplementation<TInput, TOutput, TContext extends App
 	
 	public abstract TCallContext prepareCallContext(TInput input);
 	
-	public abstract Optional<ValidationResult> validate(TInput input);
+	public abstract Optional<ValidationData> validate(TInput input);
 	
 	public abstract TOutput execute(TInput input);
 
@@ -44,5 +45,9 @@ public abstract class MethodImplementation<TInput, TOutput, TContext extends App
 		Validate.isTrue(executionContext.getCallContext().isPresent(), "Call context not yet prepared");
 		
 		return executionContext.getCallContext().get();
+	}
+	
+	public StructurePath inputPath(Object... items) {
+		return executionContext.getInputPathsTree().buildPath(items);
 	}
 }

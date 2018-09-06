@@ -8,7 +8,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.navigo3.dryapi.core.validation.ValidationResult;
+import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOperands;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
@@ -53,7 +53,7 @@ public class RemoteCalls {
 	public void testAsyncValidation() {
 		IntegerOperands input = ImmutableIntegerOperands.builder().a(40).build();
 		
-		CompletableFuture<ValidationResult> future = env.getApi().validateAsync(new AddIntegersEndpoint(), input, validation->{
+		CompletableFuture<ValidationData> future = env.getApi().validateAsync(new AddIntegersEndpoint(), input, validation->{
 			//here would be async code
 			assertEquals(1, validation.getItems().size());
 		});
@@ -65,7 +65,7 @@ public class RemoteCalls {
 	public void testBlockingValidation() {
 		IntegerOperands input = ImmutableIntegerOperands.builder().a(40).build();
 		
-		ValidationResult output = env.getApi().validateBlocking(new AddIntegersEndpoint(), input);
+		ValidationData output = env.getApi().validateBlocking(new AddIntegersEndpoint(), input);
 		
 		assertEquals(1, output.getItems().size());
 	}

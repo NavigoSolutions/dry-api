@@ -1,24 +1,33 @@
-package com.navigo3.dryapi.core.validation;
+package com.navigo3.dryapi.sample.impls;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import com.navigo3.dryapi.core.path.StructurePath;
+import com.navigo3.dryapi.core.validation.ImmutableValidationData;
+import com.navigo3.dryapi.core.validation.ImmutableValidationItem;
+import com.navigo3.dryapi.core.validation.ValidationData;
+import com.navigo3.dryapi.core.validation.ValidationItem;
 import com.navigo3.dryapi.core.validation.ValidationItem.Severity;
 
-public class ValidationResultBuilder {
+public class TestAppValidator {
 	
 	private List<ValidationItem> items = new ArrayList<>();
+	
+	public static Optional<ValidationData> empty() {
+		return Optional.empty();
+	}
 
-	public static ValidationResultBuilder create() {
-		return new ValidationResultBuilder();
+	public static Optional<ValidationData> build(Consumer<TestAppValidator> block) {
+		TestAppValidator builder = new TestAppValidator();
+		
+		block.accept(builder);
+		
+		return Optional.of(ImmutableValidationData.builder().items(builder.items).build());
 	}
 	
-	public ValidationResult build() {
-		return ImmutableValidationResult.builder().items(items).build();
-	}
-
 	public void checkNotNull(StructurePath path, Object val) {
 		if (val==null) {
 			addValidationItem(Severity.error, path, "Field should not be empty!");

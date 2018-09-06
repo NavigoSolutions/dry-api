@@ -36,11 +36,11 @@ public abstract class MethodDefinition<TInput, TOutput> {
 		return initialized;
 	}
 
-	public abstract TypeReference<TInput> getInputType();
-	
-	public abstract TypeReference<TOutput> getOutputType();
-	
 	public abstract String getQualifiedName();
 	
 	public abstract String getDescription();
+	
+	public abstract TypeReference<TInput> getInputType();
+	
+	public abstract TypeReference<TOutput> getOutputType();
 }

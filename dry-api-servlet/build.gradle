@@ -1,3 +1,5 @@
 dependencies {
 	compile project(':dry-api-core')
+	
+	compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
 }

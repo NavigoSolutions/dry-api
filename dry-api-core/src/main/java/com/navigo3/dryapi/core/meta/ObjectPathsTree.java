@@ -1,11 +1,18 @@
 package com.navigo3.dryapi.core.meta;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import org.immutables.value.Value;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.navigo3.dryapi.core.path.ImmutableStructurePath;
+import com.navigo3.dryapi.core.path.ImmutableStructurePath.Builder;
+import com.navigo3.dryapi.core.path.ImmutableStructurePathItem;
+import com.navigo3.dryapi.core.path.StructurePath;
+import com.navigo3.dryapi.core.path.StructurePathItem.JsonPathItemType;
 import com.navigo3.dryapi.core.util.StringUtils;
 
 @Value.Immutable
@@ -28,5 +35,54 @@ public interface ObjectPathsTree {
 				printDebug(level+1, i);
 			});
 		});
+	}
+
+	default StructurePath buildPath(Object[] items) {
+		List<ObjectPathsTreeNode> actOptions = getItems();
+		
+		Builder builder = ImmutableStructurePath.builder();
+		
+		for (Object item : items) {
+			Optional<ObjectPathsTreeNode> foundNode = actOptions
+				.stream()
+				.filter(node->{
+					if (item instanceof Number) {
+						if (node.getType()==JsonPathItemType.index) {
+							return Objects.equals(node.getIndex().get(), item);
+						}
+					} else if (item instanceof String) {
+						if (node.getType()==JsonPathItemType.key) {
+							return Objects.equals(node.getKey().get(), item);
+						}
+					} else {
+						throw new RuntimeException("Unsupported key type "+item.getClass().getName());
+					}
+					
+					return false;
+				})
+				.findFirst();
+			
+			if (foundNode.isPresent()) {
+				com.navigo3.dryapi.core.path.ImmutableStructurePathItem.Builder itemBuilder = ImmutableStructurePathItem.builder();
+				
+				if (foundNode.get().getType()==JsonPathItemType.index) {
+					itemBuilder
+						.type(JsonPathItemType.index)
+						.index((Integer)item);
+				} else if (foundNode.get().getType()==JsonPathItemType.key) {
+					itemBuilder
+						.type(JsonPathItemType.key)
+						.key((String)item);
+				} else {
+					throw new RuntimeException("Unexpected type "+foundNode.get().getType());
+				}
+				
+				builder.addItems(itemBuilder.build());
+			} else {
+				throw new RuntimeException(StringUtils.subst("Cannot continue at item '{}'", item));
+			}
+		}
+		
+		return builder.build();
 	}
 }

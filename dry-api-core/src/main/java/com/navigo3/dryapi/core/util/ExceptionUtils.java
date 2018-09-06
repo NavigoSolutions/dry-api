@@ -9,8 +9,12 @@ public class ExceptionUtils {
 		public void run() throws Throwable;
 	}
 	
-	public interface SupplierRunnableWithException<T> {
+	public interface SupplierWithException<T> {
 		public T get() throws Throwable;
+	}
+	
+	public interface FunctionWithException<T, U> {
+		public U apply(T param) throws Throwable;
 	}
 	
 	public static String extractStacktrace(String message, Throwable t) {
@@ -36,7 +40,7 @@ public class ExceptionUtils {
 		}
 	}
 	
-	public static <T> T withRuntimeException(SupplierRunnableWithException<T> block) {
+	public static <T> T withRuntimeException(SupplierWithException<T> block) {
 		try {
 			return block.get();
 		} catch (Throwable t) {

@@ -26,8 +26,8 @@ import com.navigo3.dryapi.core.exec.json.JsonResponse;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.JsonUtils;
 import com.navigo3.dryapi.core.util.Validate;
-import com.navigo3.dryapi.core.validation.ImmutableValidationResult;
-import com.navigo3.dryapi.core.validation.ValidationResult;
+import com.navigo3.dryapi.core.validation.ImmutableValidationData;
+import com.navigo3.dryapi.core.validation.ValidationData;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -94,11 +94,11 @@ public class RemoteHttpDryApi {
 		}
 	}
 	
-	public <TInput, TOutput> CompletableFuture<ValidationResult> validateAsync(MethodDefinition<TInput, TOutput> method, TInput input, Consumer<ValidationResult> onSuccess) {
+	public <TInput, TOutput> CompletableFuture<ValidationData> validateAsync(MethodDefinition<TInput, TOutput> method, TInput input, Consumer<ValidationData> onSuccess) {
 		checkStarted();
 		
-		ModifiableTask<TInput, TOutput, ValidationResult> task = ModifiableTask
-			.<TInput, TOutput, ValidationResult>create()
+		ModifiableTask<TInput, TOutput, ValidationData> task = ModifiableTask
+			.<TInput, TOutput, ValidationData>create()
 			.setMethod(method)
 			.setOnlyValidate(true)
 			.setInput(input)
@@ -114,7 +114,7 @@ public class RemoteHttpDryApi {
 		return task.getFuture();
 	}
 	
-	public <TInput, TOutput> ValidationResult validateBlocking(MethodDefinition<TInput, TOutput> method, TInput input) {
+	public <TInput, TOutput> ValidationData validateBlocking(MethodDefinition<TInput, TOutput> method, TInput input) {
 		return ExceptionUtils.withRuntimeException(()->validateAsync(method, input, (res)->{}).get());
 	}
 
@@ -202,7 +202,7 @@ public class RemoteHttpDryApi {
 					
 					if (batchResponse.getOverallSuccess()) {
 						if (task.getOnlyValidate()) {
-							TResult validRes = (TResult)responseObj.getValidation().orElse(ImmutableValidationResult.builder().build());
+							TResult validRes = (TResult)responseObj.getValidation().orElse(ImmutableValidationData.builder().build());
 							
 							task.getOnSuccess().accept(validRes);
 							

@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.navigo3.dryapi.core.exec.ResponseStatus;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
-import com.navigo3.dryapi.core.validation.ValidationResult;
+import com.navigo3.dryapi.core.validation.ValidationData;
 
 @Value.Immutable
 @JsonSerialize(as = ImmutableJsonResponse.class)
@@ -21,7 +21,7 @@ public interface JsonResponse {
 	
 	Optional<String> getOutputJson();
 	
-	Optional<ValidationResult> getValidation();
+	Optional<ValidationData> getValidation();
 	
 	Optional<String> getErrorMessage();
 	

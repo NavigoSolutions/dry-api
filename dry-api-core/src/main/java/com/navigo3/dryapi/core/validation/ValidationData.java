@@ -10,10 +10,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.navigo3.dryapi.core.validation.ValidationItem.Severity;
 
 @Value.Immutable
-@JsonSerialize(as = ImmutableValidationResult.class)
-@JsonDeserialize(as = ImmutableValidationResult.class)
+@JsonSerialize(as = ImmutableValidationData.class)
+@JsonDeserialize(as = ImmutableValidationData.class)
 @JsonIgnoreProperties(value={ "overallSuccess" }, allowGetters=true)
-public interface ValidationResult {
+public interface ValidationData {
 	List<ValidationItem> getItems();
 	
 	default boolean getOverallSuccess() {
