@@ -1,0 +1,1 @@
+include  'dry-api-core', 'dry-api-java-client', 'dry-api-servlet', 'dry-api-standalone-server', 'dry-api-sample-defs', 'dry-api-sample-impls'
