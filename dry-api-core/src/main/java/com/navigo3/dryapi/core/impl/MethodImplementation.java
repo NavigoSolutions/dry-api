@@ -14,6 +14,14 @@ public abstract class MethodImplementation<TInput, TOutput, TContext extends App
 	private boolean initialized = false;
 	
 	private ExecutionContext<TContext, TCallContext> executionContext;
+	
+	public abstract SecurityCheck<TContext, TCallContext> getAuthorization();
+	
+	public abstract TCallContext prepareCallContext(TInput input);
+	
+	public abstract Optional<ValidationData> validate(TInput input);
+	
+	public abstract TOutput execute(TInput input);
 
 	public void initialize(ExecutionContext<TContext, TCallContext> executionContext) {
 		Validate.isFalse(initialized, "Already initialized!");
@@ -24,14 +32,6 @@ public abstract class MethodImplementation<TInput, TOutput, TContext extends App
 		
 		initialized  = true;
 	}
-	
-	public abstract SecurityCheck<TContext, TCallContext> getAuthorization();
-	
-	public abstract TCallContext prepareCallContext(TInput input);
-	
-	public abstract Optional<ValidationData> validate(TInput input);
-	
-	public abstract TOutput execute(TInput input);
 
 	public TContext getAppContext() {
 		Validate.isTrue(initialized, "Not yet initialized!");
@@ -49,5 +49,9 @@ public abstract class MethodImplementation<TInput, TOutput, TContext extends App
 	
 	public StructurePath inputPath(Object... items) {
 		return executionContext.getInputPathsTree().buildPath(items);
+	}
+	
+	public StructurePath outputPath(Object... items) {
+		return executionContext.getOutputPathsTree().buildPath(items);
 	}
 }

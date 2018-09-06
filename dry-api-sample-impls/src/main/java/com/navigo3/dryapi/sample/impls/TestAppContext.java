@@ -2,7 +2,7 @@ package com.navigo3.dryapi.sample.impls;
 
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
-import com.navigo3.dryapi.core.util.ExceptionUtils.SupplierWithException;
+import com.navigo3.dryapi.core.util.LambdaUtils.SupplierWithException;
 
 public class TestAppContext implements AppContext {
 	

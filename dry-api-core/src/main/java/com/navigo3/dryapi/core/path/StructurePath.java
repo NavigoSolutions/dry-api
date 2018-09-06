@@ -22,7 +22,6 @@ public interface StructurePath {
 				switch (i.getType()) {
 					case key: return i.getKey().get();
 					case index: return i.getIndex().get().toString();
-					case each: return "*";
 					default: throw new RuntimeException(StringUtils.subst("Unknown type '{}'", i.getType()));
 				}
 			})

@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
-import com.navigo3.dryapi.core.security.logic.Everyone;
+import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
 import com.navigo3.dryapi.sample.defs.math.integer.ImmutableIntegerResult;
@@ -16,7 +16,7 @@ public class SolveEverythingImpl extends MethodImplementation<TopAddressInput, I
 
 	@Override
 	public SecurityCheck<TestAppContext, TestCallContext> getAuthorization() {
-		return new Everyone<>();
+		return new True<>();
 	}
 
 	@Override

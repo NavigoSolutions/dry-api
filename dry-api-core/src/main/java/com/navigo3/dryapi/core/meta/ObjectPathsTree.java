@@ -12,7 +12,7 @@ import com.navigo3.dryapi.core.path.ImmutableStructurePath;
 import com.navigo3.dryapi.core.path.ImmutableStructurePath.Builder;
 import com.navigo3.dryapi.core.path.ImmutableStructurePathItem;
 import com.navigo3.dryapi.core.path.StructurePath;
-import com.navigo3.dryapi.core.path.StructurePathItem.JsonPathItemType;
+import com.navigo3.dryapi.core.path.StructurePathItemType;
 import com.navigo3.dryapi.core.util.StringUtils;
 
 @Value.Immutable
@@ -41,17 +41,17 @@ public interface ObjectPathsTree {
 		List<ObjectPathsTreeNode> actOptions = getItems();
 		
 		Builder builder = ImmutableStructurePath.builder();
-		
+
 		for (Object item : items) {
 			Optional<ObjectPathsTreeNode> foundNode = actOptions
 				.stream()
 				.filter(node->{
 					if (item instanceof Number) {
-						if (node.getType()==JsonPathItemType.index) {
+						if (node.getType()==StructurePathItemType.index) {
 							return Objects.equals(node.getIndex().get(), item);
 						}
 					} else if (item instanceof String) {
-						if (node.getType()==JsonPathItemType.key) {
+						if (node.getType()==StructurePathItemType.key) {
 							return Objects.equals(node.getKey().get(), item);
 						}
 					} else {
@@ -65,13 +65,13 @@ public interface ObjectPathsTree {
 			if (foundNode.isPresent()) {
 				com.navigo3.dryapi.core.path.ImmutableStructurePathItem.Builder itemBuilder = ImmutableStructurePathItem.builder();
 				
-				if (foundNode.get().getType()==JsonPathItemType.index) {
+				if (foundNode.get().getType()==StructurePathItemType.index) {
 					itemBuilder
-						.type(JsonPathItemType.index)
+						.type(StructurePathItemType.index)
 						.index((Integer)item);
-				} else if (foundNode.get().getType()==JsonPathItemType.key) {
+				} else if (foundNode.get().getType()==StructurePathItemType.key) {
 					itemBuilder
-						.type(JsonPathItemType.key)
+						.type(StructurePathItemType.key)
 						.key((String)item);
 				} else {
 					throw new RuntimeException("Unexpected type "+foundNode.get().getType());

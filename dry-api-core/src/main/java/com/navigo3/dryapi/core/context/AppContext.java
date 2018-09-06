@@ -1,6 +1,6 @@
 package com.navigo3.dryapi.core.context;
 
-import com.navigo3.dryapi.core.util.ExceptionUtils.SupplierWithException;
+import com.navigo3.dryapi.core.util.LambdaUtils.SupplierWithException;
 
 public interface AppContext {
 	boolean getIsDevelopmentInstance();

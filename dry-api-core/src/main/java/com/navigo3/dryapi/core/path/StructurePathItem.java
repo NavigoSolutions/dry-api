@@ -13,53 +13,38 @@ import com.navigo3.dryapi.core.util.Validate;
 @JsonSerialize(as = ImmutableStructurePathItem.class)
 @JsonDeserialize(as = ImmutableStructurePathItem.class)
 public interface StructurePathItem {
-	public enum JsonPathItemType {
-		key,
-		index,
-		each
-	}
-	
 	static StructurePathItem createKey(String key) {
-		return ImmutableStructurePathItem.builder().type(JsonPathItemType.key).key(key).build();
+		return ImmutableStructurePathItem.builder().type(StructurePathItemType.key).key(key).build();
 	}
 	
 	static StructurePathItem createIndex(int index) {
-		return ImmutableStructurePathItem.builder().type( JsonPathItemType.index).index(index).build();
-	}
-	
-	static StructurePathItem createEach() {
-		return ImmutableStructurePathItem.builder().type(JsonPathItemType.each).build();
+		return ImmutableStructurePathItem.builder().type( StructurePathItemType.index).index(index).build();
 	}
 
-	JsonPathItemType getType();
+	StructurePathItemType getType();
 
 	Optional<String> getKey();
 
 	Optional<Integer> getIndex();
 	
 	@Value.Check default void check() {
-		if (getType()==JsonPathItemType.key) {
+		if (getType()==StructurePathItemType.key) {
 			Validate.isPresent(getKey());
 			Validate.notBlank(getKey().get());
 			Validate.notPresent(getIndex());
-		} else if (getType()==JsonPathItemType.index) {
+		} else if (getType()==StructurePathItemType.index) {
 			Validate.isPresent(getIndex());
 			Validate.notPresent(getKey());
-		} else if (getType()==JsonPathItemType.each) {
-			Validate.notPresent(getKey());
-			Validate.notPresent(getIndex());
 		} else {
 			throw new RuntimeException(StringUtils.subst("Unknown type {}", getType()));
 		}
 	}
 
 	default String toDebug() {
-		if (getType()==JsonPathItemType.key) {
+		if (getType()==StructurePathItemType.key) {
 			return StringUtils.subst("\"{}\"", getKey().get());
-		} else if (getType()==JsonPathItemType.index) {
+		} else if (getType()==StructurePathItemType.index) {
 			return StringUtils.subst("[{}]", getIndex().get());			
-		} else if (getType()==JsonPathItemType.each) {
-			return "*";
 		} else {
 			throw new RuntimeException(StringUtils.subst("Unknown type {}", getType()));
 		}

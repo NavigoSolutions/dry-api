@@ -3,9 +3,8 @@ package com.navigo3.dryapi.sample.impls.form;
 import java.util.Optional;
 
 import com.navigo3.dryapi.core.impl.MethodImplementation;
-import com.navigo3.dryapi.core.path.StructurePathBuilder;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
-import com.navigo3.dryapi.core.security.logic.Everyone;
+import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.core.validation.ValidationItem.Severity;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.IdResult;
@@ -19,7 +18,7 @@ public class FormUpsertImpl extends MethodImplementation<Person, IdResult, TestA
 
 	@Override
 	public SecurityCheck<TestAppContext, TestCallContext> getAuthorization() {
-		return new Everyone<>();
+		return new True<>();
 	}
 
 	@Override
@@ -30,11 +29,11 @@ public class FormUpsertImpl extends MethodImplementation<Person, IdResult, TestA
 	@Override
 	public Optional<ValidationData> validate(Person input) {
 		return TestAppValidator.build(builder->{
-			builder.checkNotBlank(StructurePathBuilder.create().key("name").build(), input.getName());
-			builder.checkNotBlank(StructurePathBuilder.create().key("surname").build(), input.getSurname());
+			builder.checkNotBlank(inputPath("name"), input.getName());
+			builder.checkNotBlank(inputPath("surname"), input.getSurname());
 			
 			if (input.getAge()<18) {
-				builder.addValidationItem(Severity.warning, StructurePathBuilder.create().key("age").build(), "You should be of age 18 or more");
+				builder.addValidationItem(Severity.warning, inputPath("age"), "You should be of age 18 or more");
 			}
 		});
 	}

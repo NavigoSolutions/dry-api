@@ -50,7 +50,9 @@ public class ExecutionContext<TContext extends AppContext, TCallContext extends 
 		return inputPathsTree;
 	}
 
-	public Optional<ObjectPathsTree> getOutputPathsTree() {
-		return outputPathsTree;
+	public ObjectPathsTree getOutputPathsTree() {
+		Validate.isPresent(outputPathsTree);
+		
+		return outputPathsTree.get();
 	}
 }

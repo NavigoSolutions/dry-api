@@ -3,20 +3,10 @@ package com.navigo3.dryapi.core.util;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import com.navigo3.dryapi.core.util.LambdaUtils.RunnableWithException;
+import com.navigo3.dryapi.core.util.LambdaUtils.SupplierWithException;
+
 public class ExceptionUtils {
-	
-	public interface RunnableWithException {
-		public void run() throws Throwable;
-	}
-	
-	public interface SupplierWithException<T> {
-		public T get() throws Throwable;
-	}
-	
-	public interface FunctionWithException<T, U> {
-		public U apply(T param) throws Throwable;
-	}
-	
 	public static String extractStacktrace(String message, Throwable t) {
 		StringWriter w = new StringWriter();
 		PrintWriter pw = new PrintWriter(w);

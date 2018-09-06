@@ -3,9 +3,8 @@ package com.navigo3.dryapi.sample.impls.math.integer;
 import java.util.Optional;
 
 import com.navigo3.dryapi.core.impl.MethodImplementation;
-import com.navigo3.dryapi.core.path.StructurePathBuilder;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
-import com.navigo3.dryapi.core.security.logic.Everyone;
+import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOperands;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
@@ -18,7 +17,7 @@ public class AddIntegersImpl extends MethodImplementation<IntegerOperands, Integ
 
 	@Override
 	public SecurityCheck<TestAppContext, TestCallContext> getAuthorization() {
-		return new Everyone<>();
+		return new True<>();
 	}
 	
 	@Override
@@ -29,8 +28,8 @@ public class AddIntegersImpl extends MethodImplementation<IntegerOperands, Integ
 	@Override
 	public Optional<ValidationData> validate(IntegerOperands input) {
 		return TestAppValidator.build(builder->{
-			builder.checkPresent(StructurePathBuilder.create().key("a").build(), input.getA());
-			builder.checkPresent(StructurePathBuilder.create().key("b").build(), input.getB());
+			builder.checkPresent(inputPath("a"), input.getA());
+			builder.checkPresent(inputPath("b"), input.getB());
 		});
 	}
 	

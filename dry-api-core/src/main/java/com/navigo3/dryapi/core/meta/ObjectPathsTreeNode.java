@@ -7,7 +7,7 @@ import org.immutables.value.Value;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.navigo3.dryapi.core.path.StructurePathItem.JsonPathItemType;
+import com.navigo3.dryapi.core.path.StructurePathItemType;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 
@@ -16,7 +16,7 @@ import com.navigo3.dryapi.core.util.Validate;
 @JsonSerialize(as = ImmutableObjectPathsTreeNode.class)
 @JsonDeserialize(as = ImmutableObjectPathsTreeNode.class)
 public interface ObjectPathsTreeNode {
-	JsonPathItemType getType();
+	StructurePathItemType getType();
 
 	Optional<String> getKey();
 
@@ -25,28 +25,23 @@ public interface ObjectPathsTreeNode {
 	Optional<List<ObjectPathsTreeNode>> getItems();
 	
 	@Value.Check default void check() {
-		if (getType()==JsonPathItemType.key) {
+		if (getType()==StructurePathItemType.key) {
 			Validate.isPresent(getKey());
 			Validate.notBlank(getKey().get());
 			Validate.notPresent(getIndex());
-		} else if (getType()==JsonPathItemType.index) {
+		} else if (getType()==StructurePathItemType.index) {
 			Validate.isPresent(getIndex());
 			Validate.notPresent(getKey());
-		} else if (getType()==JsonPathItemType.each) {
-			Validate.notPresent(getKey());
-			Validate.notPresent(getIndex());
 		} else {
 			throw new RuntimeException(StringUtils.subst("Unknown type {}", getType()));
 		}
 	}
 	
 	default String toDebug() {
-		if (getType()==JsonPathItemType.key) {
+		if (getType()==StructurePathItemType.key) {
 			return StringUtils.subst("\"{}\"", getKey().get());
-		} else if (getType()==JsonPathItemType.index) {
+		} else if (getType()==StructurePathItemType.index) {
 			return StringUtils.subst("[{}]", getIndex().get());			
-		} else if (getType()==JsonPathItemType.each) {
-			return "*";
 		} else {
 			throw new RuntimeException(StringUtils.subst("Unknown type {}", getType()));
 		}

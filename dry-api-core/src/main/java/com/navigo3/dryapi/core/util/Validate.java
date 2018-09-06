@@ -109,6 +109,10 @@ public class Validate {
 		}
 	}
 
+	public static void equals(Object a, Object b) {
+		equals(a, b, StringUtils.subst("Objects '{}' and '{}' are different", a, b));
+	}
+
 	public static <T> void notContained(Collection<T> coll, T val) {
 		if (coll.contains(val)) {
 			throw new RuntimeException(StringUtils.subst("Value {} is already contained", val));

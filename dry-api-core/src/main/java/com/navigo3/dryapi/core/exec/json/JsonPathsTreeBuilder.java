@@ -11,7 +11,7 @@ import com.navigo3.dryapi.core.meta.ImmutableObjectPathsTreeNode;
 import com.navigo3.dryapi.core.meta.ImmutableObjectPathsTreeNode.Builder;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.meta.ObjectPathsTreeNode;
-import com.navigo3.dryapi.core.path.StructurePathItem.JsonPathItemType;
+import com.navigo3.dryapi.core.path.StructurePathItemType;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 
@@ -44,7 +44,7 @@ public class JsonPathsTreeBuilder {
 		object.fieldNames().forEachRemaining(key->{
 			Builder itemBuilder = ImmutableObjectPathsTreeNode
 				.builder()
-				.type(JsonPathItemType.key)
+				.type(StructurePathItemType.key)
 				.key(key);
 		
 			JsonNode subJsonNode = object.get(key);
@@ -69,7 +69,7 @@ public class JsonPathsTreeBuilder {
 		for (int i=0;i<array.size();++i) {
 			Builder itemBuilder = ImmutableObjectPathsTreeNode
 				.builder()
-				.type(JsonPathItemType.index)
+				.type(StructurePathItemType.index)
 				.index(i);
 		
 			JsonNode subJsonNode = array.get(i);
