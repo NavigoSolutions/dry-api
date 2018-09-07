@@ -14,10 +14,16 @@ import com.navigo3.dryapi.core.util.Validate;
 @JsonDeserialize(as = ImmutableStructurePathItem.class)
 public interface StructurePathItem {
 	static StructurePathItem createKey(String key) {
-		return ImmutableStructurePathItem.builder().type(StructurePathItemType.key).key(key).build();
+		Validate.notBlank(key);
+		
+		String camelCaseKey = StringUtils.underscoreToCamelCase(key);
+		
+		return ImmutableStructurePathItem.builder().type(StructurePathItemType.key).key(camelCaseKey).build();
 	}
 	
 	static StructurePathItem createIndex(int index) {
+		Validate.nonNegative(index);
+		
 		return ImmutableStructurePathItem.builder().type( StructurePathItemType.index).index(index).build();
 	}
 

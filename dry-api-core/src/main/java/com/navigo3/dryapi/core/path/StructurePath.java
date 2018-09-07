@@ -1,6 +1,7 @@
 package com.navigo3.dryapi.core.path;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.immutables.value.Value;
@@ -15,7 +16,7 @@ import com.navigo3.dryapi.core.util.StringUtils;
 public interface StructurePath {
 	List<StructurePathItem> getItems();
 
-	default String printDebug() {
+	default String toDebug() {
 		return getItems()
 			.stream()
 			.map(i->{
@@ -26,5 +27,29 @@ public interface StructurePath {
 				}
 			})
 			.collect(Collectors.joining("."));
+	}
+	
+	public static StructurePath of(Consumer<StructurePathBuilder> block) {
+		StructurePathBuilder builder = StructurePathBuilder.create();
+		
+		block.accept(builder);
+		
+		return builder.build();
+	}
+	
+	default StructurePath appendKey(String key) {
+		return ImmutableStructurePath
+			.builder()
+			.addAllItems(getItems())
+			.addItems(StructurePathItem.createKey(key))
+			.build();
+	}
+	
+	default StructurePath appendIndex(int index) {
+		return ImmutableStructurePath
+			.builder()
+			.addAllItems(getItems())
+			.addItems(StructurePathItem.createIndex(index))
+			.build();
 	}
 }

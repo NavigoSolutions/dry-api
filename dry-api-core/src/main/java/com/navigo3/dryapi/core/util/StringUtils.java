@@ -34,4 +34,34 @@ public class StringUtils {
 			return str.substring(0, 1).toLowerCase() + str.substring(1);
 		}
 	}
+	
+	public static String withFirstUppercase(String str) {
+		if (str.isEmpty()) {
+			return "";
+		} else if (str.length()==1) {
+			return str.toUpperCase();
+		} else {
+			return str.substring(0, 1).toUpperCase() + str.substring(1);
+		}
+	}
+
+	public static String underscoreToCamelCase(String value) {
+		Validate.notNull(value);
+		
+		if (!value.contains("_")) {
+			return value;
+		}
+		
+		String[] items = value.split("_");
+		
+		StringBuilder builder = new StringBuilder();
+		
+		for (int i=0;i<items.length;++i) {
+			String item = items[i];
+			
+			builder.append(i==0 ? withFirstLowercase(item) : withFirstUppercase(item));
+		}
+		
+		return builder.toString();
+	}
 }

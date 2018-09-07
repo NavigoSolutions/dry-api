@@ -7,6 +7,7 @@ import org.immutables.value.Value;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.validation.ValidationItem.Severity;
 
 @Value.Immutable
@@ -18,5 +19,24 @@ public interface ValidationData {
 	
 	default boolean getOverallSuccess() {
 		return getItems().stream().noneMatch(r->r.getSeverity()==Severity.error);
+	}
+	
+	default String toDebug() {
+		if (getOverallSuccess()) {
+			return "Everything is perfectly valid!";
+		} else {
+			StringBuilder res = new StringBuilder("Validation issues:\n");
+	
+			
+			getItems().forEach(item->{
+				res.append(StringUtils.subst("{}: {}\n", item.getPath().toDebug(), item.getMessage()));
+			});
+			
+			return res.toString();
+		}
+	}
+
+	default void printDebug() {
+		System.out.println(toDebug());
 	}
 }
