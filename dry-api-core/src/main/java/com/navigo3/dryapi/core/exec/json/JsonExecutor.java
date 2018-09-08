@@ -15,6 +15,7 @@ import com.navigo3.dryapi.core.exec.json.ImmutableJsonResponse.Builder;
 import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
 import com.navigo3.dryapi.core.impl.ExecutionContext;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
+import com.navigo3.dryapi.core.impl.MethodSecurity;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.util.Consumer3;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
@@ -25,17 +26,16 @@ import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.ImmutableValidationData;
 import com.navigo3.dryapi.core.validation.ValidationData;
-import com.navigo3.dryapi.core.validation.ValidationItem.Severity;
 
-public class JsonExecutor<TContext extends AppContext, TCallContext extends CallContext> {
+public class JsonExecutor<TAppContext extends AppContext, TCallContext extends CallContext> {
 
-	private final DryApi<TContext, TCallContext> api;
+	private final DryApi<TAppContext, TCallContext> api;
 
-	public JsonExecutor(DryApi<TContext, TCallContext> api) {
+	public JsonExecutor(DryApi<TAppContext, TCallContext> api) {
 		this.api = api;
 	}
 	
-	public JsonBatchResponse execute(TContext context, JsonBatchRequest batch) {
+	public JsonBatchResponse execute(TAppContext context, JsonBatchRequest batch) {
 		ImmutableJsonBatchResponse.Builder builder = ImmutableJsonBatchResponse.builder();
 		
 		batch.getRequests().forEach(request->{
@@ -45,7 +45,7 @@ public class JsonExecutor<TContext extends AppContext, TCallContext extends Call
 		return builder.build();
 	}
 
-	private JsonResponse execute(TContext context, JsonRequest request) {
+	private JsonResponse execute(TAppContext context, JsonRequest request) {
 		
 		ImmutableJsonResponse.Builder outputBuilder = ImmutableJsonResponse
 			.builder()
@@ -70,18 +70,18 @@ public class JsonExecutor<TContext extends AppContext, TCallContext extends Call
 	}
 
 	@SuppressWarnings("rawtypes")
-	private void findMethod(TContext context, JsonRequest request, Builder outputBuilder, Consumer<MethodDefinition> onSuccess) {
+	private void findMethod(TAppContext context, JsonRequest request, Builder outputBuilder, Consumer<MethodDefinition> onSuccess) {
 		Optional<MethodDefinition> optDef = api.lookupDefinition(request.getQualifiedName());
 		
 		OptionalUtils.ifPresentOrElse(optDef, onSuccess, ()->{
 			outputBuilder
-				.status(ResponseStatus.notFound)
+				.status(ResponseStatus.NOT_FOUND)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? StringUtils.subst("Method '{}' not found", request.getQualifiedName()) : null));
 		});
 	}
 
 	@SuppressWarnings("rawtypes")
-	private void parseInputJson(TContext context, JsonRequest request, Builder outputBuilder, MethodDefinition def, Consumer3<Object, ObjectMapper, ExecutionContext> onSuccess) {
+	private void parseInputJson(TAppContext context, JsonRequest request, Builder outputBuilder, MethodDefinition def, Consumer3<Object, ObjectMapper, ExecutionContext> onSuccess) {
 		ObjectMapper objectMapper = JsonUtils.createMapper();
 		
 		try {
@@ -98,13 +98,13 @@ public class JsonExecutor<TContext extends AppContext, TCallContext extends Call
 			onSuccess.accept(input, objectMapper, executionContext);
 		} catch (Throwable t) {
 			outputBuilder
-				.status(ResponseStatus.malformedInput)
+				.status(ResponseStatus.MALFORMED_INPUT)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during parsing input", t) : null));
 		}
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void checkSecurity(TContext context, JsonRequest request, Builder outputBuilder, Object input, ExecutionContext executionContext,
+	private void checkSecurity(TAppContext context, JsonRequest request, Builder outputBuilder, Object input, ExecutionContext executionContext,
 			BiConsumer<MethodImplementation, CallContext> onSuccess) {
 		try {
 			Optional<Class<? extends MethodImplementation>> impl = api.lookupImplementationClass(request.getQualifiedName());
@@ -112,45 +112,49 @@ public class JsonExecutor<TContext extends AppContext, TCallContext extends Call
 			Validate.isPresent(impl);
 			
 			MethodImplementation instance = ReflectionUtils.createInstance(impl.get());
-			instance.initialize(executionContext);
+			instance.initialize(api.lookupDefinition(request.getQualifiedName()).get(), executionContext);
 			
-			CallContext callContext = instance.prepareCallContext(input);
+			TCallContext callContext = (TCallContext) instance.prepareCallContext(input);
 			
 			Validate.notNull(callContext);
 			
+			Optional<MethodSecurity<TAppContext, TCallContext>> security = api.lookupSecurity(request.getQualifiedName());
+			
+			Validate.isPresent(security);
+			
 			executionContext.setCallContext(callContext);
 			
-			boolean pass = instance.getAuthorization().pass(context, callContext);
+			boolean pass = security.get().getAuthorization().pass(context, callContext);
 						
 			if (pass) {
 				onSuccess.accept(instance, callContext);
 			} else {
 				outputBuilder
-					.status(ResponseStatus.notAuthorized)
+					.status(ResponseStatus.NOT_AUTHORIZED)
 					.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? "Not authorized" : null));
 			}
 			
 		} catch (Throwable t) {
 			outputBuilder
-				.status(ResponseStatus.internalErrorOnSecurity)
+				.status(ResponseStatus.INTERNAL_ERROR_ON_SECURITY)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during execution", t) : null));
 		}
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private void clearProhibitedInputFields(TContext context, Builder outputBuilder, Object input, MethodImplementation instance, 
+	private void clearProhibitedInputFields(TAppContext context, Builder outputBuilder, Object input, MethodImplementation instance, 
 			ObjectMapper objectMapper, CallContext callContext, Runnable block) {
 		try {
 			block.run();
 		} catch (Throwable t) {
 			outputBuilder
-				.status(ResponseStatus.internalErrorOnClearingInput)
+				.status(ResponseStatus.INTERNAL_ERROR_ON_CLEARING_INPUT)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during cleaning prohibited input fields", t) : null));
 		}
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void validate(TContext context, JsonRequest request, Builder outputBuilder, Object input, MethodImplementation instance, Runnable onSuccess) {
+	private void validate(TAppContext context, JsonRequest request, Builder outputBuilder, Object input, MethodImplementation instance, Runnable onSuccess) {
 		try {
 			Optional<ValidationData> validationResult = instance.validate(input);
 			
@@ -159,13 +163,13 @@ public class JsonExecutor<TContext extends AppContext, TCallContext extends Call
 			outputBuilder
 				.validation(validationResult.orElse(ImmutableValidationData.builder().build()));
 			
-			if (request.getRequestType()==RequestType.validate) {
+			if (request.getRequestType()==RequestType.VALIDATE) {
 				outputBuilder
-					.status(ResponseStatus.success);
-			} else if (request.getRequestType()==RequestType.execute) {
-				if (validationResult.isPresent() && validationResult.get().getItems().stream().anyMatch(i->i.getSeverity()==Severity.error)) {
+					.status(ResponseStatus.SUCCESS);
+			} else if (request.getRequestType()==RequestType.EXECUTE) {
+				if (validationResult.isPresent() && !validationResult.get().getOverallSuccess()) {
 					outputBuilder
-						.status(ResponseStatus.invalidInput)
+						.status(ResponseStatus.INVALID_INPUT)
 						.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? "Input validation problem" : null));
 				} else {
 					onSuccess.run();
@@ -175,13 +179,13 @@ public class JsonExecutor<TContext extends AppContext, TCallContext extends Call
 			}			
 		} catch (Throwable t) {
 			outputBuilder
-				.status(ResponseStatus.internalErrorOnValidation)
+				.status(ResponseStatus.INTERNAL_ERROR_ON_VALIDATION)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during validation", t) : null));
 		}
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void execute(TContext context, JsonRequest request, Builder outputBuilder, Object input, MethodImplementation instance, ObjectMapper objectMapper,
+	private void execute(TAppContext context, JsonRequest request, Builder outputBuilder, Object input, MethodImplementation instance, ObjectMapper objectMapper,
 			Consumer<Object> onSuccess) {
 		try {
 			Object output = instance.execute(input);
@@ -189,13 +193,13 @@ public class JsonExecutor<TContext extends AppContext, TCallContext extends Call
 			onSuccess.accept(output);
 		} catch (Throwable t) {
 			outputBuilder
-				.status(ResponseStatus.internalErrorOnExecution)
+				.status(ResponseStatus.INTERNAL_ERROR_ON_EXECUTION)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during execution", t) : null));
 		}
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private void clearProhibitedOutputFields(TContext context, Builder outputBuilder, Object output,
+	private void clearProhibitedOutputFields(TAppContext context, Builder outputBuilder, Object output,
 			MethodImplementation instance, ObjectMapper objectMapper, CallContext callContext, ExecutionContext executionContext) {
 		try {
 			String originalOutputJson = objectMapper.writeValueAsString(output);
@@ -209,11 +213,11 @@ public class JsonExecutor<TContext extends AppContext, TCallContext extends Call
 			outputBuilder.allowedOutputFields(outputPathsTree);
 
 			outputBuilder
-				.status(ResponseStatus.success)
+				.status(ResponseStatus.SUCCESS)
 				.outputJson(objectMapper.writeValueAsString(output));
 		} catch (Throwable t) {
 			outputBuilder
-				.status(ResponseStatus.internalErrorOnClearingOutput)
+				.status(ResponseStatus.INTERNAL_ERROR_ON_CLEARING_OUTPUT)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during cleaning prohibited output fields", t) : null));
 		}
 	}

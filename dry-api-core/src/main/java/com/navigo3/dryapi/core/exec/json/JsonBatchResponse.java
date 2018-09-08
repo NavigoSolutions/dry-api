@@ -17,6 +17,6 @@ public interface JsonBatchResponse {
 	List<JsonResponse> getResponses();
 	
 	default boolean getOverallSuccess() {
-		return getResponses().stream().allMatch(r->r.getStatus()==ResponseStatus.success);
+		return getResponses().stream().allMatch(r->r.getStatus()==ResponseStatus.SUCCESS);
 	}
 }

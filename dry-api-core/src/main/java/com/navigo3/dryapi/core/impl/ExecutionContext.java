@@ -7,14 +7,14 @@ import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.util.Validate;
 
-public class ExecutionContext<TContext extends AppContext, TCallContext extends CallContext> implements PublicExecutionContext<TContext, TCallContext> {
+public class ExecutionContext<TAppContext extends AppContext, TCallContext extends CallContext> implements PublicExecutionContext<TAppContext, TCallContext> {
 
-	private TContext appContext;
+	private TAppContext appContext;
 	private Optional<TCallContext> callContext = Optional.empty();
 	private ObjectPathsTree inputPathsTree;
 	private Optional<ObjectPathsTree> outputPathsTree = Optional.empty();
 	
-	public ExecutionContext(TContext appContext, ObjectPathsTree inputPathsTree) {
+	public ExecutionContext(TAppContext appContext, ObjectPathsTree inputPathsTree) {
 		Validate.notNull(appContext);
 		Validate.notNull(inputPathsTree);
 		
@@ -37,7 +37,7 @@ public class ExecutionContext<TContext extends AppContext, TCallContext extends 
 	}
 
 	@Override
-	public TContext getAppContext() {
+	public TAppContext getAppContext() {
 		return appContext;
 	}
 

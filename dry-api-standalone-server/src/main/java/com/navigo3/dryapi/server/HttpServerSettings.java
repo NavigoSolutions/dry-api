@@ -41,7 +41,7 @@ public interface HttpServerSettings<TAppContext extends AppContext, TCallContext
 	
 	List<ApiMount<TAppContext, TCallContext>> getApiMounts();
 	
-	Function<HttpServerExchange, TAppContext> getContextProvider();
+	Function<HttpServerExchange, TAppContext> getAppContextProvider();
 	
 	@Check
 	default void check() {

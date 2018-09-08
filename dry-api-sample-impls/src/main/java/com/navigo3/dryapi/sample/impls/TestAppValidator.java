@@ -30,19 +30,19 @@ public class TestAppValidator {
 	
 	public void checkNotNull(StructurePath path, Object val) {
 		if (val==null) {
-			addValidationItem(Severity.error, path, "Field should not be empty!");
+			addValidationItem(Severity.ERROR, path, "Field should not be empty!");
 		}
 	}	
 	
 	public void checkNotBlank(StructurePath path, String val) {
 		if (val==null || val.trim().isEmpty()) {
-			addValidationItem(Severity.error, path, "Field should not be blank!");
+			addValidationItem(Severity.ERROR, path, "Field should not be blank!");
 		}
 	}
 
 	public void checkPresent(StructurePath path, Optional<?> val) {
 		if (!val.isPresent()) {
-			addValidationItem(Severity.error, path, "Field should not be empty!");
+			addValidationItem(Severity.ERROR, path, "Field should not be empty!");
 		}
 	}
 

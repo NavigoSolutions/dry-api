@@ -8,7 +8,10 @@ import org.immutables.value.Value;
 
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
+import com.navigo3.dryapi.core.def.ImmutableEntry.Builder;
+import com.navigo3.dryapi.core.impl.ImmutableMethodSecurity;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
+import com.navigo3.dryapi.core.impl.MethodSecurity;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
@@ -19,23 +22,23 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 	public static final String PATH_PATTERN = StringUtils.subst("({}/)*({})", IDENTIFIER_PATTERN, IDENTIFIER_PATTERN);
 	
 	@Value.Immutable
-	public interface Entry {
+	public interface Entry<TAppContext extends AppContext, TCallContext extends CallContext> {
 		@SuppressWarnings("rawtypes")
-		public MethodDefinition getDefinition();
+		MethodDefinition getDefinition();
 		
 		@SuppressWarnings("rawtypes")
-		public Class<? extends MethodImplementation> getImplementationClass();
+		Class<? extends MethodImplementation> getImplementationClass();
+		
+		MethodSecurity<TAppContext, TCallContext> getSecurity();
 	}
 
-	@SuppressWarnings("rawtypes")
 	public <TInput, TOutput> void register(
-			Class<? extends MethodDefinition<TInput, TOutput>> defClass, 
+			MethodDefinition<TInput, TOutput> definition, 
 			Class<? extends MethodImplementation<TInput, TOutput, TAppContext, TCallContext>> implClass
 	) {
-		Validate.notNull(defClass);
+		Validate.notNull(definition);
 		Validate.notNull(implClass);
-		
-		MethodDefinition definition = ReflectionUtils.createInstance(defClass);
+
 		definition.initialize();
 		
 		String qualifiedName = definition.getQualifiedName();
@@ -43,15 +46,27 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 		Validate.passRegex(qualifiedName, PATH_PATTERN);
 		Validate.keyNotContained(entries, qualifiedName);
 		
-		entries.put(qualifiedName, ImmutableEntry
-			.builder()
+		MethodImplementation<TInput, TOutput, TAppContext, TCallContext> implementation = ReflectionUtils.createInstance(implClass);
+		
+		Validate.notNull(implementation);
+		
+		implementation.setDefinition(definition);
+		
+		Builder<TAppContext, TCallContext> builder = ImmutableEntry
+			.<TAppContext, TCallContext>builder()
 			.definition(definition)
-			.implementationClass(implClass)
-			.build()
-		);
+			.implementationClass(implClass);
+		
+		com.navigo3.dryapi.core.impl.ImmutableMethodSecurity.Builder<TAppContext, TCallContext> methodBuilder = ImmutableMethodSecurity.builder();
+		
+		implementation.defineClassSecurity(methodBuilder);
+		
+		builder.security(methodBuilder.build());
+		
+		entries.put(qualifiedName, builder.build());
 	}
 
-	private Map<String, Entry> entries = new HashMap<>();
+	private Map<String, Entry<TAppContext, TCallContext>> entries = new HashMap<>();
 	
 	@SuppressWarnings("rawtypes")
 	public Optional<MethodDefinition> lookupDefinition(String qualifiedName) {
@@ -61,5 +76,9 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 	@SuppressWarnings("rawtypes")
 	public Optional<Class<? extends MethodImplementation>> lookupImplementationClass(String qualifiedName) {
 		return Optional.ofNullable(entries.get(qualifiedName)).map(Entry::getImplementationClass);
+	}
+	
+	public Optional<MethodSecurity<TAppContext, TCallContext>> lookupSecurity(String qualifiedName) {
+		return Optional.ofNullable(entries.get(qualifiedName)).map(Entry::getSecurity);
 	}
 }

@@ -12,8 +12,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonDeserialize(as = ImmutableJsonRequest.class)
 public interface JsonRequest {
 	public enum RequestType {
-		validate,
-		execute
+		VALIDATE,
+		EXECUTE
 	}
 	
 	UUID getRequestUuid();

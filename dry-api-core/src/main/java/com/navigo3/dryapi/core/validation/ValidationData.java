@@ -18,7 +18,7 @@ public interface ValidationData {
 	List<ValidationItem> getItems();
 	
 	default boolean getOverallSuccess() {
-		return getItems().stream().noneMatch(r->r.getSeverity()==Severity.error);
+		return getItems().stream().noneMatch(r->r.getSeverity()==Severity.ERROR);
 	}
 	
 	default String toDebug() {

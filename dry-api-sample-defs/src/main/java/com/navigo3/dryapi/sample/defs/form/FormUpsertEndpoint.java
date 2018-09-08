@@ -21,6 +21,8 @@ public class FormUpsertEndpoint extends MethodDefinition<Person, IdResult> {
 		String getSurname();
 		int getAge();
 		
+		int getSecretNumber();
+
 		Map<String, List<Integer>> getColorsToFavoriteNumbers();
 	}
 	

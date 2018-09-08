@@ -21,8 +21,8 @@ public interface StructurePath {
 			.stream()
 			.map(i->{
 				switch (i.getType()) {
-					case key: return i.getKey().get();
-					case index: return i.getIndex().get().toString();
+					case KEY: return i.getKey().get();
+					case INDEX: return i.getIndex().get().toString();
 					default: throw new RuntimeException(StringUtils.subst("Unknown type '{}'", i.getType()));
 				}
 			})

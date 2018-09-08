@@ -19,7 +19,7 @@ public class RemoteCallsEnvironment {
 			.<TestAppContext, TestCallContext>builder()
 			.addHttpInterfaces(ImmutableHttpInterface.builder().host("localhost").port(8080).build())
 			.addApiMounts(ImmutableApiMount.<TestAppContext, TestCallContext>builder().basePath("/test/xxx").dryApi(TestApi.build()).build())
-			.contextProvider(exch->new TestAppContext(true))
+			.appContextProvider(exch->new TestAppContext(true))
 			.build()
 		);
 		

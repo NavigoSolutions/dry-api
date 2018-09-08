@@ -177,7 +177,7 @@ public class RemoteHttpDryApi {
 				.builder()
 				.qualifiedName(task.getMethod().getQualifiedName())
 				.inputJson(ExceptionUtils.withRuntimeException(()->mapper.writeValueAsString(task.getInput())))
-				.requestType(task.getOnlyValidate() ? RequestType.validate : RequestType.execute)
+				.requestType(task.getOnlyValidate() ? RequestType.VALIDATE : RequestType.EXECUTE)
 				.requestUuid(UUID.randomUUID())
 				.build()
 			)
@@ -191,6 +191,7 @@ public class RemoteHttpDryApi {
 			.build();
 		
 		httpClient.newCall(request).enqueue(new Callback() {
+			@SuppressWarnings("unchecked")
 			@Override
 			public void onResponse(Call call, Response response) throws IOException {
 				try {

@@ -3,7 +3,9 @@ package com.navigo3.dryapi.core.meta;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,28 +21,32 @@ import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.navigo3.dryapi.core.path.TypePath;
+import com.navigo3.dryapi.core.path.TypePathItem;
+import com.navigo3.dryapi.core.path.TypeSelectorType;
 import com.navigo3.dryapi.core.util.CollectionUtils;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
+import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 
 public class TypeSchema {
 	
 	public enum ContainerType {
-		list,
-		map,
-		optional
+		LIST,
+		MAP,
+		OPTIONAL
 	}
 	
 	public enum ValueType {
 		//scalar types
-		number,
-		string,
-		bool,
-		enumerable,
+		NUMBER,
+		STRING,
+		BOOL,
+		ENUMERABLE,
 		
 		//reference types
-		ref
+		REF
 	}
 
 	@Value.Immutable
@@ -63,8 +69,19 @@ public class TypeSchema {
 	@Value.Immutable
 	public interface TypeDefinition {
 		String getName();
+		
+		Optional<ContainerType> getContainerType();
+		
+		Optional<List<FieldDefinition>> getTemplateParams();
+		
 		List<FieldDefinition> getFields();
+		
+		@Value.Default default boolean getIsDirectRootContainer() {
+			return false;
+		};
 	}
+
+	private static final String ROOT_CONTAINER_ID = "DirectRootContainter";
 	
 	private Map<String, TypeDefinition> definitions = new HashMap<>();
 	private String rootDefinition;
@@ -89,19 +106,32 @@ public class TypeSchema {
 	}
 
 	private void parse(TypeReference<?> type) {
-		final Class<?> klass = (Class<?>)(type.getType() instanceof ParameterizedType ? ((ParameterizedType)type.getType()).getRawType() : type.getType());
-	
+		final Class<?> klass;
+		final Type[] templateParams;
+		
+		if (type.getType() instanceof ParameterizedType) {
+			ParameterizedType paramType = (ParameterizedType)type.getType();
+			
+			klass = (Class<?>)paramType.getRawType();
+			templateParams = paramType.getActualTypeArguments();
+		} else {
+			klass = (Class<?>)type.getType();
+			templateParams = new Type[]{};
+		}
+
 		rootDefinition = klass.getName();
 		
 		Set<Class<?>> classesToBeDefined = new HashSet<>();
 		classesToBeDefined.add(klass);
 		
-		parseIteratively(classesToBeDefined);
+		parseIteratively(classesToBeDefined, templateParams);
 		
 		definitions = Collections.unmodifiableMap(definitions);
 	}
 
-	private void parseIteratively(Set<Class<?>> classesToBeDefined) {
+	private void parseIteratively(Set<Class<?>> classesToBeDefined, Type[] templateParams) {
+		boolean first = true;
+		
 		while (!classesToBeDefined.isEmpty()) {
 			Class<?> klass = classesToBeDefined.iterator().next();
 			classesToBeDefined.remove(klass);
@@ -110,15 +140,53 @@ public class TypeSchema {
 				continue;
 			}
 			
-			ImmutableTypeDefinition.Builder builder = ImmutableTypeDefinition
-					.builder()
-					.name(klass.getName());
+			ImmutableTypeDefinition.Builder builder = ImmutableTypeDefinition.builder();
+			
+			boolean isKnownTemplate = true;
+			
+			if (Collection.class.isAssignableFrom(klass)) {
+				builder.containerType(ContainerType.LIST);
+			} else if (Map.class.isAssignableFrom(klass)) {
+				builder.containerType(ContainerType.MAP);
+			} else if (Optional.class.isAssignableFrom(klass)) {
+				builder.containerType(ContainerType.OPTIONAL);
+			} else {
+				isKnownTemplate = false;
+				builder.name(klass.getName());
+			}
+			
+			if (first && isKnownTemplate) {
+				List<FieldDefinition> typeFields = new ArrayList<>();
+				
+				builder
+					.name(ROOT_CONTAINER_ID)
+					.isDirectRootContainer(true);
+				
+				rootDefinition = ROOT_CONTAINER_ID;
+			
+				for (Type type : klass.getTypeParameters()) {
+					ImmutableFieldDefinition.Builder fieldBuilder = ImmutableFieldDefinition.builder();
+					fieldBuilder.name(type.getTypeName());
+					
+					String typeKlass = templateParams[typeFields.size()].getTypeName().split("<")[0];
+					
+					ExceptionUtils.withRuntimeException(()->{
+						setupField(Class.forName(typeKlass), templateParams[typeFields.size()].getTypeName(), fieldBuilder, classesToBeDefined);
+					});
+					
+					typeFields.add(fieldBuilder.build());
+				}
+				
+				builder.templateParams(typeFields);
+			}
+			
+			first = false;
 			
 			Set<String> uniquenessNameCheck = new HashSet<>();
 			
 			for (Method method : klass.getMethods()) {
-				//is from Object
-				if (method.getDeclaringClass().getName().startsWith("java.") || method.getDeclaringClass().getName().startsWith("sun.")) {
+				//core packages
+				if (method.getDeclaringClass().getName().startsWith("sun.") || method.getDeclaringClass().getName().startsWith("java.")) {
 					continue;
 				}
 				
@@ -166,9 +234,9 @@ public class TypeSchema {
 
 	private void setupField(Class<?> klass, String returnTypeDesc, ImmutableFieldDefinition.Builder fieldBuilder, Set<Class<?>> classesToBeDefined) {
 		if (String.class.isAssignableFrom(klass)) {
-			fieldBuilder.valueType(ValueType.string);
+			fieldBuilder.valueType(ValueType.STRING);
 		} else if (UUID.class.isAssignableFrom(klass)) {
-			fieldBuilder.valueType(ValueType.string);
+			fieldBuilder.valueType(ValueType.STRING);
 		} else if (
 			klass.isAssignableFrom(BigDecimal.class)
 			|| Integer.class.isAssignableFrom(klass)
@@ -184,26 +252,26 @@ public class TypeSchema {
 			|| Byte.class.isAssignableFrom(klass)
 			|| byte.class.isAssignableFrom(klass)
 		) {
-			fieldBuilder.valueType(ValueType.number);
+			fieldBuilder.valueType(ValueType.NUMBER);
 		} else if (Enum.class.isAssignableFrom(klass)) {
-			fieldBuilder.valueType(ValueType.enumerable);
+			fieldBuilder.valueType(ValueType.ENUMERABLE);
 			
 			fieldBuilder.enumValues(Stream.of(klass.getEnumConstants()).map(o->((Enum<?>)o).name()).collect(Collectors.toList()));
 		} else if (
 			Boolean.class.isAssignableFrom(klass)
 			|| boolean.class.isAssignableFrom(klass)
 		) {
-			fieldBuilder.valueType(ValueType.bool);
+			fieldBuilder.valueType(ValueType.BOOL);
 		} else if (Optional.class.isAssignableFrom(klass)) {
-			fieldBuilder.containerType(ContainerType.optional);
+			fieldBuilder.containerType(ContainerType.OPTIONAL);
 			
 			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
 		} else if (Collection.class.isAssignableFrom(klass)) {
-			fieldBuilder.containerType(ContainerType.list);
+			fieldBuilder.containerType(ContainerType.LIST);
 			
 			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
 		} else if (Map.class.isAssignableFrom(klass)) {
-			fieldBuilder.containerType(ContainerType.map);
+			fieldBuilder.containerType(ContainerType.MAP);
 			
 			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
 		} else {
@@ -212,7 +280,7 @@ public class TypeSchema {
 			}
 			
 			fieldBuilder
-				.valueType(ValueType.ref)
+				.valueType(ValueType.REF)
 				.typeRef(klass.getName());
 		}
 	}
@@ -236,312 +304,93 @@ public class TypeSchema {
 
 		fieldBuilder.templateParams(templateParams);
 	}
-}
 
-/*
-
-public class DescribeMethodEndpoint extends NavigoApiMethodImplementation<NameParam, MethodDescription> {
-	
-	private static final Logger logger = LoggerFactory.getLogger(DescribeMethodEndpoint.class);	
-	
-	private static Set<Class<?>> atomicClasses = new HashSet<>(Arrays.asList(
-			String.class,
-			Integer.class,
-			Boolean.class,
-			Long.class,
-			Double.class,
-			Float.class,
-			BigDecimal.class,
-			Object.class,
-			Class.class,
-			Date.class,
-			java.sql.Date.class,
-			Time.class,
-			LocalDate.class,
-			LocalDateTime.class,
-			LocalTime.class,
-			int.class,
-			long.class,
-			boolean.class,
-			double.class,
-			float.class
-			));
-	
-	private static Set<String> commonProperties = new HashSet<>(Arrays.asList(
-			"class",
-			"empty",
-			"present",
-			"SQLDataType",
-			"catalog",
-			"schemas",
-			"declaringClass",
-			"SQLType",
-			"arrayDataType",
-			"UDT",
-			"schema",
-			"literal",
-			"UDTs",
-			"SQLUsable",
-			"dataType",
-			"array",
-			"arrayType"
-			));
-
-	@Value.Immutable
-	public interface MethodDescription {
-		String getName();
-		String getDescription();
-		TypeDescription getInputType();
-		TypeDescription getOutputType();
-		RightDescription getSecurityCheck();
-		Set<String> getSecurityCheckContextParams();
-	}
-	
-	@Value.Immutable
-	public interface RightDescription {
-		String getDescription();
-		String getKlass();
-		List<RightDescription> getChildren();
-	}
-	
-	@Value.Immutable
-	public interface TypeDescription {
-		String getSimpleType();
-		String getType();
-		boolean getRecursive();
-		Optional<List<TypeDescription>> getGenericTypes();
-		Optional<List<PropertyDescription>> getProperties();
-	}
-	
-	@Value.Immutable
-	public interface PropertyDescription {
-		String getName();
-		TypeDescription getType();
-	}
-
-	@Override
-	public ApiMethod<NameParam, MethodDescription, NavigoContext> getDefinition() {
-		return ApiMethodBuilder
-			.builder(getClass())
-			.inputType(new TypeReference<NameParam>() {})
-			.outputType(new TypeReference<MethodDescription>() {})
-			.name("metaapi/describe-method")
-			.description("Describe API method")
-			.authorization(new IsSuperuser())
-			.methodResultTypeReference(new TypeReference<MethodResult<MethodDescription>>() {})
-			.build();
-	}
-
-	@Override
-	protected CallContext getCallContext(NameParam input) {
-		return null;
-	}
-
-	@Override
-	protected ValidationResult validateInput(NameParam input) {
-		ValidationResult res = new ValidationResult(getContext()::translate);
+	public void throwIfPathNotExists(TypePath path) {
+		TypeDefinition actType = definitions.get(rootDefinition);
+		FieldDefinition actField = null;
 		
-		if (getMethod().getRegistry().lookup(input.getName())==null) {
-			res.addResult(ValidationContext.none(), ValidationProblemLevel.error, "Method '{}' does not exist", input.getName());
-		}
-		
-		return res;
-	}
-
-	@Override
-	protected MethodDescription execute(NameParam input) {		
-		ApiMethod<?, ?, ?> apiMethod = getMethod().getRegistry().lookup(input.getName()).get();
-		
-		return NavigoLambda.withRuntimeException(()->{
-			return ImmutableMethodDescription
-				.builder()
-				.name(apiMethod.getName())
-				.description(apiMethod.getDescription())
-				.inputType(describeType(apiMethod.getInputType().getType().getTypeName(), new HashSet<Class<?>>(), 0))
-				.outputType(describeType(apiMethod.getOutputType().getType().getTypeName(), new HashSet<Class<?>>(), 0))
-				.securityCheck(describeSecurityCheck(apiMethod.getSecurityChecker()))
-				.securityCheckContextParams(enumerateParams(apiMethod.getSecurityChecker()))
-				.build();
-		});
-	}
-
-	private Set<String> enumerateParams(SecurityChecker<?> securityChecker) {
-		HashSet<String> res = new HashSet<>();
-		securityChecker.getUsedContextParams().stream().map(ContextParameter::getName).forEach(res::add);
-		
-		securityChecker.getChildren().forEach(childSecurityChecker->{
-			res.addAll(enumerateParams(childSecurityChecker));
-		});
-		
-		return res;
-	}
-
-	private TypeDescription describeType(Class<?> klass, Method getter, HashSet<Class<?>> alreadyDescribed, int level) {
-		logger.debug("Describing class '{}', level {}", klass, level);
-		
-		avoidStackOverflow(level);
-		
-		ImmutableTypeDescription.Builder desc = ImmutableTypeDescription.builder();
-		
-		fillType(desc, klass);
-		
-		if (klass.getTypeParameters().length>0 || !alreadyDescribed.contains(klass)) {
-			alreadyDescribed.add(klass);
+		for (int i=0;i<path.getItems().size();++i) {
+			TypePathItem item = path.getItems().get(i);
 			
-			describeProperties(desc, klass, new HashSet<>(alreadyDescribed), level+1);
+			try {
 			
-			List<TypeDescription> types = new ArrayList<>();
-			
-			if (klass.isArray()) {
-				types.add(describeType(klass.getComponentType(), null, new HashSet<>(alreadyDescribed), level+1));
-			}
-			
-			TypeDescription forceReturn = NavigoLambda.withRuntimeException(()->{
-				if (getter!=null) {
-					Type returnType = getter.getGenericReturnType();
+				Validate.oneNotNull(actType, actField);
+				
+				if (actType!=null && actType.getIsDirectRootContainer()) {
+					Validate.isPresent(actType.getContainerType());
 					
-					if (returnType instanceof ParameterizedType) {
+					if (actType.getContainerType().get()==ContainerType.OPTIONAL) {
+						Validate.isPresent(actType.getTemplateParams());
+						Validate.size(actType.getTemplateParams().get(), 1);
 						
-						ParameterizedType parametrizedReturnType = (ParameterizedType) returnType;
+						actField = actType.getTemplateParams().get().get(0);
+						actType = null;
+					}
+				}
+				
+				if (actType!=null) {
+					if (actType.getIsDirectRootContainer()) {
+						Validate.isPresent(actType.getContainerType());
 						
-						if (Optional.class.isAssignableFrom(klass) && parametrizedReturnType.getActualTypeArguments().length==1) {
-							return describeType(parametrizedReturnType.getActualTypeArguments()[0].getTypeName(), new HashSet<>(alreadyDescribed), level+1);
+						if (actType.getContainerType().get()==ContainerType.LIST) {
+							Validate.equals(item.getType(), TypeSelectorType.INDEX);
+							Validate.isPresent(actType.getTemplateParams());
+							Validate.size(actType.getTemplateParams().get(), 1);
+							
+							actField = actType.getTemplateParams().get().get(0);
+							actType = null;
+						} else if (actType.getContainerType().get()==ContainerType.MAP) {
+							Validate.equals(item.getType(), TypeSelectorType.KEY);
+							Validate.isPresent(actType.getTemplateParams());
+							Validate.size(actType.getTemplateParams().get(), 2);
+							
+							actField = actType.getTemplateParams().get().get(1);
+							actType = null;
 						} else {
-							for (Type t : parametrizedReturnType.getActualTypeArguments()) {
-								types.add(describeType(t.getTypeName(), new HashSet<>(alreadyDescribed), level+1));
-							}
+							throw new RuntimeException(StringUtils.subst("Unexpected container type {}", actType.getContainerType().get()));
 						}
-					}
-				}
-				
-				return null;
-			});
-			
-			if (forceReturn!=null) {
-				return forceReturn;
-			}
-			
-			if (!types.isEmpty()) {
-				desc.genericTypes(types);
-			}
-		} else {
-			desc.recursive(true);
-		}
-		
-		return desc.build();
-	}
-
-	private TypeDescription describeType(String klassDef, HashSet<Class<?>> alreadyDescribed, int level) throws ClassNotFoundException {
-		logger.debug("Describing string '{}', level {}", klassDef, level);
-		
-		avoidStackOverflow(level);
-		
-		GenericParseResult parseResult = NavigoReflectionUtils.parseGenericType(klassDef);
-		
-		Class<?> klass = getClass().getClassLoader().loadClass(parseResult.getType());
-		
-		Validate.notNull(klass);
-		
-		if (Optional.class.isAssignableFrom(klass) && parseResult.getTemplateParams().size()==1) {
-			return describeType(parseResult.getTemplateParams().get(0), new HashSet<>(alreadyDescribed), level+1);
-		}
-		
-		ImmutableTypeDescription.Builder desc = ImmutableTypeDescription.builder();
-		
-		fillType(desc, klass);
-		
-		if (klass.getTypeParameters().length>0 || !alreadyDescribed.contains(klass)) {
-			alreadyDescribed.add(klass);
-		
-			describeProperties(desc, klass, new HashSet<>(alreadyDescribed), level+1);
-			
-			List<TypeDescription> types = new ArrayList<>();
-			
-			for (String sub : parseResult.getTemplateParams()) {
-				types.add(describeType(sub, new HashSet<>(alreadyDescribed), level+1));
-			}	
-			
-			if (!types.isEmpty()) {
-				desc.genericTypes(types);
-			}
-		} else {
-			desc.recursive(true);
-		}
-
-		return desc.build();
-	}
-	
-	private void fillType(Builder desc, Class<?> klass) {
-		desc.type(klass.getCanonicalName());
-		desc.recursive(false);
-		
-		if (isBasicType(klass)) {
-			desc.simpleType(klass.getSimpleName());
-		} else if (Collection.class.isAssignableFrom(klass) || klass.isArray()) {
-			desc.simpleType("[]");
-		} else {
-			desc.simpleType("{}");
-		}
-	}
-
-	private void describeProperties(Builder desc, Class<?> klass, HashSet<Class<?>> alreadyDescribed, int level) {
-		logger.debug("Describing properties of '{}', level {}", klass, level);
-		
-		avoidStackOverflow(level);
-		
-		List<PropertyDescription> props = new ArrayList<>();
-		
-		NavigoLambda.withRuntimeException(()->{
-			if (!isBasicType(klass)) {
-				
-				BeanInfo bi = Introspector.getBeanInfo(klass);
-
-				for (PropertyDescriptor prop : bi.getPropertyDescriptors()) {
-					if (!isCommonProperty(prop.getName())) {
-						Method propGetter = prop.getReadMethod();
-
-						logger.debug("Describing property {}, level {}", prop.getName(), level);
+					} else {
+						Validate.equals(item.getType(), TypeSelectorType.FIELD);
 						
-						props.add(ImmutablePropertyDescription
-								.builder()
-								.name(prop.getName())
-								.type(describeType(propGetter.getReturnType(), propGetter, new HashSet<>(alreadyDescribed), level+1))
-								.build());
+						Optional<FieldDefinition> field = actType.getFields().stream().filter(f->f.getName().equals(item.getFieldName().get())).findFirst();
+						
+						Validate.isPresent(field);
+						
+						actField = field.get();
+						actType = null;
+					}
+				} else {
+					while (actField.getContainerType().isPresent() && actField.getContainerType().get()==ContainerType.OPTIONAL) {
+						Validate.isPresent(actField.getTemplateParams());
+						Validate.size(actField.getTemplateParams().get(), 1);
+						
+						actField = actField.getTemplateParams().get().get(0);
+					}
+					
+					Validate.isPresent(actField.getContainerType());
+					
+					if (actField.getContainerType().get()==ContainerType.LIST) {
+						Validate.equals(item.getType(), TypeSelectorType.INDEX);
+						Validate.isPresent(actField.getTemplateParams());
+						Validate.size(actField.getTemplateParams().get(), 1);
+						
+						actField = actField.getTemplateParams().get().get(0);
+					} else if (actField.getContainerType().get()==ContainerType.MAP) {
+						Validate.equals(item.getType(), TypeSelectorType.KEY);
+						Validate.isPresent(actField.getTemplateParams());
+						Validate.size(actField.getTemplateParams().get(), 2);
+						
+						actField = actField.getTemplateParams().get().get(1);
+					} else {
+						throw new RuntimeException(StringUtils.subst("Unexpected container type {}", actField.getContainerType().get()));
 					}
 				}
+			} catch (Throwable t) {
+				throw new RuntimeException(StringUtils.subst("Problem with path on item {}", path.getDebug(i)), t);
 			}
-		});
-		
-		if (!props.isEmpty()) {
-			desc.properties(props);
 		}
-	}
-
-	private void avoidStackOverflow(int level) {
-		if (level>100) {
-			throw new RuntimeException("Too deep structure! Loop?");
-		}
-	}
-
-	private boolean isCommonProperty(String name) {
-		return commonProperties.contains(name);
-	}
-
-	private boolean isBasicType(Class<?> klass) {
-		return atomicClasses.contains(klass);
-	}
-
-	private RightDescription describeSecurityCheck(SecurityChecker<?> securityChecker) {
-		ImmutableRightDescription.Builder desc = ImmutableRightDescription.builder();
-		desc.description(securityChecker.getDescription());
-		desc.klass(securityChecker.getClass().getCanonicalName());
-	
-		securityChecker.getChildren().forEach(c->{
-			desc.addChildren(describeSecurityCheck(c));
-		});
 		
-		return desc.build();
+		Validate.isTrue(actField!=null && actType==null, "It is expected last item will select field");
+		Validate.isTrue(actField.getValueType().isPresent(), "It seems path is too short and ends in collection, not field");
 	}
 }
-
- */

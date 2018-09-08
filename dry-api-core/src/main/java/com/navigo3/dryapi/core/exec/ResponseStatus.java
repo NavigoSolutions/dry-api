@@ -1,14 +1,14 @@
 package com.navigo3.dryapi.core.exec;
 
 public enum ResponseStatus {
-	success,
-	notFound,
-	notAuthorized,
-	internalErrorOnSecurity,
-	internalErrorOnValidation,
-	internalErrorOnExecution,
-	internalErrorOnClearingInput,
-	internalErrorOnClearingOutput,
-	invalidInput,
-	malformedInput
+	SUCCESS,
+	NOT_FOUND,
+	NOT_AUTHORIZED,
+	INTERNAL_ERROR_ON_SECURITY,
+	INTERNAL_ERROR_ON_VALIDATION,
+	INTERNAL_ERROR_ON_EXECUTION,
+	INTERNAL_ERROR_ON_CLEARING_INPUT,
+	INTERNAL_ERROR_ON_CLEARING_OUTPUT,
+	INVALID_INPUT,
+	MALFORMED_INPUT
 }

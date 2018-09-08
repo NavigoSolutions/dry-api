@@ -18,27 +18,27 @@ public interface StructurePathItem {
 		
 		String camelCaseKey = StringUtils.underscoreToCamelCase(key);
 		
-		return ImmutableStructurePathItem.builder().type(StructurePathItemType.key).key(camelCaseKey).build();
+		return ImmutableStructurePathItem.builder().type(StructureSelectorType.KEY).key(camelCaseKey).build();
 	}
 	
 	static StructurePathItem createIndex(int index) {
 		Validate.nonNegative(index);
 		
-		return ImmutableStructurePathItem.builder().type( StructurePathItemType.index).index(index).build();
+		return ImmutableStructurePathItem.builder().type(StructureSelectorType.INDEX).index(index).build();
 	}
 
-	StructurePathItemType getType();
+	StructureSelectorType getType();
 
 	Optional<String> getKey();
 
 	Optional<Integer> getIndex();
 	
 	@Value.Check default void check() {
-		if (getType()==StructurePathItemType.key) {
+		if (getType()==StructureSelectorType.KEY) {
 			Validate.isPresent(getKey());
 			Validate.notBlank(getKey().get());
 			Validate.notPresent(getIndex());
-		} else if (getType()==StructurePathItemType.index) {
+		} else if (getType()==StructureSelectorType.INDEX) {
 			Validate.isPresent(getIndex());
 			Validate.notPresent(getKey());
 		} else {
@@ -47,9 +47,9 @@ public interface StructurePathItem {
 	}
 
 	default String toDebug() {
-		if (getType()==StructurePathItemType.key) {
+		if (getType()==StructureSelectorType.KEY) {
 			return StringUtils.subst("\"{}\"", getKey().get());
-		} else if (getType()==StructurePathItemType.index) {
+		} else if (getType()==StructureSelectorType.INDEX) {
 			return StringUtils.subst("[{}]", getIndex().get());			
 		} else {
 			throw new RuntimeException(StringUtils.subst("Unknown type {}", getType()));

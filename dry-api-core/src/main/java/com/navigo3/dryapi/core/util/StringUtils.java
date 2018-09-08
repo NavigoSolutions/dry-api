@@ -8,7 +8,7 @@ public class StringUtils {
 		String res = pattern;
 
 		for (Object arg : args) {
-			res = res.replaceFirst("\\{\\}", Matcher.quoteReplacement(arg.toString()));
+			res = res.replaceFirst("\\{\\}", Matcher.quoteReplacement(arg!=null ? arg.toString() : "NULL"));
 		}
 		
 		return res;

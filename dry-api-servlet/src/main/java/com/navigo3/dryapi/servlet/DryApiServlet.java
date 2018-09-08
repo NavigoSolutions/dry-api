@@ -20,13 +20,13 @@ import com.navigo3.dryapi.core.exec.json.JsonExecutor;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.JsonUtils;
 
-public class DryApiServlet<TContext extends AppContext, TCallContext extends CallContext> extends HttpServlet {
+public class DryApiServlet<TAppContext extends AppContext, TCallContext extends CallContext> extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
-	private final JsonExecutor<TContext, TCallContext> executor;
-	private Function<HttpServletRequest, TContext> contextProvider;
+	private final JsonExecutor<TAppContext, TCallContext> executor;
+	private Function<HttpServletRequest, TAppContext> contextProvider;
 	
-	public DryApiServlet(DryApi<TContext, TCallContext> api, Function<HttpServletRequest, TContext> contextProvider) {
+	public DryApiServlet(DryApi<TAppContext, TCallContext> api, Function<HttpServletRequest, TAppContext> contextProvider) {
 		this.executor = new JsonExecutor<>(api);
 		this.contextProvider = contextProvider;
 	}
@@ -39,14 +39,14 @@ public class DryApiServlet<TContext extends AppContext, TCallContext extends Cal
 		
 		JsonBatchRequest batch = ExceptionUtils.withRuntimeException(()->mapper.readValue(body, new TypeReference<JsonBatchRequest>() {}));
 
-		TContext appContext = null;
+		TAppContext appContext = null;
 		
 		JsonBatchResponse res = null;
 		
 		try {
 			appContext = contextProvider.apply(req);
 			
-			TContext tmpAppContext = appContext;
+			TAppContext tmpAppContext = appContext;
 			
 			res = appContext.transaction(()->{
 				return executor.execute(tmpAppContext, batch);

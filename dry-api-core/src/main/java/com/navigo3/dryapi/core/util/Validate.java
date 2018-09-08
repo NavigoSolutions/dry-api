@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class Validate {
 	public static <T> void keyNotContained(Map<T, ?> map, T key) {
@@ -63,6 +64,14 @@ public class Validate {
 		}
 	}
 
+	public static void notBlank(Optional<String> val) {
+		Validate.notNull(val);
+		
+		if (!val.isPresent() || val.get().trim().isEmpty()) {
+			throw new RuntimeException("This string should not be blank");
+		}
+	}
+
 	public static void notEmpty(Collection<?> coll) {
 		if (coll.isEmpty()) {
 			throw new RuntimeException("This collection should not be empty");
@@ -103,14 +112,23 @@ public class Validate {
 		}
 	}
 
-	public static void equals(Object a, Object b, String message) {
+	public static <T> void equals(T a, T b, String message) {
 		if (!Objects.equals(a, b)) {
 			throw new RuntimeException(message);
 		}
 	}
 
-	public static void equals(Object a, Object b) {
+	public static <T> void equals(T a, T b) {
 		equals(a, b, StringUtils.subst("Objects '{}' and '{}' are different", a, b));
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> void equalsWithOneOf(T a, T... args) {
+		long countNonNull = Stream.of(args).filter(i->a.equals(i)).count();
+		
+		if (countNonNull!=1) {
+			throw new RuntimeException(StringUtils.subst("There should be exactly one equal item, but is {} of them", countNonNull));
+		}
 	}
 
 	public static <T> void notContained(Collection<T> coll, T val) {
@@ -126,6 +144,20 @@ public class Validate {
 		
 		if (vals.size()!=coll.size()) {
 			throw new RuntimeException("Collection contains duplicate field values");
+		}
+	}
+
+	public static void oneNotNull(Object...args) {
+		long countNonNull = Stream.of(args).filter(a->a!=null).count();
+		
+		if (countNonNull!=1) {
+			throw new RuntimeException(StringUtils.subst("There should be exactly one non-null item, but is {} of them", countNonNull));
+		}
+	}
+
+	public static void size(Collection<?> coll, int size) {
+		if (coll.size()!=size) {
+			throw new RuntimeException(StringUtils.subst("Expected collection of size {} got {}", size, coll.size()));
 		}
 	}
 }

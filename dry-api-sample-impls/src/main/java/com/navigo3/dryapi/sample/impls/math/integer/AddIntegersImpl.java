@@ -2,8 +2,8 @@ package com.navigo3.dryapi.sample.impls.math.integer;
 
 import java.util.Optional;
 
+import com.navigo3.dryapi.core.impl.ImmutableMethodSecurity.Builder;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
-import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOperands;
@@ -16,8 +16,8 @@ import com.navigo3.dryapi.sample.impls.TestCallContext;
 public class AddIntegersImpl extends MethodImplementation<IntegerOperands, IntegerResult, TestAppContext, TestCallContext> {
 
 	@Override
-	public SecurityCheck<TestAppContext, TestCallContext> getAuthorization() {
-		return new True<>();
+	public void defineClassSecurity(Builder<TestAppContext, TestCallContext> builder) {
+		builder.authorization(new True<>());
 	}
 	
 	@Override

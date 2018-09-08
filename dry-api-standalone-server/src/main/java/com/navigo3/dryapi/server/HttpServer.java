@@ -21,14 +21,14 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
 
-public class HttpServer<TContext extends AppContext, TCallContext extends CallContext> {
+public class HttpServer<TAppContext extends AppContext, TCallContext extends CallContext> {
 	private final Undertow server;
 	
-	private final Map<String, DryApi<TContext, TCallContext>> mounts;
+	private final Map<String, DryApi<TAppContext, TCallContext>> mounts;
 
-	private HttpServerSettings<TContext, TCallContext> settings;
+	private HttpServerSettings<TAppContext, TCallContext> settings;
 
-	public HttpServer(HttpServerSettings<TContext, TCallContext> settings) {
+	public HttpServer(HttpServerSettings<TAppContext, TCallContext> settings) {
 		this.settings = settings;
 				
 		Builder builder = Undertow.builder();
@@ -61,7 +61,7 @@ public class HttpServer<TContext extends AppContext, TCallContext extends CallCo
 	        return;
 		}
 		
-		DryApi<TContext, TCallContext> api = mounts.get(exchange.getRelativePath());
+		DryApi<TAppContext, TCallContext> api = mounts.get(exchange.getRelativePath());
 		
 		if (api==null) {
 			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
@@ -75,8 +75,8 @@ public class HttpServer<TContext extends AppContext, TCallContext extends CallCo
 			
 			JsonBatchRequest batch = ExceptionUtils.withRuntimeException(()->mapper.readValue(new String(data, "utf-8"), new TypeReference<JsonBatchRequest>() {}));
 			
-			JsonExecutor<TContext, TCallContext> gate = new JsonExecutor<>(api);
-			JsonBatchResponse res = gate.execute(settings.getContextProvider().apply(ex), batch);
+			JsonExecutor<TAppContext, TCallContext> gate = new JsonExecutor<>(api);
+			JsonBatchResponse res = gate.execute(settings.getAppContextProvider().apply(ex), batch);
 			
 			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
 			exchange.setStatusCode(StatusCodes.OK);

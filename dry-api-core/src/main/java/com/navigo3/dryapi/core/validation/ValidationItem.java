@@ -11,8 +11,8 @@ import com.navigo3.dryapi.core.path.StructurePath;
 @JsonDeserialize(as = ImmutableValidationItem.class)
 public interface ValidationItem {
 	public enum Severity {
-		error,
-		warning
+		ERROR,
+		WARNING
 	}
 	
 	Severity getSeverity();

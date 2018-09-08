@@ -11,11 +11,14 @@ public abstract class MethodDefinition<TInput, TOutput> {
 	
 	private boolean initialized = false;
 	
-	public void initialize() {
+	void initialize() {
 		Validate.isFalse(initialized);
 		
-		this.inputSchema = TypeSchema.build(getInputType());
-		this.outputSchema = TypeSchema.build(getOutputType());
+		inputSchema = TypeSchema.build(getInputType());
+		outputSchema = TypeSchema.build(getOutputType());
+		
+//		JsonUtils.prettyPrint(inputSchema);
+//		JsonUtils.prettyPrint(outputSchema);
 		
 		initialized = true;
 	}
