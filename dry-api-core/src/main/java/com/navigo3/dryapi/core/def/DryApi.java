@@ -9,9 +9,9 @@ import org.immutables.value.Value;
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.def.ImmutableEntry.Builder;
-import com.navigo3.dryapi.core.impl.ImmutableMethodSecurity;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.impl.MethodSecurity;
+import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
@@ -57,9 +57,9 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 			.definition(definition)
 			.implementationClass(implClass);
 		
-		com.navigo3.dryapi.core.impl.ImmutableMethodSecurity.Builder<TAppContext, TCallContext> methodBuilder = ImmutableMethodSecurity.builder();
+		MethodSecurityBuilder<TAppContext, TCallContext> methodBuilder = new MethodSecurityBuilder<>(definition.getInputSchema(), definition.getOutputSchema());
 		
-		implementation.defineClassSecurity(methodBuilder);
+		implementation.fillClassSecurity(methodBuilder);
 		
 		builder.security(methodBuilder.build());
 		

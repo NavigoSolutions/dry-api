@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.navigo3.dryapi.core.impl.ImmutableMethodSecurity.Builder;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
+import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
@@ -17,8 +17,8 @@ import com.navigo3.dryapi.sample.impls.TestCallContext;
 public class ListPersonsImpl extends MethodImplementation<Map<String, List<Person>>, List<Person>, TestAppContext, TestCallContext> {
 
 	@Override
-	public void defineClassSecurity(Builder<TestAppContext, TestCallContext> builder) {
-		builder.authorization(new True<>());
+	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
+		security.authorization(new True<>());
 	}
 
 	@Override

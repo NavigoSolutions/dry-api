@@ -32,6 +32,7 @@ public class FieldsSecurityBuilder<TAppContext extends AppContext, TCallContext 
 	private FieldsSecurity<TAppContext, TCallContext> build() {
 		return ImmutableFieldsSecurity
 			.<TAppContext, TCallContext>builder()
+			.securityPerField(securityPerField)
 			.build();
 	}
 	
@@ -43,5 +44,9 @@ public class FieldsSecurityBuilder<TAppContext extends AppContext, TCallContext 
 		schema.throwIfPathNotExists(path);
 		
 		securityPerField.put(path, security);
+	}
+	
+	public void throwIfNotFullyCovered() {
+		System.err.println("NOT IMPLEMENTED!!!!");
 	}
 }

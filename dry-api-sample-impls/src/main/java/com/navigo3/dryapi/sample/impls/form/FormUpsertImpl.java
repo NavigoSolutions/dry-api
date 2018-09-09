@@ -2,9 +2,9 @@ package com.navigo3.dryapi.sample.impls.form;
 
 import java.util.Optional;
 
-import com.navigo3.dryapi.core.impl.ImmutableMethodSecurity.Builder;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
-import com.navigo3.dryapi.core.path.TypePathBuilder;
+import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
+import com.navigo3.dryapi.core.path.TypePath;
 import com.navigo3.dryapi.core.security.logic.False;
 import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.validation.ValidationData;
@@ -19,12 +19,12 @@ import com.navigo3.dryapi.sample.impls.TestCallContext;
 public class FormUpsertImpl extends MethodImplementation<Person, IdResult, TestAppContext, TestCallContext> {
 	
 	@Override
-	public void defineClassSecurity(Builder<TestAppContext, TestCallContext> security) {
+	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
 		security.authorization(new True<>());
-		security.inputFieldsSecurity(buildInputFieldsSecurity(fieldSecurity->{
-			fieldSecurity.add(TypePathBuilder.of(x->x.field("secretNumber")), new False<>());
-			fieldSecurity.add(TypePathBuilder.of(x->x.field("colorsToFavoriteNumbers").key().index()), new False<>());
-		}));
+		security.defineInputFieldsSecurity(builder->{
+			builder.add(TypePath.field("secretNumber"), new False<>());
+			builder.add(TypePath.field("colorsToFavoriteNumbers").addKey().addIindex(), new False<>());
+		});
 	}
 	
 	@Override
