@@ -10,9 +10,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.navigo3.dryapi.core.path.ImmutableStructurePath;
 import com.navigo3.dryapi.core.path.ImmutableStructurePath.Builder;
-import com.navigo3.dryapi.core.path.StructureSelectorType;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.path.StructurePathItem;
+import com.navigo3.dryapi.core.path.StructureSelectorType;
 import com.navigo3.dryapi.core.util.StringUtils;
 
 @Value.Immutable

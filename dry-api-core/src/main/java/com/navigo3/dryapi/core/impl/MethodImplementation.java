@@ -24,7 +24,7 @@ public abstract class MethodImplementation<TInput, TOutput, TAppContext extends 
 	 * Abstract methods for client implementation - security handling
 	 */
 	
-	public abstract void fillClassSecurity(MethodSecurityBuilder<TAppContext, TCallContext> builder);
+	public abstract void fillClassSecurity(MethodSecurityBuilder<TAppContext, TCallContext> securityBuilder);
 	
 	/**
 	 * Abstract methods for client implementation - request handling
