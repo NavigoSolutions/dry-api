@@ -6,4 +6,5 @@ public interface AppContext {
 	boolean getIsDevelopmentInstance();
 	void destroy();
 	<T> T transaction(SupplierWithException<T> block);
+	void executeAfterCommit(Runnable block);
 }

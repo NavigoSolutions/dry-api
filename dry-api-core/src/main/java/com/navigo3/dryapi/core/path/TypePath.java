@@ -36,8 +36,22 @@ public class TypePath {
 		);
 	}
 	
+	public static TypePath empty() {
+	return new TypePath();
+	}
+	
+	private TypePath() {
+		
+	}
+	
 	private TypePath(Optional<List<TypePathItem>> base, TypePathItem item) {
 		Validate.notNull(item);
+		
+		base.ifPresent(list->{
+			if (!list.isEmpty()) {
+				Validate.notEquals(list.get(list.size()-1).getType(), TypeSelectorType.KEEP_RECURSIVELY, "Trying to extend recursive path!");
+			}
+		});
 		
 		base.ifPresent(items::addAll);
 		items.add(item);
@@ -63,7 +77,7 @@ public class TypePath {
 		);
 	}
 	
-	public TypePath addIindex() {
+	public TypePath addIndex() {
 		return new TypePath(Optional.of(items), ImmutableTypePathItem
 			.builder()
 			.type(TypeSelectorType.INDEX)
@@ -76,6 +90,14 @@ public class TypePath {
 			.builder()
 			.type(TypeSelectorType.FIELD)
 			.fieldName(name)
+			.build()
+		);
+	}
+	
+	public TypePath andRecursively() {
+		return new TypePath(Optional.of(items), ImmutableTypePathItem
+			.builder()
+			.type(TypeSelectorType.KEEP_RECURSIVELY)
 			.build()
 		);
 	}

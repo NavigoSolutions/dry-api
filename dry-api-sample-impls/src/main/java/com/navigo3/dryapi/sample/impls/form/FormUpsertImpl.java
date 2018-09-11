@@ -23,7 +23,7 @@ public class FormUpsertImpl extends MethodImplementation<Person, IdResult, TestA
 		security.authorization(new True<>());
 		security.defineInputFieldsSecurity(builder->{
 			builder.add(TypePath.field("secretNumber"), new False<>());
-			builder.add(TypePath.field("colorsToFavoriteNumbers").addKey().addIindex(), new False<>());
+			builder.add(TypePath.field("colorsToFavoriteNumbers").addKey().addIndex(), new False<>());
 		});
 	}
 	

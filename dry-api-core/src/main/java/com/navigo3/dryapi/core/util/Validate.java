@@ -122,6 +122,16 @@ public class Validate {
 		equals(a, b, StringUtils.subst("Objects '{}' and '{}' are different", a, b));
 	}
 
+	public static <T> void notEquals(T a, T b, String message) {
+		if (Objects.equals(a, b)) {
+			throw new RuntimeException(message);
+		}
+	}
+
+	public static <T> void notEquals(T a, T b) {
+		notEquals(a, b, StringUtils.subst("Objects '{}' and '{}' are different", a, b));
+	}
+
 	@SuppressWarnings("unchecked")
 	public static <T> void equalsWithOneOf(T a, T... args) {
 		long countNonNull = Stream.of(args).filter(i->a.equals(i)).count();
