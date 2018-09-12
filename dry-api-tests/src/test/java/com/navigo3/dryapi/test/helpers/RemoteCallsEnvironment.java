@@ -11,13 +11,15 @@ import com.navigo3.dryapi.server.ImmutableHttpInterface;
 import com.navigo3.dryapi.server.ImmutableHttpServerSettings;
 
 public class RemoteCallsEnvironment {
+	private static final int PORT = 8777;
+	
 	private HttpServer<TestAppContext, TestCallContext> server;
 	private RemoteHttpDryApi api;
 	
 	public void start() {
 		server = new HttpServer<>(ImmutableHttpServerSettings
 			.<TestAppContext, TestCallContext>builder()
-			.addHttpInterfaces(ImmutableHttpInterface.builder().host("localhost").port(8080).build())
+			.addHttpInterfaces(ImmutableHttpInterface.builder().host("localhost").port(PORT).build())
 			.addApiMounts(ImmutableApiMount.<TestAppContext, TestCallContext>builder().basePath("/test/xxx").dryApi(TestApi.build()).build())
 			.appContextProvider(exch->new TestAppContext(true))
 			.build()
@@ -25,7 +27,7 @@ public class RemoteCallsEnvironment {
 		
 		server.start();
 		
-		api = new RemoteHttpDryApi("http://localhost:8080/test/xxx", RemoteHttpDryApiSettings.buildDefault());
+		api = new RemoteHttpDryApi("http://localhost:"+PORT+"/test/xxx", RemoteHttpDryApiSettings.buildDefault());
 		api.start();
 	}
 

@@ -4,6 +4,9 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.navigo3.dryapi.core.context.AppContext;
@@ -28,7 +31,8 @@ import com.navigo3.dryapi.core.validation.ImmutableValidationData;
 import com.navigo3.dryapi.core.validation.ValidationData;
 
 public class JsonExecutor<TAppContext extends AppContext, TCallContext extends CallContext> {
-
+	private static final Logger logger = LoggerFactory.getLogger(JsonExecutor.class);
+	
 	private final DryApi<TAppContext, TCallContext> api;
 
 	public JsonExecutor(DryApi<TAppContext, TCallContext> api) {
@@ -97,6 +101,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			
 			onSuccess.accept(input, objectMapper, executionContext);
 		} catch (Throwable t) {
+			logger.error("Error during parseInputJson", t);
+			
 			outputBuilder
 				.status(ResponseStatus.MALFORMED_INPUT)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during parsing input", t) : null));
@@ -135,6 +141,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			}
 			
 		} catch (Throwable t) {
+			logger.error("Error during checkSecurity()", t);
+			
 			outputBuilder
 				.status(ResponseStatus.INTERNAL_ERROR_ON_SECURITY)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during execution", t) : null));
@@ -147,6 +155,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		try {
 			block.run();
 		} catch (Throwable t) {
+			logger.error("Error during clearProhibitedInputFields()", t);
+			
 			outputBuilder
 				.status(ResponseStatus.INTERNAL_ERROR_ON_CLEARING_INPUT)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during cleaning prohibited input fields", t) : null));
@@ -178,6 +188,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				throw new RuntimeException(StringUtils.subst("Unknown type: {}", request.getRequestType()));
 			}			
 		} catch (Throwable t) {
+			logger.error("Error during validate()", t);
+			
 			outputBuilder
 				.status(ResponseStatus.INTERNAL_ERROR_ON_VALIDATION)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during validation", t) : null));
@@ -192,6 +204,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			
 			onSuccess.accept(output);
 		} catch (Throwable t) {
+			logger.error("Error during execute()", t);
+			
 			outputBuilder
 				.status(ResponseStatus.INTERNAL_ERROR_ON_EXECUTION)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during execution", t) : null));
@@ -216,6 +230,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				.status(ResponseStatus.SUCCESS)
 				.outputJson(objectMapper.writeValueAsString(output));
 		} catch (Throwable t) {
+			logger.error("Error during clearProhibitedOutputFields()", t);
+			
 			outputBuilder
 				.status(ResponseStatus.INTERNAL_ERROR_ON_CLEARING_OUTPUT)
 				.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace("Internal error during cleaning prohibited output fields", t) : null));

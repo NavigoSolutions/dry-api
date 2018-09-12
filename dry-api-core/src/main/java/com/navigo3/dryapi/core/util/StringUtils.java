@@ -35,13 +35,23 @@ public class StringUtils {
 		}
 	}
 	
-	public static String withFirstUppercase(String str) {
+	public static String withFirstLowercaseAndRestLowercase(String str) {
+		if (str.isEmpty()) {
+			return "";
+		} else if (str.length()==1) {
+			return str.toLowerCase();
+		} else {
+			return str.substring(0, 1).toLowerCase() + str.substring(1).toLowerCase();
+		}
+	}
+	
+	public static String withFirstUppercaseAndRestLowercase(String str) {
 		if (str.isEmpty()) {
 			return "";
 		} else if (str.length()==1) {
 			return str.toUpperCase();
 		} else {
-			return str.substring(0, 1).toUpperCase() + str.substring(1);
+			return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
 		}
 	}
 
@@ -59,7 +69,11 @@ public class StringUtils {
 		for (int i=0;i<items.length;++i) {
 			String item = items[i];
 			
-			builder.append(i==0 ? withFirstLowercase(item) : withFirstUppercase(item));
+			if (item.matches("[0-9].*")) {
+				builder.append("_"+item.toLowerCase());
+			} else {
+				builder.append(i==0 ? withFirstLowercaseAndRestLowercase(item) : withFirstUppercaseAndRestLowercase(item));
+			}
 		}
 		
 		return builder.toString();

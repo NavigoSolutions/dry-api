@@ -1,4 +1,4 @@
-package com.navigo3.dryapi.test;
+package com.navigo3.dryapi.test.core;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
