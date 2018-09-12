@@ -19,6 +19,8 @@ public abstract class MethodImplementation<TInput, TOutput, TAppContext extends 
 	private ExecutionContext<TAppContext, TCallContext> executionContext;
 
 	private MethodDefinition<TInput, TOutput> definition;
+
+	private MethodSecurity<TAppContext, TCallContext> security;
 	
 	/**
 	 * Abstract methods for client implementation - security handling
@@ -44,6 +46,12 @@ public abstract class MethodImplementation<TInput, TOutput, TAppContext extends 
 		Validate.notNull(definition);
 		
 		return definition;
+	}
+	
+	protected MethodSecurity<TAppContext, TCallContext> getSecurity() {
+		Validate.notNull(security);
+		
+		return security;
 	}
 	
 	protected TAppContext getAppContext() {
@@ -96,5 +104,11 @@ public abstract class MethodImplementation<TInput, TOutput, TAppContext extends 
 		Validate.notNull(definition);
 		
 		this.definition = definition;
+	}
+
+	public void setSecurity(MethodSecurity<TAppContext, TCallContext> security) {
+		Validate.notNull(security);
+		
+		this.security = security;
 	}
 }

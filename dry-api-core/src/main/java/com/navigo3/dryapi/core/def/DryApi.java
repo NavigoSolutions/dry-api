@@ -61,7 +61,11 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 		
 		implementation.fillClassSecurity(methodBuilder);
 		
-		builder.security(methodBuilder.build());
+		MethodSecurity<TAppContext, TCallContext> security = methodBuilder.build();
+		
+		builder.security(security);
+		
+		implementation.setSecurity(security);
 		
 		entries.put(qualifiedName, builder.build());
 	}
