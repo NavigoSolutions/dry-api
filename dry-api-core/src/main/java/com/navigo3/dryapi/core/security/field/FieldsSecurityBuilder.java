@@ -30,10 +30,7 @@ public class FieldsSecurityBuilder<TAppContext extends AppContext, TCallContext 
 	}
 	
 	private FieldsSecurity<TAppContext, TCallContext> build() {
-		return ImmutableFieldsSecurity
-			.<TAppContext, TCallContext>builder()
-			.securityPerField(securityPerField)
-			.build();
+		return new StaticFieldsSecurity<>(securityPerField);
 	}
 	
 	public void add(TypePath path, SecurityCheck<TAppContext, TCallContext> security) {
