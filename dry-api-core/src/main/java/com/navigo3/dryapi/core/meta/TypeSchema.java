@@ -26,6 +26,7 @@ import com.navigo3.dryapi.core.path.TypePathItem;
 import com.navigo3.dryapi.core.path.TypeSelectorType;
 import com.navigo3.dryapi.core.util.CollectionUtils;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
+import com.navigo3.dryapi.core.util.JsonUtils;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
@@ -309,8 +310,15 @@ public class TypeSchema {
 		TypeDefinition actType = definitions.get(rootDefinition);
 		FieldDefinition actField = null;
 		
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+		System.out.println(path.getDebug());
+		
 		for (int i=0;i<path.getItems().size();++i) {
 			TypePathItem item = path.getItems().get(i);
+			
+			System.out.println("----------------"+item+"-----------------");
+			System.out.println(actType);
+			System.out.println(actField);
 			
 			try {
 			
@@ -358,7 +366,7 @@ public class TypeSchema {
 						
 						actField = field.get();
 						actType = null;
-					}
+					}			
 				} else {
 					while (actField.getContainerType().isPresent() && actField.getContainerType().get()==ContainerType.OPTIONAL) {
 						Validate.isPresent(actField.getTemplateParams());
@@ -369,13 +377,13 @@ public class TypeSchema {
 					
 					Validate.isPresent(actField.getContainerType());
 					
-					if (actField.getContainerType().get()==ContainerType.LIST) {
+					if (actField.getContainerType().isPresent() && actField.getContainerType().get()==ContainerType.LIST) {
 						Validate.equals(item.getType(), TypeSelectorType.INDEX);
 						Validate.isPresent(actField.getTemplateParams());
 						Validate.size(actField.getTemplateParams().get(), 1);
 						
 						actField = actField.getTemplateParams().get().get(0);
-					} else if (actField.getContainerType().get()==ContainerType.MAP) {
+					} else if (actField.getContainerType().isPresent() && actField.getContainerType().get()==ContainerType.MAP) {
 						Validate.equals(item.getType(), TypeSelectorType.KEY);
 						Validate.isPresent(actField.getTemplateParams());
 						Validate.size(actField.getTemplateParams().get(), 2);
@@ -385,8 +393,13 @@ public class TypeSchema {
 						throw new RuntimeException(StringUtils.subst("Unexpected container type {}", actField.getContainerType().get()));
 					}
 				}
+				
+				if (actField.getTypeRef().isPresent()) {
+					actType = definitions.get(actField.getTypeRef().get());
+					actField = null;
+				}	
 			} catch (Throwable t) {
-				throw new RuntimeException(StringUtils.subst("Problem with path on item {}", path.getDebug(i)), t);
+				throw new RuntimeException(StringUtils.subst("Problem with path on item {} of schema {}", path.getDebug(i), JsonUtils.prettyGet(this)), t);
 			}
 		}
 		

@@ -1,6 +1,7 @@
 package com.navigo3.dryapi.sample.defs.philosophy;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.immutables.value.Value;
@@ -32,6 +33,8 @@ public class SolveEverythingEndpoint extends MethodDefinition<TopAddressInput, I
 		String getCountry();
 		
 		List<LowAddressInput> getLowAddresses();
+		
+		Map<String, Integer> getStringCodes();
 	}
 	
 	@Value.Immutable

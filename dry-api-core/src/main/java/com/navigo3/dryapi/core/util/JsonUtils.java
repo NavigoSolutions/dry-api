@@ -14,11 +14,15 @@ public class JsonUtils {
 		return objectMapper;
 	}
 
-	public static void prettyPrint(Object o) {
-		ExceptionUtils.withRuntimeException(()->{
+	public static String prettyGet(Object o) {
+		return ExceptionUtils.withRuntimeException(()->{
 			ObjectMapper mapper = JsonUtils.createMapper();
 			mapper.setSerializationInclusion(Include.NON_ABSENT);
-			System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(o));
+			return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(o);
 		});
+	}
+
+	public static void prettyPrint(Object o) {
+		System.out.println(prettyGet(o));
 	}
 }

@@ -61,6 +61,10 @@ public class TypePath {
 		return items;
 	}
 
+	public String getDebug() {
+		return getDebug(items.size());
+	}
+	
 	public String getDebug(int maxIndex) {
 		return getItems()
 			.stream()
