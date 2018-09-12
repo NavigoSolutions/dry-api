@@ -8,10 +8,7 @@ import org.immutables.value.Value;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.navigo3.dryapi.core.path.ImmutableStructurePath;
-import com.navigo3.dryapi.core.path.ImmutableStructurePath.Builder;
 import com.navigo3.dryapi.core.path.StructurePath;
-import com.navigo3.dryapi.core.path.StructurePathItem;
 import com.navigo3.dryapi.core.path.StructureSelectorType;
 import com.navigo3.dryapi.core.util.StringUtils;
 
@@ -40,7 +37,7 @@ public interface ObjectPathsTree {
 	default StructurePath buildPath(Object[] items) {
 		List<ObjectPathsTreeNode> actOptions = getItems();
 		
-		Builder builder = ImmutableStructurePath.builder();
+		StructurePath path = StructurePath.empty();
 
 		for (Object item : items) {
 			Optional<ObjectPathsTreeNode> foundNode = actOptions
@@ -64,9 +61,9 @@ public interface ObjectPathsTree {
 			
 			if (foundNode.isPresent()) {
 				if (foundNode.get().getType()==StructureSelectorType.INDEX) {
-					builder.addItems(StructurePathItem.createIndex((Integer)item));
+					path = path.addIndex((Integer)item);
 				} else if (foundNode.get().getType()==StructureSelectorType.KEY) {
-					builder.addItems(StructurePathItem.createKey((String)item));
+					path = path.addKey((String)item);
 				} else {
 					throw new RuntimeException("Unexpected type "+foundNode.get().getType());
 				}
@@ -75,6 +72,6 @@ public interface ObjectPathsTree {
 			}
 		}
 		
-		return builder.build();
+		return path;
 	}
 }
