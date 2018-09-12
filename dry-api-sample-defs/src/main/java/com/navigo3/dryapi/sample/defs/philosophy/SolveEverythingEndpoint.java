@@ -1,5 +1,6 @@
 package com.navigo3.dryapi.sample.defs.philosophy;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +36,12 @@ public class SolveEverythingEndpoint extends MethodDefinition<TopAddressInput, I
 		List<LowAddressInput> getLowAddresses();
 		
 		Map<String, Integer> getStringCodes();
+		
+		LocalDateTime getCurrentGalacticDateTime();
+		
+		Map<LocalDateTime, String> getCronicles();
+		
+		Optional<LowAddressInput> getMainAddress();
 	}
 	
 	@Value.Immutable

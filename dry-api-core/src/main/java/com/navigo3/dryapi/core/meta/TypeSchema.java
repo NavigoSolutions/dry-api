@@ -5,6 +5,9 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +48,9 @@ public class TypeSchema {
 		STRING,
 		BOOL,
 		ENUMERABLE,
+		DATE,
+		TIME,
+		DATETIME,
 		
 		//reference types
 		REF
@@ -258,11 +264,14 @@ public class TypeSchema {
 			fieldBuilder.valueType(ValueType.ENUMERABLE);
 			
 			fieldBuilder.enumValues(Stream.of(klass.getEnumConstants()).map(o->((Enum<?>)o).name()).collect(Collectors.toList()));
-		} else if (
-			Boolean.class.isAssignableFrom(klass)
-			|| boolean.class.isAssignableFrom(klass)
-		) {
+		} else if (Boolean.class.isAssignableFrom(klass) || boolean.class.isAssignableFrom(klass)) {
 			fieldBuilder.valueType(ValueType.BOOL);
+		} else if (LocalDate.class.isAssignableFrom(klass)) {
+			fieldBuilder.valueType(ValueType.DATE);
+		} else if (LocalTime.class.isAssignableFrom(klass)) {
+			fieldBuilder.valueType(ValueType.TIME);
+		} else if (LocalDateTime.class.isAssignableFrom(klass)) {
+			fieldBuilder.valueType(ValueType.DATETIME);
 		} else if (Optional.class.isAssignableFrom(klass)) {
 			fieldBuilder.containerType(ContainerType.OPTIONAL);
 			
@@ -310,19 +319,24 @@ public class TypeSchema {
 		TypeDefinition actType = definitions.get(rootDefinition);
 		FieldDefinition actField = null;
 		
-		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-		System.out.println(path.getDebug());
+//		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+//		System.out.println(path.getDebug());
 		
 		for (int i=0;i<path.getItems().size();++i) {
 			TypePathItem item = path.getItems().get(i);
+
 			
-			System.out.println("----------------"+item+"-----------------");
-			System.out.println(actType);
-			System.out.println(actField);
+//			System.out.println("----------------"+item+"-----------------");
+//			System.out.println(actType);
+//			System.out.println(actField);
 			
 			try {
-			
 				Validate.oneNotNull(actType, actField);
+
+				if (item.getType()==TypeSelectorType.KEEP_RECURSIVELY) {
+					Validate.equals(i+1, path.getItems().size());
+					return;
+				}
 				
 				if (actType!=null && actType.getIsDirectRootContainer()) {
 					Validate.isPresent(actType.getContainerType());
@@ -392,6 +406,13 @@ public class TypeSchema {
 					} else {
 						throw new RuntimeException(StringUtils.subst("Unexpected container type {}", actField.getContainerType().get()));
 					}
+				}
+				
+				while (actField!=null && actField.getContainerType().isPresent() && actField.getContainerType().get()==ContainerType.OPTIONAL) {
+					Validate.isPresent(actField.getTemplateParams());
+					Validate.size(actField.getTemplateParams().get(), 1);
+					
+					actField = actField.getTemplateParams().get().get(0);
 				}
 				
 				if (actField.getTypeRef().isPresent()) {

@@ -47,4 +47,34 @@ public class TypeSchemaTests {
 	public void incompletePath() {
 		schema.throwIfPathNotExists(TypePath.field("middleAddress"));
 	}
+	
+	@Test
+	public void validDatetimeField() {
+		schema.throwIfPathNotExists(TypePath.field("middleAddress").addField("currentGalacticDateTime"));
+	}
+	
+	@Test
+	public void validDatetimeKey() {
+		schema.throwIfPathNotExists(TypePath.field("middleAddress").addField("cronicles").addKey());
+	}
+	
+	@Test
+	public void validOptionalFieldInTheMiddle() {
+		schema.throwIfPathNotExists(TypePath.field("middleAddress").addField("mainAddress").addField("street"));
+	}
+	
+	@Test
+	public void validWithKeepRecursivelyOnField() {
+		schema.throwIfPathNotExists(TypePath.field("middleAddress").andRecursively());
+	}
+	
+	@Test
+	public void validWithKeepRecursivelyOnList() {
+		schema.throwIfPathNotExists(TypePath.field("middleAddress").addField("lowAddresses").andRecursively());
+	}
+	
+	@Test
+	public void validWithKeepRecursivelyOnMap() {
+		schema.throwIfPathNotExists(TypePath.field("middleAddress").addField("cronicles").andRecursively());
+	}
 }
