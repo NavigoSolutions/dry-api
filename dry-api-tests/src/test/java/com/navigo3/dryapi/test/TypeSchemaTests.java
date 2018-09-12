@@ -38,6 +38,11 @@ public class TypeSchemaTests {
 		schema.throwIfPathNotExists(TypePath.field("middleAddress").addField("stringCodes").addKey());
 	}
 	
+	@Test
+	public void validFieldKeyFieldPathUnderscores() {
+		schema.throwIfPathNotExists(TypePath.field("middle_address").addField("string_codes").addKey());
+	}
+	
 	@Test(expected=Throwable.class)
 	public void incompletePath() {
 		schema.throwIfPathNotExists(TypePath.field("middleAddress"));

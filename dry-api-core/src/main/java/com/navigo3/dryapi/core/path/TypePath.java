@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 
 public class TypePath {
@@ -31,7 +32,7 @@ public class TypePath {
 		return new TypePath(Optional.empty(), ImmutableTypePathItem
 			.builder()
 			.type(TypeSelectorType.FIELD)
-			.fieldName(name)
+			.fieldName(StringUtils.underscoreToCamelCase(name))
 			.build()
 		);
 	}
@@ -93,7 +94,7 @@ public class TypePath {
 		return new TypePath(Optional.of(items), ImmutableTypePathItem
 			.builder()
 			.type(TypeSelectorType.FIELD)
-			.fieldName(name)
+			.fieldName(StringUtils.underscoreToCamelCase(name))
 			.build()
 		);
 	}
