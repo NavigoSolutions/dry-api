@@ -50,8 +50,6 @@ public class TypeFieldsSecurity<TAppContext extends AppContext, TCallContext ext
 			})
 			.map(e->e.getKey())
 			.collect(Collectors.toList());
-		
-		allowedTypePaths.forEach(p->System.out.println(p.getDebug()));
 
 		List<StructurePath> res = new ArrayList<>();
 		

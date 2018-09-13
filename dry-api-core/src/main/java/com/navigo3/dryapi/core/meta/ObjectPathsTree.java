@@ -38,7 +38,21 @@ public interface ObjectPathsTree {
 		});
 	}
 
-	default void throwIfPathDoesNotExists(StructurePath path) {
+	default boolean throwIfPathDoesNotExists(StructurePath path) {
+		StringBuilder errorMessage = new StringBuilder();
+		
+		if (!keyExists(path, Optional.of(errorMessage))) {
+			throw new RuntimeException(errorMessage.toString());
+		}
+		
+		return true;
+	}
+	
+	default boolean keyExists(StructurePath path) {
+		return keyExists(path, Optional.empty());
+	}
+	
+	default boolean keyExists(StructurePath path, Optional<StringBuilder> errorMessage) {
 		List<ObjectPathsTreeNode> actOptions = getItems();
 		
 		int i = 0;
@@ -61,25 +75,34 @@ public interface ObjectPathsTree {
 				})
 				.findFirst();
 			
+			int fi = i;
+			
 			if (foundNode.isPresent()) {
 				actOptions = foundNode.get().getItems().orElse(Arrays.asList());
 			} else {
-				throw new RuntimeException(StringUtils.subst("Cannot continue at path '{}'", path.toDebug(i)));
+				errorMessage.ifPresent(b->b.append(StringUtils.subst("Cannot continue at path '{}'", path.toDebug(fi))));
+				return false;
 			}
 			
 			++i;
 		}
 		
-		Validate.isEmpty(actOptions, 
-			StringUtils.subst(
+		if (!actOptions.isEmpty()) {
+			List<ObjectPathsTreeNode> fiActOptions = actOptions;
+			
+			errorMessage.ifPresent(b->b.append(StringUtils.subst(
 				"Path [{}] does not select field. Maybe you want continue with:\n{}", 
 				path.toDebug(),
-				actOptions
+				fiActOptions
 					.stream()
 					.map(node->"\t"+node.toDebug())
 					.collect(Collectors.joining("\n"))
-			)
-		);
+			)));
+			
+			return false;
+		}
+		
+		return true;
 	}
 
 	static ObjectPathsTree from(List<StructurePath> allowedPaths) {

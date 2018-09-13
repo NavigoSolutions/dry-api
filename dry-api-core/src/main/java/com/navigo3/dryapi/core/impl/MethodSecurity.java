@@ -1,7 +1,6 @@
 package com.navigo3.dryapi.core.impl;
 
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import org.immutables.value.Value;
 
@@ -10,6 +9,8 @@ import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.security.field.FieldsSecurity;
 import com.navigo3.dryapi.core.security.field.ObjectFieldsSecurityBuilder;
+import com.navigo3.dryapi.core.util.Consumer3;
+import com.navigo3.dryapi.core.util.Validate;
 
 @Value.Immutable
 public interface MethodSecurity<TAppContext extends AppContext, TCallContext extends CallContext> {
@@ -19,7 +20,15 @@ public interface MethodSecurity<TAppContext extends AppContext, TCallContext ext
 	
 	Optional<FieldsSecurity<TAppContext, TCallContext>> getOutputFieldsTypeSecurity();
 	
-	Optional<Consumer<ObjectFieldsSecurityBuilder<TAppContext, TCallContext>>> getInputFieldsObjectSecurity();
+	Optional<Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>>> getInputFieldsObjectSecurity();
 	
-	Optional<Consumer<ObjectFieldsSecurityBuilder<TAppContext, TCallContext>>> getOutputFieldsObjectSecurity();
+	Optional<Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>>> getOutputFieldsObjectSecurity();
+	
+	@Value.Check default void check() {
+		Validate.isFalse(getInputFieldsTypeSecurity().isPresent() && getInputFieldsObjectSecurity().isPresent(), 
+			"Input fields security on both type and object is not supported!");
+		
+		Validate.isFalse(getOutputFieldsTypeSecurity().isPresent() && getOutputFieldsObjectSecurity().isPresent(), 
+			"Output fields security on both type and object is not supported!");
+	}
 }

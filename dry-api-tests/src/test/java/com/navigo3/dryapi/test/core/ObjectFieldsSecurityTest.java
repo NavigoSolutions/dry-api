@@ -1,5 +1,8 @@
 package com.navigo3.dryapi.test.core;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -11,10 +14,8 @@ import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.security.field.ObjectFieldsSecurity;
-import com.navigo3.dryapi.core.security.field.ObjectFieldsSecurityBuilder;
 import com.navigo3.dryapi.core.security.logic.False;
 import com.navigo3.dryapi.core.security.logic.True;
-import com.navigo3.dryapi.core.util.JsonUtils;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
@@ -45,12 +46,9 @@ public class ObjectFieldsSecurityTest {
 	}
 	
 	@Test
-	public void test() {		
-		JsonUtils.prettyPrint(schema);
-		pathsTree.printDebug();
-		
-		ObjectFieldsSecurity<TestAppContext, TestCallContext> dynamicFieldsSecurity = new ObjectFieldsSecurity<>((appContext, callContext, typeSchema)->{
-			return ObjectFieldsSecurityBuilder.build(pathsTree, builder->{
+	public void test() {
+		ObjectFieldsSecurity<TestAppContext, TestCallContext> dynamicFieldsSecurity = 
+			new ObjectFieldsSecurity<TestAppContext, TestCallContext>((appContext, callContext, builder)->{
 				SecurityCheck<TestAppContext, TestCallContext> everyone = new True<>();
 				SecurityCheck<TestAppContext, TestCallContext> nobody = new False<>();
 				
@@ -64,9 +62,19 @@ public class ObjectFieldsSecurityTest {
 				builder.add(StructurePath.key("colorsToFavoriteNumbers").addKey("blue").addIndex(0), everyone);
 				builder.add(StructurePath.key("colorsToFavoriteNumbers").addKey("blue").addIndex(1), nobody);
 			});
-		});
 		
 		ObjectPathsTree clearanceTree = dynamicFieldsSecurity.getAllowedPaths(appContext, callContext, schema, pathsTree);
-		clearanceTree.printDebug();
+		
+		assertTrue(clearanceTree.keyExists(StructurePath.key("name")));
+		assertTrue(clearanceTree.keyExists(StructurePath.key("surname")));
+		assertTrue(clearanceTree.keyExists(StructurePath.key("age")));
+		assertTrue(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers").addKey("blue").addIndex(0)));
+		assertTrue(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers").addKey("red").addIndex(0)));
+		assertTrue(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers").addKey("red").addIndex(2)));
+		
+		assertFalse(clearanceTree.keyExists(StructurePath.key("xxx")));
+		assertFalse(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers")));
+		assertFalse(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers").addKey("green").addIndex(0)));
+		assertFalse(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers").addKey("red").addIndex(3)));
 	}
 }

@@ -12,19 +12,21 @@ import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
-import com.navigo3.dryapi.core.util.Function3;
+import com.navigo3.dryapi.core.util.Consumer3;
 
 public class ObjectFieldsSecurity<TAppContext extends AppContext, TCallContext extends CallContext> implements FieldsSecurity<TAppContext, TCallContext> {
 
-	private final Function3<TAppContext, TCallContext, ObjectPathsTree, Map<StructurePath, SecurityCheck<TAppContext, TCallContext>>> block;
+	private final Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block;
 
-	public ObjectFieldsSecurity(Function3<TAppContext, TCallContext, ObjectPathsTree, Map<StructurePath, SecurityCheck<TAppContext, TCallContext>>> block) {
+	public ObjectFieldsSecurity(Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
 		this.block = block;
 	}
 	
 	@Override
 	public ObjectPathsTree getAllowedPaths(TAppContext appContext, TCallContext callContext, TypeSchema schema, ObjectPathsTree pathsTree) {
-		Map<StructurePath, SecurityCheck<TAppContext, TCallContext>> paths = block.apply(appContext, callContext, pathsTree);
+		Map<StructurePath, SecurityCheck<TAppContext, TCallContext>> paths = ObjectFieldsSecurityBuilder.build(pathsTree, builder->{
+			block.accept(appContext, callContext, builder);
+		});
 		
 		List<CacheEntry<TAppContext, TCallContext>> cache = new ArrayList<>();
 		

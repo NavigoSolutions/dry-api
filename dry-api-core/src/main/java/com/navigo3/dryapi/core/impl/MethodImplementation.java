@@ -6,6 +6,7 @@ import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.def.MethodDefinition;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
+import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.ImmutableValidationData;
 import com.navigo3.dryapi.core.validation.ValidationData;
@@ -101,7 +102,14 @@ public abstract class MethodImplementation<TInput, TOutput, TAppContext extends 
 		
 		res.ifPresent(validatorData->{
 			validatorData.getItems().forEach(item->{
-				tree.throwIfPathDoesNotExists(item.getPath());
+				try {
+					tree.throwIfPathDoesNotExists(item.getPath());
+				} catch (Throwable t) {
+					throw new RuntimeException(
+						StringUtils.subst("There is no path [{}] at {}.validate()", item.getPath().toDebug(), getClass().getName()), 
+						t
+					);
+				}	
 			});
 		});
 		

@@ -6,7 +6,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.navigo3.dryapi.core.util.JsonUtils;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.IdResult;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
@@ -42,7 +41,7 @@ public class Sandbox {
 		
 		IdResult output = env.getApi().executeBlocking(new FormUpsertEndpoint(), input);
 		
-		JsonUtils.prettyPrint(output);
+//		JsonUtils.prettyPrint(output);
 		
 		//TODO
 	}

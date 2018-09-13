@@ -8,6 +8,7 @@ import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.security.field.ObjectFieldsSecurityBuilder;
 import com.navigo3.dryapi.core.security.field.TypeFieldsSecurityBuilder;
+import com.navigo3.dryapi.core.util.Consumer3;
 import com.navigo3.dryapi.core.util.Validate;
 
 public class MethodSecurityBuilder<TAppContext extends AppContext, TCallContext extends CallContext> {
@@ -50,15 +51,15 @@ public class MethodSecurityBuilder<TAppContext extends AppContext, TCallContext 
 		return this;
 	}
 	
-	public MethodSecurityBuilder<TAppContext, TCallContext> defineInputFieldsObjectSecurity(Consumer<ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+	public MethodSecurityBuilder<TAppContext, TCallContext> defineInputFieldsObjectSecurity(Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
 		Validate.notNull(block);
-		
+	
 		builder.inputFieldsObjectSecurity(block);
 
 		return this;
 	}
 	
-	public MethodSecurityBuilder<TAppContext, TCallContext> defineOutputObjectSecurity(Consumer<ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+	public MethodSecurityBuilder<TAppContext, TCallContext> defineOutputObjectSecurity(Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
 		Validate.notNull(block);
 		
 		builder.outputFieldsObjectSecurity(block);
