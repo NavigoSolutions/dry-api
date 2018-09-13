@@ -1,5 +1,6 @@
 package com.navigo3.dryapi.sample.defs.form;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,18 @@ public class FormUpsertEndpoint extends MethodDefinition<Person, IdResult> {
 		int getSecretNumber();
 
 		Map<String, List<Integer>> getColorsToFavoriteNumbers();
+		
+		public static Person createSampleData() {
+			return ImmutablePerson
+				.builder()
+				.name("Jarek")
+				.surname("Kuboš")
+				.age(42)
+				.secretNumber(13)
+				.putColorsToFavoriteNumbers("red", Arrays.asList(1, 5, 7))
+				.putColorsToFavoriteNumbers("blue", Arrays.asList(42, 74))
+				.build();
+		}
 	}
 	
 	@Value.Immutable

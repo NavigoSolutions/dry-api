@@ -53,6 +53,36 @@ public class SolveEverythingEndpoint extends MethodDefinition<TopAddressInput, I
 		String getPlanet();
 		
 		MiddleAddressInput getMiddleAddress();
+		
+		public static TopAddressInput createSampleData() {
+			ImmutableLowAddressInput.Builder lowAddressBuilder = ImmutableLowAddressInput
+				.builder()
+				.city("Brno")
+				.number(1245)
+				.street("Charvatska");
+			
+			ImmutableMiddleAddressInput.Builder middleAddressBuilder = ImmutableMiddleAddressInput
+				.builder()
+				.continent("Europe")
+				.country("Czech republic")
+				.currentGalacticDateTime(LocalDateTime.now())
+				.putCronicles(LocalDateTime.now().minusYears(1), "year ago")
+				.putCronicles(LocalDateTime.now().minusYears(2), "two years ago")
+				.putStringCodes("xxx", 123)
+				.putStringCodes("yyy", 745)
+				.mainAddress(lowAddressBuilder.build())
+				.addLowAddresses(lowAddressBuilder.build())
+				.addLowAddresses(lowAddressBuilder.build());
+			
+			ImmutableTopAddressInput.Builder topAddressBuilder = ImmutableTopAddressInput
+				.builder()
+				.corner("left")
+				.galaxy("Milky way")
+				.planet("Earth")
+				.middleAddress(middleAddressBuilder.build());
+			
+			return topAddressBuilder.build();
+		}
 	}
 
 	@Override

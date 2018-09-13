@@ -1,5 +1,6 @@
 package com.navigo3.dryapi.core.exec.json;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -20,6 +21,8 @@ import com.navigo3.dryapi.core.impl.ExecutionContext;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.impl.MethodSecurity;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
+import com.navigo3.dryapi.core.path.StructurePath;
+import com.navigo3.dryapi.core.security.field.FieldsSecurity;
 import com.navigo3.dryapi.core.util.Consumer3;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.JsonUtils;
@@ -56,7 +59,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		
 		findMethod(context, request, outputBuilder, def->{
 			parseInputJson(context, request, outputBuilder, def, (input, objectMapper, executionContext)->{
-				checkSecurity(context, request, outputBuilder, input, executionContext, (instance, callContext)->{
+				checkSecurity(context, request, outputBuilder, input, executionContext, objectMapper, def, (instance, callContext)->{
 					clearProhibitedInputFields(context, outputBuilder, input, instance, objectMapper, callContext, ()->{
 						validate(context, request, outputBuilder, input, instance, ()->{
 							execute(context, request, outputBuilder, input, instance, objectMapper, output->{
@@ -84,19 +87,13 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	}
 
 	@SuppressWarnings("rawtypes")
-	private void parseInputJson(TAppContext context, JsonRequest request, Builder outputBuilder, MethodDefinition def, Consumer3<Object, ObjectMapper, ExecutionContext> onSuccess) {
+	private void parseInputJson(TAppContext context, JsonRequest request, Builder outputBuilder, MethodDefinition def, Consumer3<Object, ObjectMapper, ExecutionContext<TAppContext, TCallContext>> onSuccess) {
 		ObjectMapper objectMapper = JsonUtils.createMapper();
 		
 		try {
-			JsonNode inputNode = objectMapper.readValue(request.getInputJson(), JsonNode.class);
-			
 			Object input = objectMapper.readValue(request.getInputJson(), def.getInputType());
-			
-			ObjectPathsTree inputPathsTree = JsonPathsTreeBuilder.parse(inputNode);
-			
-			ExecutionContext executionContext = new ExecutionContext<>(context, inputPathsTree);
-			
-			outputBuilder.allowedInputFields(inputPathsTree);
+
+			ExecutionContext<TAppContext, TCallContext> executionContext = new ExecutionContext<>(context);
 			
 			onSuccess.accept(input, objectMapper, executionContext);
 		} catch (Throwable t) {
@@ -109,8 +106,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void checkSecurity(TAppContext context, JsonRequest request, Builder outputBuilder, Object input, ExecutionContext executionContext,
-			BiConsumer<MethodImplementation, CallContext> onSuccess) {
+	private void checkSecurity(TAppContext context, JsonRequest request, Builder outputBuilder, Object input, ExecutionContext<TAppContext, TCallContext> executionContext,
+			ObjectMapper objectMapper, MethodDefinition def, BiConsumer<MethodImplementation, CallContext> onSuccess) {
 		try {
 			Optional<Class<? extends MethodImplementation>> impl = api.lookupImplementationClass(request.getQualifiedName());
 			
@@ -132,6 +129,21 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			boolean pass = security.get().getAuthorization().pass(context, callContext);
 						
 			if (pass) {
+				ObjectPathsTree inputPathsTree;
+				
+				if (security.get().getInputFieldsSecurity().isPresent()) {
+					FieldsSecurity<TAppContext, TCallContext> fieldsSecurity = security.get().getInputFieldsSecurity().get();
+					
+					List<StructurePath> allowedPaths = fieldsSecurity.getAllowedPaths(executionContext.getAppContext(), callContext, def.getInputSchema());
+					
+					inputPathsTree = ObjectPathsTree.from(allowedPaths);
+				} else {
+					JsonNode inputNode = objectMapper.readValue(request.getInputJson(), JsonNode.class);
+					inputPathsTree = JsonPathsTreeBuilder.parse(inputNode);
+				}
+				
+				outputBuilder.allowedInputFields(inputPathsTree);
+
 				onSuccess.accept(instance, callContext);
 			} else {
 				outputBuilder
@@ -220,9 +232,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			JsonNode outputNode = objectMapper.readValue(originalOutputJson, JsonNode.class);
 
 			ObjectPathsTree outputPathsTree = JsonPathsTreeBuilder.parse(outputNode);
-
-			executionContext.setOutputPathsTree(outputPathsTree);
 			
+			int todo;
 			outputBuilder.allowedOutputFields(outputPathsTree);
 
 			outputBuilder

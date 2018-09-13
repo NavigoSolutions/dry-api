@@ -1,13 +1,11 @@
 package com.navigo3.dryapi.core.impl;
 
 import java.util.Optional;
-import java.util.function.Consumer;
 
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.def.MethodDefinition;
-import com.navigo3.dryapi.core.security.field.FieldsSecurity;
-import com.navigo3.dryapi.core.security.field.FieldsSecurityBuilder;
+import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.ImmutableValidationData;
 import com.navigo3.dryapi.core.validation.ValidationData;
@@ -68,14 +66,6 @@ public abstract class MethodImplementation<TInput, TOutput, TAppContext extends 
 		return executionContext.getCallContext().get();
 	}
 	
-	protected FieldsSecurity<TAppContext, TCallContext> buildInputFieldsSecurity(Consumer<FieldsSecurityBuilder<TAppContext, TCallContext>> block) {
-		return FieldsSecurityBuilder.build(getDefinition().getInputSchema(), block);
-	}
-	
-	protected FieldsSecurity<TAppContext, TCallContext> buildOutputFieldsSecurity(Consumer<FieldsSecurityBuilder<TAppContext, TCallContext>> block) {
-		return FieldsSecurityBuilder.build(getDefinition().getOutputSchema(), block);
-	}
-	
 	/**
 	 * Private stuff
 	 */
@@ -104,14 +94,14 @@ public abstract class MethodImplementation<TInput, TOutput, TAppContext extends 
 		this.security = security;
 	}
 
-	public ValidationData securedValidate(TInput input) {
+	public ValidationData securedValidate(TInput input, ObjectPathsTree tree) {
 		Optional<ValidationData> res = validate(input);
 		
 		Validate.notNull(res);
 		
 		res.ifPresent(validatorData->{
 			validatorData.getItems().forEach(item->{
-				executionContext.getInputPathsTree().throwIfPathDoesNotExists(item.getPath());
+				tree.throwIfPathDoesNotExists(item.getPath());
 			});
 		});
 		

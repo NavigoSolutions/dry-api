@@ -6,8 +6,8 @@ import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
-import com.navigo3.dryapi.core.security.field.FieldsSecurity;
-import com.navigo3.dryapi.core.security.field.FieldsSecurityBuilder;
+import com.navigo3.dryapi.core.security.field.ObjectFieldsSecurityBuilder;
+import com.navigo3.dryapi.core.security.field.TypeFieldsSecurityBuilder;
 import com.navigo3.dryapi.core.util.Validate;
 
 public class MethodSecurityBuilder<TAppContext extends AppContext, TCallContext extends CallContext> {
@@ -34,35 +34,35 @@ public class MethodSecurityBuilder<TAppContext extends AppContext, TCallContext 
 		return builder.build();
 	}
 	
-	public MethodSecurityBuilder<TAppContext, TCallContext> defineInputFieldsSecurity(Consumer<FieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+	public MethodSecurityBuilder<TAppContext, TCallContext> defineInputFieldsTypeSecurity(Consumer<TypeFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
 		Validate.notNull(block);
 		
-		builder.inputFieldsSecurity(FieldsSecurityBuilder.build(inputSchema, block));
+		builder.inputFieldsTypeSecurity(TypeFieldsSecurityBuilder.build(inputSchema, block));
 
 		return this;
 	}
 	
-	public MethodSecurityBuilder<TAppContext, TCallContext> defineOutputFieldsSecurity(Consumer<FieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+	public MethodSecurityBuilder<TAppContext, TCallContext> defineOutputFieldsTypeSecurity(Consumer<TypeFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
 		Validate.notNull(block);
 		
-		builder.outputFieldsSecurity(FieldsSecurityBuilder.build(outputSchema, block));
+		builder.outputFieldsTypeSecurity(TypeFieldsSecurityBuilder.build(outputSchema, block));
 		
 		return this;
 	}
 	
-	public MethodSecurityBuilder<TAppContext, TCallContext> inputFieldsSecurity(FieldsSecurity<TAppContext, TCallContext> security) {
-		Validate.notNull(security);
+	public MethodSecurityBuilder<TAppContext, TCallContext> defineInputFieldsObjectSecurity(Consumer<ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+		Validate.notNull(block);
 		
-		builder.inputFieldsSecurity(security);
+		builder.inputFieldsObjectSecurity(block);
 
 		return this;
 	}
 	
-	public MethodSecurityBuilder<TAppContext, TCallContext> outputFieldsSecurity(FieldsSecurity<TAppContext, TCallContext> security) {
-		Validate.notNull(security);
+	public MethodSecurityBuilder<TAppContext, TCallContext> defineOutputObjectSecurity(Consumer<ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+		Validate.notNull(block);
 		
-		builder.outputFieldsSecurity(security);
-
+		builder.outputFieldsObjectSecurity(block);
+		
 		return this;
 	}
 }

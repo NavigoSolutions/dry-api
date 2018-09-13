@@ -11,10 +11,10 @@ import com.navigo3.dryapi.core.path.TypePath;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.util.Validate;
 
-public class FieldsSecurityBuilder<TAppContext extends AppContext, TCallContext extends CallContext> {
+public class TypeFieldsSecurityBuilder<TAppContext extends AppContext, TCallContext extends CallContext> {
 	public static <TAppContext extends AppContext, TCallContext extends CallContext> FieldsSecurity<TAppContext, TCallContext> 
-		build(TypeSchema schema, Consumer<FieldsSecurityBuilder<TAppContext, TCallContext>> block) {
-		FieldsSecurityBuilder<TAppContext, TCallContext> builder = new FieldsSecurityBuilder<>(schema);
+		build(TypeSchema schema, Consumer<TypeFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+		TypeFieldsSecurityBuilder<TAppContext, TCallContext> builder = new TypeFieldsSecurityBuilder<>(schema);
 		
 		block.accept(builder);
 		
@@ -25,12 +25,14 @@ public class FieldsSecurityBuilder<TAppContext extends AppContext, TCallContext 
 	
 	private Map<TypePath, SecurityCheck<TAppContext, TCallContext>> securityPerField = new HashMap<>();
 
-	private FieldsSecurityBuilder(TypeSchema schema) {
+	private TypeFieldsSecurityBuilder(TypeSchema schema) {
 		this.schema = schema;
 	}
 	
 	private FieldsSecurity<TAppContext, TCallContext> build() {
-		return new StaticFieldsSecurity<>(securityPerField);
+		throwIfNotFullyCovered();
+		
+		return new TypeFieldsSecurity<>(securityPerField);
 	}
 	
 	public void add(TypePath path, SecurityCheck<TAppContext, TCallContext> security) {

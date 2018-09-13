@@ -1,6 +1,7 @@
 package com.navigo3.dryapi.core.meta;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -79,5 +80,45 @@ public interface ObjectPathsTree {
 					.collect(Collectors.joining("\n"))
 			)
 		);
+	}
+
+	static ObjectPathsTree from(List<StructurePath> allowedPaths) {
+		ImmutableObjectPathsTree.Builder builder = ImmutableObjectPathsTree.builder();
+		
+		builder.addAllItems(groupByIndex(allowedPaths, 0)
+			.stream()
+			.map(group->createNode(group, 0))
+			.collect(Collectors.toList())
+		);
+		
+		return builder.build();
+	}
+
+	static ObjectPathsTreeNode createNode(List<StructurePath> paths, int index) {
+		Validate.notEmpty(paths);
+		
+		ImmutableObjectPathsTreeNode.Builder builder = ImmutableObjectPathsTreeNode.builder();
+		
+		StructurePathItem item = paths.get(0).getItems().get(index);
+		
+		builder.type(item.getType());
+		builder.index(item.getIndex());
+		builder.key(item.getKey());
+		
+		builder.items(groupByIndex(paths, index+1)
+			.stream()
+			.map(group->createNode(group, index+1))
+			.collect(Collectors.toList())
+		);
+		
+		return builder.build();
+	}
+
+	static Collection<List<StructurePath>> groupByIndex(List<StructurePath> paths, int index) {
+		return paths
+			.stream()
+			.filter(path->path.getItems().size()>index)
+			.collect(Collectors.groupingBy(path->path.getItems().get(index)))
+			.values();
 	}
 }
