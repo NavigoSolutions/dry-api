@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
+import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.path.TypePath;
 import com.navigo3.dryapi.core.security.logic.False;
 import com.navigo3.dryapi.core.security.logic.True;
@@ -35,11 +36,11 @@ public class FormUpsertImpl extends MethodImplementation<Person, IdResult, TestA
 	@Override
 	public Optional<ValidationData> validate(Person input) {
 		return TestAppValidator.build(builder->{
-			builder.checkNotBlank(inputPath("name"), input.getName());
-			builder.checkNotBlank(inputPath("surname"), input.getSurname());
+			builder.checkNotBlank(StructurePath.key("name"), input.getName());
+			builder.checkNotBlank(StructurePath.key("surname"), input.getSurname());
 			
 			if (input.getAge()<18) {
-				builder.addValidationItem(Severity.WARNING, inputPath("age"), "You should be of age 18 or more");
+				builder.addValidationItem(Severity.WARNING, StructurePath.key("age"), "You should be of age 18 or more");
 			}
 		});
 	}

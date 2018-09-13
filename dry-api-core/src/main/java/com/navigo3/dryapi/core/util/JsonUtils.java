@@ -6,10 +6,12 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class JsonUtils {
+
 	public static ObjectMapper createMapper() {
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new Jdk8Module());
 		objectMapper.registerModule(new JavaTimeModule());
+		objectMapper.registerModule(new DateTimeJsonSerializerDeserializer());
 		
 		return objectMapper;
 	}

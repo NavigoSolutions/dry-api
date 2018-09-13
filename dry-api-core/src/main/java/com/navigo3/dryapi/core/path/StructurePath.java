@@ -39,8 +39,13 @@ public class StructurePath {
 	}
 
 	public String toDebug() {
+		return toDebug(getItems().size());
+	}
+	
+	public String toDebug(int maxIndex) {
 		return getItems()
 			.stream()
+			.limit(maxIndex+1)
 			.map(i->{
 				switch (i.getType()) {
 					case KEY: return i.getKey().get();

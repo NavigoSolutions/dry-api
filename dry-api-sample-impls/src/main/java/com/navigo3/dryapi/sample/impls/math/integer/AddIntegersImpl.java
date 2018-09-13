@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
+import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOperands;
@@ -28,8 +29,8 @@ public class AddIntegersImpl extends MethodImplementation<IntegerOperands, Integ
 	@Override
 	public Optional<ValidationData> validate(IntegerOperands input) {
 		return TestAppValidator.build(builder->{
-			builder.checkPresent(inputPath("a"), input.getA());
-			builder.checkPresent(inputPath("b"), input.getB());
+			builder.checkPresent(StructurePath.key("a"), input.getA());
+			builder.checkPresent(StructurePath.key("b"), input.getB());
 		});
 	}
 	

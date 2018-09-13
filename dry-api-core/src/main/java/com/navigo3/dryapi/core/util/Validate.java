@@ -77,6 +77,16 @@ public class Validate {
 			throw new RuntimeException("This collection should not be empty");
 		}
 	}
+	
+	public static void isEmpty(Collection<?> coll) {
+		isEmpty(coll, "This collection should not be empty");
+	}
+
+	public static void isEmpty(Collection<?> coll, String message) {
+		if (!coll.isEmpty()) {
+			throw new RuntimeException(message);
+		}
+	}
 
 	public static void isTrue(boolean val) {
 		isTrue(val, "Value 'true' expected");

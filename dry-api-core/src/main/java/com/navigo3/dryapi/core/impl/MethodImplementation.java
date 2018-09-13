@@ -6,10 +6,10 @@ import java.util.function.Consumer;
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.def.MethodDefinition;
-import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.security.field.FieldsSecurity;
 import com.navigo3.dryapi.core.security.field.FieldsSecurityBuilder;
 import com.navigo3.dryapi.core.util.Validate;
+import com.navigo3.dryapi.core.validation.ImmutableValidationData;
 import com.navigo3.dryapi.core.validation.ValidationData;
 
 public abstract class MethodImplementation<TInput, TOutput, TAppContext extends AppContext, TCallContext extends CallContext> {
@@ -68,14 +68,6 @@ public abstract class MethodImplementation<TInput, TOutput, TAppContext extends 
 		return executionContext.getCallContext().get();
 	}
 	
-	protected StructurePath inputPath(Object... items) {
-		return executionContext.getInputPathsTree().buildPath(items);
-	}
-	
-	protected StructurePath outputPath(Object... items) {
-		return executionContext.getOutputPathsTree().buildPath(items);
-	}
-	
 	protected FieldsSecurity<TAppContext, TCallContext> buildInputFieldsSecurity(Consumer<FieldsSecurityBuilder<TAppContext, TCallContext>> block) {
 		return FieldsSecurityBuilder.build(getDefinition().getInputSchema(), block);
 	}
@@ -110,5 +102,19 @@ public abstract class MethodImplementation<TInput, TOutput, TAppContext extends 
 		Validate.notNull(security);
 		
 		this.security = security;
+	}
+
+	public ValidationData securedValidate(TInput input) {
+		Optional<ValidationData> res = validate(input);
+		
+		Validate.notNull(res);
+		
+		res.ifPresent(validatorData->{
+			validatorData.getItems().forEach(item->{
+				executionContext.getInputPathsTree().throwIfPathDoesNotExists(item.getPath());
+			});
+		});
+		
+		return res.orElse(ImmutableValidationData.builder().build());
 	}
 }

@@ -1,16 +1,19 @@
 package com.navigo3.dryapi.core.meta;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.immutables.value.Value;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.navigo3.dryapi.core.path.StructurePath;
+import com.navigo3.dryapi.core.path.StructurePathItem;
 import com.navigo3.dryapi.core.path.StructureSelectorType;
 import com.navigo3.dryapi.core.util.StringUtils;
+import com.navigo3.dryapi.core.util.Validate;
 
 @Value.Immutable
 
@@ -34,44 +37,47 @@ public interface ObjectPathsTree {
 		});
 	}
 
-	default StructurePath buildPath(Object[] items) {
+	default void throwIfPathDoesNotExists(StructurePath path) {
 		List<ObjectPathsTreeNode> actOptions = getItems();
 		
-		StructurePath path = StructurePath.empty();
-
-		for (Object item : items) {
+		int i = 0;
+		
+		for (StructurePathItem item : path.getItems()) {
 			Optional<ObjectPathsTreeNode> foundNode = actOptions
 				.stream()
 				.filter(node->{
-					if (item instanceof Number) {
-						if (node.getType()==StructureSelectorType.INDEX) {
-							return Objects.equals(node.getIndex().get(), item);
-						}
-					} else if (item instanceof String) {
+					if (node.getType()==item.getType()) {
 						if (node.getType()==StructureSelectorType.KEY) {
-							return Objects.equals(node.getKey().get(), item);
+							return node.getKey().get().equals(item.getKey().get());
+						} else if (node.getType()==StructureSelectorType.INDEX) {
+							return node.getIndex().get().equals(item.getIndex().get());
+						} else {
+							throw new RuntimeException("Unsupported key type "+node.getType());
 						}
 					} else {
-						throw new RuntimeException("Unsupported key type "+item.getClass().getName());
+						return true;
 					}
-					
-					return false;
 				})
 				.findFirst();
 			
 			if (foundNode.isPresent()) {
-				if (foundNode.get().getType()==StructureSelectorType.INDEX) {
-					path = path.addIndex((Integer)item);
-				} else if (foundNode.get().getType()==StructureSelectorType.KEY) {
-					path = path.addKey((String)item);
-				} else {
-					throw new RuntimeException("Unexpected type "+foundNode.get().getType());
-				}
+				actOptions = foundNode.get().getItems().orElse(Arrays.asList());
 			} else {
-				throw new RuntimeException(StringUtils.subst("Cannot continue at item '{}'", item));
+				throw new RuntimeException(StringUtils.subst("Cannot continue at path '{}'", path.toDebug(i)));
 			}
+			
+			++i;
 		}
 		
-		return path;
+		Validate.isEmpty(actOptions, 
+			StringUtils.subst(
+				"Path [{}] does not select field. Maybe you want continue with:\n{}", 
+				path.toDebug(),
+				actOptions
+					.stream()
+					.map(node->"\t"+node.toDebug())
+					.collect(Collectors.joining("\n"))
+			)
+		);
 	}
 }

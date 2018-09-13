@@ -27,7 +27,6 @@ import com.navigo3.dryapi.core.util.OptionalUtils;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
-import com.navigo3.dryapi.core.validation.ImmutableValidationData;
 import com.navigo3.dryapi.core.validation.ValidationData;
 
 public class JsonExecutor<TAppContext extends AppContext, TCallContext extends CallContext> {
@@ -163,21 +162,21 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		}
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void validate(TAppContext context, JsonRequest request, Builder outputBuilder, Object input, MethodImplementation instance, Runnable onSuccess) {
 		try {
-			Optional<ValidationData> validationResult = instance.validate(input);
-			
+			ValidationData validationResult = instance.securedValidate(input);
+	
 			Validate.notNull(validationResult);
 			
 			outputBuilder
-				.validation(validationResult.orElse(ImmutableValidationData.builder().build()));
+				.validation(validationResult);
 			
 			if (request.getRequestType()==RequestType.VALIDATE) {
 				outputBuilder
 					.status(ResponseStatus.SUCCESS);
 			} else if (request.getRequestType()==RequestType.EXECUTE) {
-				if (validationResult.isPresent() && !validationResult.get().getOverallSuccess()) {
+				if (!validationResult.getOverallSuccess()) {
 					outputBuilder
 						.status(ResponseStatus.INVALID_INPUT)
 						.errorMessage(Optional.ofNullable(context.getIsDevelopmentInstance() ? "Input validation problem" : null));
