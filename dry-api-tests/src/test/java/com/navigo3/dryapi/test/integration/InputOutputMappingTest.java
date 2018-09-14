@@ -17,6 +17,8 @@ import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOperands;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
 import com.navigo3.dryapi.sample.defs.math.integer.ImmutableIntegerOperands;
+import com.navigo3.dryapi.sample.defs.math.integer.ImmutableIntegerResult;
+import com.navigo3.dryapi.sample.defs.math.integer.NegateIntegersEndpoint;
 import com.navigo3.dryapi.test.helpers.RemoteCallsEnvironment;
 
 public class InputOutputMappingTest {
@@ -60,6 +62,37 @@ public class InputOutputMappingTest {
 		
 		env.getApi().callBlockingRaw(ImmutableRequestsBatchData.builder().addRequests(first, second).build());
 
-		assertEquals(42, second.getOutput().get().getRes());
+		assertEquals(42, second.getOutput().get().getRes().get().intValue());
+	}
+	
+	@Test
+	public void test2() {
+		//calculate 1+1
+		ModifiableRequestData<IntegerOperands, IntegerResult> first = ModifiableRequestData
+			.<IntegerOperands, IntegerResult>create()
+			.setUuid(UUID.randomUUID().toString())
+			.setInput(ImmutableIntegerOperands.builder().a(1).b(1).build())
+			.setMethod(new AddIntegersEndpoint())
+			.setRequestType(RequestType.EXECUTE);
+		
+		//calculate - ?
+		ModifiableRequestData<IntegerResult, IntegerResult> second = ModifiableRequestData
+			.<IntegerResult, IntegerResult>create()
+			.setInput(ImmutableIntegerResult.builder().build())
+			.setMethod(new NegateIntegersEndpoint())
+			.setRequestType(RequestType.EXECUTE);
+		
+		//set result of first to ? in second
+		second.addInputOutputMappings(ImmutableInputOutputMapping
+			.builder()
+			.fromUuid(first.getUuid())
+			.fromPath(StructurePath.empty())
+			.toPath(StructurePath.empty())
+			.build()
+		);
+		
+		env.getApi().callBlockingRaw(ImmutableRequestsBatchData.builder().addRequests(first, second).build());
+
+		assertEquals(-2, second.getOutput().get().getRes().get().intValue());
 	}
 }

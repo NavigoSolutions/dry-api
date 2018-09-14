@@ -37,7 +37,7 @@ public class RemoteCalls {
 			assertEquals(42, output.getRes());
 		});
 
-		assertEquals(42, future.join().getRes());
+		assertEquals(42, future.join().getRes().get().intValue());
 	}
 	
 	@Test
@@ -46,7 +46,7 @@ public class RemoteCalls {
 		
 		IntegerResult output = env.getApi().executeBlocking(new AddIntegersEndpoint(), input);
 		
-		assertEquals(42, output.getRes());
+		assertEquals(42, output.getRes().get().intValue());
 	}
 	
 	@Test

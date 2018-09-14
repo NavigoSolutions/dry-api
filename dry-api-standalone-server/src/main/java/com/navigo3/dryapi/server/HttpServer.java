@@ -97,8 +97,12 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 			);
 			
 			JsonExecutor<TAppContext, TCallContext> gate = new JsonExecutor<>(api);
-			JsonBatchResponse res = gate.execute(settings.getAppContextProvider().apply(ex), batch);
 			
+			TAppContext appContext = settings.getAppContextProvider().apply(ex);
+			
+			
+			JsonBatchResponse res = gate.execute(appContext, batch);
+
 			logger.debug("Execution done:\n{}", res
 				.getResponses()
 				.stream()

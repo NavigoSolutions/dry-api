@@ -25,7 +25,7 @@ public class AddIntegersEndpoint extends MethodDefinition<IntegerOperands, Integ
 	@JsonSerialize(as = ImmutableIntegerResult.class)
 	@JsonDeserialize(as = ImmutableIntegerResult.class)
 	public interface IntegerResult {
-		int getRes();
+		Optional<Integer> getRes();
 	}
 
 	@Override

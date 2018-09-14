@@ -68,9 +68,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 				
 				TAppContext tmpAppContext = appContext;
 				
-				res = appContext.transaction(()->{
-					return executor.execute(tmpAppContext, batch);
-				});			
+				res = executor.execute(tmpAppContext, batch);	
 			} finally {
 				if (appContext!=null) {
 					appContext.destroy();

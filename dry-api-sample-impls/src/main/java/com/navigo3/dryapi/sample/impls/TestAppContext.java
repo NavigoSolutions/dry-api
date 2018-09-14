@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.navigo3.dryapi.core.context.AppContext;
-import com.navigo3.dryapi.core.util.ExceptionUtils;
-import com.navigo3.dryapi.core.util.LambdaUtils.SupplierWithException;
 
 public class TestAppContext implements AppContext {
 	
@@ -27,12 +25,10 @@ public class TestAppContext implements AppContext {
 	}
 
 	@Override
-	public <T> T transaction(SupplierWithException<T> block) {
-		T res = ExceptionUtils.withRuntimeException(block);
+	public void transaction(Runnable block) {
+		block.run();
 		
 		runAfterCommit.forEach(Runnable::run);
-		
-		return res;
 	}
 	
 	@Override

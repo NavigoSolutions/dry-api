@@ -10,11 +10,29 @@ import com.navigo3.dryapi.core.path.StructureSelectorType;
 public class JsonAccessor {
 
 	public static JsonNode getNodeAt(JsonNode node, StructurePath path) {
-		return getNodeAt(node, path, 0);
+		if (!path.getItems().isEmpty()) {
+			return getNodeAt(node, path, 0);
+		} else {
+			return node;
+		}
 	}
 	
 	public static void setNodeAt(JsonNode node, StructurePath path, JsonNode value) {
-		setNodeAt(node, path, value, 0);
+		if (!path.getItems().isEmpty()) {
+			setNodeAt(node, path, value, 0);
+		} else {
+			Validate.equals(node.getNodeType(), value.getNodeType());
+			
+			if (node.isArray()) {
+				((ArrayNode)node).removeAll();
+				((ArrayNode)node).addAll((ArrayNode)value);
+			} else if (node.isObject()) {
+				((ObjectNode)node).removeAll();
+				((ObjectNode)node).setAll((ObjectNode)value);
+			} else {
+				throw new RuntimeException("Unknown type "+node.getNodeType());
+			}
+		}
 	}
 
 	private static JsonNode getNodeAt(JsonNode node, StructurePath path, int index) {
