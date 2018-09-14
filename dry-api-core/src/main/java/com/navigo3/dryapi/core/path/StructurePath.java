@@ -18,13 +18,13 @@ public class StructurePath {
 	public static StructurePath key(String key) {
 		Validate.notBlank(key);
 		
-		return new StructurePath(Optional.empty(), ImmutableStructurePathItem.builder().type(StructureSelectorType.KEY).key(key).build());
+		return new StructurePath(Optional.empty(), StructurePathItem.createKey(key));
 	}
 	
 	public static StructurePath index(int index) {
 		Validate.nonNegative(index);
 		
-		return new StructurePath(Optional.empty(), ImmutableStructurePathItem.builder().type(StructureSelectorType.INDEX).index(index).build());
+		return new StructurePath(Optional.empty(), StructurePathItem.createIndex(index));
 	}
 	
 	private StructurePath() {
@@ -63,12 +63,12 @@ public class StructurePath {
 	public StructurePath addKey(String key) {
 		Validate.notBlank(key);
 		
-		return new StructurePath(Optional.of(this), ImmutableStructurePathItem.builder().type(StructureSelectorType.KEY).key(key).build());
+		return new StructurePath(Optional.of(this), StructurePathItem.createKey(key));
 	}
 	
 	public StructurePath addIndex(int index) {
 		Validate.nonNegative(index);
 		
-		return new StructurePath(Optional.of(this), ImmutableStructurePathItem.builder().type(StructureSelectorType.INDEX).index(index).build());
+		return new StructurePath(Optional.of(this), StructurePathItem.createIndex(index));
 	}
 }

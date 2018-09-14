@@ -157,6 +157,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			
 			Validate.isPresent(security);
 			
+			instance.setSecurity(security.get());
+			
 			executionContext.setCallContext(callContext);
 			
 			boolean pass = security.get().getAuthorization().pass(appContext, callContext);
