@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.navigo3.dryapi.core.exec.ResponseStatus;
+import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
 
 @Value.Immutable
 @JsonSerialize(as = ImmutableJsonBatchResponse.class)
@@ -17,6 +18,6 @@ public interface JsonBatchResponse {
 	List<JsonResponse> getResponses();
 	
 	default boolean getOverallSuccess() {
-		return getResponses().stream().allMatch(r->r.getStatus()==ResponseStatus.SUCCESS);
+		return getResponses().stream().allMatch(r->r.getStatus()==ResponseStatus.SUCCESS || (r.getRequestType()==RequestType.VALIDATE && r.getStatus()==ResponseStatus.INVALID_INPUT));
 	}
 }

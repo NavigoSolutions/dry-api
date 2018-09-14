@@ -10,6 +10,7 @@ import com.navigo3.dryapi.core.security.logic.False;
 import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.core.validation.ValidationItem.Severity;
+import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.IdResult;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.defs.form.ImmutableIdResult;
@@ -17,7 +18,7 @@ import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestAppValidator;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
 
-public class FormUpsertImpl extends MethodImplementation<Person, IdResult, TestAppContext, TestCallContext> {
+public class FormUpsertImpl extends MethodImplementation<Person, IdResult, FormUpsertEndpoint, TestAppContext, TestCallContext> {
 	
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {

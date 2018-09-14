@@ -59,7 +59,7 @@ public class MethodSecurityBuilder<TAppContext extends AppContext, TCallContext 
 		return this;
 	}
 	
-	public MethodSecurityBuilder<TAppContext, TCallContext> defineOutputObjectSecurity(Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+	public MethodSecurityBuilder<TAppContext, TCallContext> defineOutputFieldsObjectSecurity(Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
 		Validate.notNull(block);
 		
 		builder.outputFieldsObjectSecurity(block);

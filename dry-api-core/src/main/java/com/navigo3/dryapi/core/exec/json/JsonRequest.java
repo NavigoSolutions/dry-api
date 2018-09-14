@@ -1,9 +1,10 @@
 package com.navigo3.dryapi.core.exec.json;
 
-import java.util.UUID;
+import java.util.List;
 
 import org.immutables.value.Value;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -13,12 +14,15 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public interface JsonRequest {
 	public enum RequestType {
 		VALIDATE,
-		EXECUTE
+		EXECUTE,
+		INPUT_FIELDS_SECURITY
 	}
 	
-	UUID getRequestUuid();
+	String getRequestUuid();
 	String getQualifiedName();
 	RequestType getRequestType();
 	
-	String getInputJson();
+	JsonNode getInput();
+	
+	List<InputOutputMapping> getInputMappings();
 }

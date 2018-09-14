@@ -15,6 +15,16 @@ public class Validate {
 			throw new RuntimeException(StringUtils.subst("Key {} should not be contained in this map", key));
 		}
 	}
+	
+	public static <T> void keyContained(Map<T, ?> map, T key) {
+		keyContained(map, key, StringUtils.subst("Key {} should be contained in this map", key));
+	}
+	
+	public static <T> void keyContained(Map<T, ?> map, T key, String message) {
+		if (!map.containsKey(key)) {
+			throw new RuntimeException(message);
+		}
+	}
 
 	public static void isPresent(Optional<?> optional) {
 		if (!optional.isPresent()) {
@@ -178,6 +188,18 @@ public class Validate {
 	public static void size(Collection<?> coll, int size) {
 		if (coll.size()!=size) {
 			throw new RuntimeException(StringUtils.subst("Expected collection of size {} got {}", size, coll.size()));
+		}
+	}
+	
+	public static void sameSize(Collection<?> coll1, Collection<?> coll2) {
+		if (coll1.size()!=coll2.size()) {
+			throw new RuntimeException(StringUtils.subst("Expected same size but got {} and {}", coll1.size(), coll2.size()));
+		}
+	}
+
+	public static void isValidIndex(Collection<?> coll, int index) {
+		if (index<0 || index>=coll.size()) {
+			throw new RuntimeException(StringUtils.subst("Index {} out of collection range <0, {})", index, coll.size()));
 		}
 	}
 }

@@ -8,11 +8,12 @@ import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
 import com.navigo3.dryapi.sample.defs.math.integer.ImmutableIntegerResult;
+import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
 
-public class SolveEverythingImpl extends MethodImplementation<TopAddressInput, IntegerResult, TestAppContext, TestCallContext> {
+public class SolveEverythingImpl extends MethodImplementation<TopAddressInput, IntegerResult, SolveEverythingEndpoint, TestAppContext, TestCallContext> {
 	
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {

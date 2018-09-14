@@ -13,8 +13,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.immutables.value.Value;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.navigo3.dryapi.core.def.MethodDefinition;
 import com.navigo3.dryapi.core.exec.json.ImmutableJsonBatchRequest;
@@ -22,7 +20,6 @@ import com.navigo3.dryapi.core.exec.json.ImmutableJsonRequest;
 import com.navigo3.dryapi.core.exec.json.JsonBatchRequest;
 import com.navigo3.dryapi.core.exec.json.JsonBatchResponse;
 import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
-import com.navigo3.dryapi.core.exec.json.JsonResponse;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.JsonUtils;
 import com.navigo3.dryapi.core.util.Validate;
@@ -41,25 +38,13 @@ import okhttp3.Response;
 
 public class RemoteHttpDryApi {
 	
-	@Value.Modifiable
-	public interface Task<TInput, TOutput, TResult> {
-		MethodDefinition<TInput, TOutput> getMethod();
-		
-		TInput getInput();
-		Optional<TOutput> getOutput();
-		boolean getOnlyValidate();
-		Consumer<TResult> getOnSuccess();
-		Consumer<Throwable> getOnFail();
-		CompletableFuture<TResult> getFuture();
-	}
-	
 	private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
 	private HttpUrl apiUrl;
 	private RemoteHttpDryApiSettings settings;
-	private List<ModifiableTask<?,?,?>> newTasks = new ArrayList<>();
-	private LinkedList<ModifiableTask<?,?,?>> tasks = new LinkedList<>();
-	private Set<ModifiableTask<?,?,?>> currentTasks = new HashSet<>();
+	private List<RequestsBatchData> newTasks = new ArrayList<>();
+	private LinkedList<RequestsBatchData> tasks = new LinkedList<>();
+	private Set<RequestsBatchData> currentTasks = new HashSet<>();
 	
 	private Thread thread;
 	private volatile boolean shouldStop;
@@ -95,23 +80,14 @@ public class RemoteHttpDryApi {
 	}
 	
 	public <TInput, TOutput> CompletableFuture<ValidationData> validateAsync(MethodDefinition<TInput, TOutput> method, TInput input, Consumer<ValidationData> onSuccess) {
-		checkStarted();
+		CompletableFuture<ValidationData> resFuture = new CompletableFuture<>();
 		
-		ModifiableTask<TInput, TOutput, ValidationData> task = ModifiableTask
-			.<TInput, TOutput, ValidationData>create()
-			.setMethod(method)
-			.setOnlyValidate(true)
-			.setInput(input)
-			.setOnSuccess(onSuccess)
-			.setOnFail(settings.getGlobalErrorHandler().orElse((t)->t.printStackTrace()))
-			.setFuture(new CompletableFuture<>());
+		callSimple(method, input, RequestType.VALIDATE).thenAccept(r->{
+			ValidationData val = r.getResponse().get().getValidation().orElseGet(()->ImmutableValidationData.builder().build());
+			resFuture.complete(val);
+		});
 		
-		synchronized (newTasks) {
-			newTasks.add(task);
-			this.thread.interrupt();
-		}
-		
-		return task.getFuture();
+		return resFuture;
 	}
 	
 	public <TInput, TOutput> ValidationData validateBlocking(MethodDefinition<TInput, TOutput> method, TInput input) {
@@ -119,29 +95,56 @@ public class RemoteHttpDryApi {
 	}
 
 	public <TInput, TOutput> CompletableFuture<TOutput> executeAsync(MethodDefinition<TInput, TOutput> method, TInput input, Consumer<TOutput> onSuccess) {
-		checkStarted();
+		CompletableFuture<TOutput> resFuture = new CompletableFuture<>();
 		
-		ModifiableTask<TInput, TOutput, TOutput> task = ModifiableTask
-			.<TInput, TOutput, TOutput>create()
-			.setMethod(method)
-			.setOnlyValidate(false)
-			.setInput(input)
-			.setOnSuccess(onSuccess)
-			.setOnFail(settings.getGlobalErrorHandler().orElse((t)->t.printStackTrace()))
-			.setFuture(new CompletableFuture<>());
+		callSimple(method, input, RequestType.EXECUTE).thenAccept(r->{
+			resFuture.complete(r.getOutput().get());
+		});
 		
-		synchronized (newTasks) {
-			newTasks.add(task);
-			this.thread.interrupt();
-		}
-		
-		return task.getFuture();
+		return resFuture;
 	}
 	
 	public <TInput, TOutput> TOutput executeBlocking(MethodDefinition<TInput, TOutput> method, TInput input) {
 		return ExceptionUtils.withRuntimeException(()->executeAsync(method, input, (res)->{}).get());
 	}
 	
+	public <TInput, TOutput> CompletableFuture<RequestData<TInput,TOutput>> callSimple(MethodDefinition<TInput, TOutput> method, TInput input, RequestType type) {
+		CompletableFuture<RequestData<TInput,TOutput>> resFuture = new CompletableFuture<>();
+		
+		ModifiableRequestData<TInput, TOutput> req = ModifiableRequestData
+			.<TInput, TOutput>create()
+			.setUuid(UUID.randomUUID().toString())
+			.setInput(input)
+			.setMethod(method)
+			.setRequestType(type);
+		
+		RequestsBatchData batch = ImmutableRequestsBatchData
+			.builder()
+			.addRequests(req)
+			.build();
+		
+		callRaw(batch).thenRun(()->resFuture.complete(req));
+		
+		return resFuture;
+	}
+	
+	public CompletableFuture<RequestsBatchData> callRaw(RequestsBatchData batch) {
+		checkStarted();
+		
+		Validate.notEmpty(batch.getRequests());
+		
+		synchronized (newTasks) {
+			newTasks.add(batch);
+			this.thread.interrupt();
+		}
+		
+		return batch.getFuture();
+	}
+	
+	public RequestsBatchData callBlockingRaw(RequestsBatchData batch) {
+		return ExceptionUtils.withRuntimeException(()->callRaw(batch).get());
+	}
+
 	private void checkStarted() {
 		Validate.isTrue(thread.isAlive() && !shouldStop, "Please start this API first by calling start() and do not forget shutdown by stop()!");
 	}
@@ -155,7 +158,7 @@ public class RemoteHttpDryApi {
 			}
 			
 			while (!tasks.isEmpty() && currentTasks.size()<settings.getMaxExecutedInParallel()) {
-				Task<?, ?, ?> task = tasks.poll();
+				RequestsBatchData task = tasks.poll();
 				
 				processTask(task);
 			}
@@ -168,20 +171,12 @@ public class RemoteHttpDryApi {
 		}
 	}
 
-	private <TInput, TOutput, TResult> void processTask(Task<TInput, TOutput, TResult> task) {
+	private void processTask(RequestsBatchData requestsBatch) {
+		Validate.notEmpty(requestsBatch.getRequests());
+		
 		ObjectMapper mapper = JsonUtils.createMapper();
 		
-		JsonBatchRequest batch = ImmutableJsonBatchRequest
-			.builder()
-			.addRequests(ImmutableJsonRequest
-				.builder()
-				.qualifiedName(task.getMethod().getQualifiedName())
-				.inputJson(ExceptionUtils.withRuntimeException(()->mapper.writeValueAsString(task.getInput())))
-				.requestType(task.getOnlyValidate() ? RequestType.VALIDATE : RequestType.EXECUTE)
-				.requestUuid(UUID.randomUUID())
-				.build()
-			)
-			.build();
+		JsonBatchRequest batch = buildBatch(mapper, requestsBatch);
 		
 		RequestBody body = ExceptionUtils.withRuntimeException(()->RequestBody.create(JSON, mapper.writeValueAsString(batch)));
 			
@@ -193,46 +188,76 @@ public class RemoteHttpDryApi {
 		httpClient.newCall(request).enqueue(new Callback() {
 			@SuppressWarnings("unchecked")
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response httpResponse) throws IOException {
 				try {
-					JsonBatchResponse batchResponse = ExceptionUtils.withRuntimeException(()->mapper.readValue(response.body().string(), JsonBatchResponse.class));
+					JsonBatchResponse batchResponse = ExceptionUtils.withRuntimeException(()->mapper.readValue(httpResponse.body().string(), JsonBatchResponse.class));
 
-					JsonResponse responseObj = batchResponse.getResponses().get(0);
+					Validate.sameSize(batchResponse.getResponses(), requestsBatch.getRequests());
 					
-//					JsonUtils.prettyPrint(responseObj);
+					batchResponse.getResponses().forEach(response->{
+						@SuppressWarnings("rawtypes")
+						Optional<? extends ModifiableRequestData> requestData = requestsBatch
+							.getRequests()
+							.stream()
+							.filter(r->r.getUuid().equals(response.getRequestUuid()))
+							.findFirst();
+						
+						Validate.isPresent(requestData, "There is no response for gived uuid!");
+						
+						requestData.get().setResponse(response);
+						
+						if (response.getOutput().isPresent()) {
+							Object output = ExceptionUtils
+									.withRuntimeException(()->mapper.convertValue(response.getOutput().get(), requestData.get().getMethod().getOutputType()));
+							
+							requestData.get().setOutput(Optional.of(output));
+						}
+							
+					});
 					
-					if (batchResponse.getOverallSuccess()) {
-						if (task.getOnlyValidate()) {
-							TResult validRes = (TResult)responseObj.getValidation().orElse(ImmutableValidationData.builder().build());
-							
-							task.getOnSuccess().accept(validRes);
-							
-							task.getFuture().complete(validRes);
-						} else {
-							String json = responseObj.getOutputJson().get();
-							
-							TResult res = ExceptionUtils.withRuntimeException(()->mapper.readValue(json, task.getMethod().getOutputType()));
-							
-							task.getOnSuccess().accept(res);
-							
-							task.getFuture().complete(res);
-						} 	
-					} else {
-						task.getOnFail().accept(new RuntimeException(responseObj.getErrorMessage().orElse("")));
-						task.getFuture().completeExceptionally(new RuntimeException(responseObj.getErrorMessage().orElse("")));
-					}
-					
+					requestsBatch.getFuture().complete(requestsBatch);
 				} catch (Throwable t) {
-					task.getOnFail().accept(t);
-					task.getFuture().completeExceptionally(t);
+					t.printStackTrace();
+					requestsBatch.getOnFail().orElse(settings.getGlobalErrorHandler().orElse(Throwable::printStackTrace));
+					requestsBatch.getFuture().completeExceptionally(t);
 				}
 			}
 			
 			@Override
 			public void onFailure(Call call, IOException e) {
 				e.printStackTrace();
-				task.getFuture().complete(null);
+				requestsBatch.getOnFail().orElse(settings.getGlobalErrorHandler().orElse(Throwable::printStackTrace));
+				requestsBatch.getFuture().completeExceptionally(e);
 			}
 		});
+	}
+
+	private JsonBatchRequest buildBatch(ObjectMapper mapper, RequestsBatchData requestsBatch) {
+		Validate.notEmpty(requestsBatch.getRequests());
+		
+		ImmutableJsonBatchRequest.Builder batchBuilder = ImmutableJsonBatchRequest.builder();
+		
+		requestsBatch.getRequests().forEach(request->{
+			
+			if (!request.uuidIsSet()) {
+				request.setUuid(UUID.randomUUID().toString());
+			}
+
+			batchBuilder.addRequests(ImmutableJsonRequest
+				.builder()
+				.qualifiedName(request.getMethod().getQualifiedName())
+				.input(ExceptionUtils.withRuntimeException(()->mapper.valueToTree(request.getInput())))
+				.requestType(request.getRequestType())
+				.requestUuid(request.getUuid())
+				.addAllInputMappings(request.getInputOutputMappings())
+				.build()
+			);
+		});
+		
+		ImmutableJsonBatchRequest res = batchBuilder.build();
+		
+		Validate.notEmpty(res.getRequests());
+		
+		return res;
 	}
 }

@@ -11,7 +11,7 @@ import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.ImmutableValidationData;
 import com.navigo3.dryapi.core.validation.ValidationData;
 
-public abstract class MethodImplementation<TInput, TOutput, TAppContext extends AppContext, TCallContext extends CallContext> {
+public abstract class MethodImplementation<TInput, TOutput, TDef extends MethodDefinition<TInput, TOutput>, TAppContext extends AppContext, TCallContext extends CallContext> {
 
 	private boolean initialized = false;
 	

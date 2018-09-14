@@ -34,7 +34,7 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 
 	public <TInput, TOutput> void register(
 			MethodDefinition<TInput, TOutput> definition, 
-			Class<? extends MethodImplementation<TInput, TOutput, TAppContext, TCallContext>> implClass
+			Class<? extends MethodImplementation<TInput, TOutput, ? extends MethodDefinition<TInput, TOutput>, TAppContext, TCallContext>> implClass
 	) {
 		Validate.notNull(definition);
 		Validate.notNull(implClass);
@@ -46,7 +46,7 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 		Validate.passRegex(qualifiedName, PATH_PATTERN);
 		Validate.keyNotContained(entries, qualifiedName);
 		
-		MethodImplementation<TInput, TOutput, TAppContext, TCallContext> implementation = ReflectionUtils.createInstance(implClass);
+		MethodImplementation<TInput, TOutput, ? extends MethodDefinition<TInput, TOutput>, TAppContext, TCallContext> implementation = ReflectionUtils.createInstance(implClass);
 		
 		Validate.notNull(implementation);
 		

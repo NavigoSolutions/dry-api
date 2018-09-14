@@ -11,10 +11,11 @@ import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.defs.form.ImmutablePerson;
+import com.navigo3.dryapi.sample.defs.list.ListPersonsEndpoint;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
 
-public class ListPersonsImpl extends MethodImplementation<Map<String, List<Person>>, List<Person>, TestAppContext, TestCallContext> {
+public class ListPersonsImpl extends MethodImplementation<Map<String, List<Person>>, List<Person>, ListPersonsEndpoint, TestAppContext, TestCallContext> {
 
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {

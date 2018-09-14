@@ -1,12 +1,16 @@
 package com.navigo3.dryapi.core.exec.json;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
@@ -19,9 +23,11 @@ import com.navigo3.dryapi.core.impl.ExecutionContext;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.impl.MethodSecurity;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
+import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.security.field.ObjectFieldsSecurity;
 import com.navigo3.dryapi.core.util.Consumer3;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
+import com.navigo3.dryapi.core.util.JsonAccessor;
 import com.navigo3.dryapi.core.util.JsonUtils;
 import com.navigo3.dryapi.core.util.OptionalUtils;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
@@ -41,23 +47,42 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	public JsonBatchResponse execute(TAppContext appContext, JsonBatchRequest batch) {
 		ImmutableJsonBatchResponse.Builder builder = ImmutableJsonBatchResponse.builder();
 		
+		Map<String, JsonNode> previousResults = new HashMap<>();
+		
 		batch.getRequests().forEach(request->{
-			builder.addResponses(execute(appContext, request));
+			JsonResponse resp = executeRequest(appContext, request, (uuid, path)->{
+				Validate.keyContained(previousResults, uuid, "");
+	
+				return JsonAccessor.getNodeAt(previousResults.get(uuid), path);
+			});
+			
+			if (resp.getRequestType()==RequestType.EXECUTE) {
+				if (resp.getStatus()==ResponseStatus.SUCCESS) {
+					if (resp.getOutput().isPresent()) {
+						Validate.keyNotContained(previousResults, resp.getRequestUuid());
+						previousResults.put(resp.getRequestUuid(), resp.getOutput().get());
+					}
+				}
+			}
+		
+			builder.addResponses(resp);
 		});
 		
 		return builder.build();
 	}
 
-	private JsonResponse execute(TAppContext appContext, JsonRequest request) {
+	private JsonResponse executeRequest(TAppContext appContext, JsonRequest request, BiFunction<String, StructurePath, JsonNode> getPreviousOutput) {
 		
 		ImmutableJsonResponse.Builder outputBuilder = ImmutableJsonResponse
 			.builder()
-			.requestUuid(request.getRequestUuid());
+			.requestUuid(request.getRequestUuid())
+			.requestType(request.getRequestType())
+			.qualifiedName(request.getQualifiedName());
 		
 		findMethod(appContext, request, outputBuilder, def->{
 			parseInputJson(appContext, request, outputBuilder, def, (rawInput, objectMapper, executionContext)->{
 				checkSecurity(appContext, request, outputBuilder, rawInput, executionContext, objectMapper, def, (instance, callContext, security)->{
-					clearProhibitedInputFields(appContext, outputBuilder, rawInput, instance, objectMapper, callContext, security, def, (input, inputPathsTree)->{
+					clearProhibitedInputFields(appContext, outputBuilder, rawInput, instance, objectMapper, callContext, security, def, request, getPreviousOutput, (input, inputPathsTree)->{
 						validate(appContext, request, outputBuilder, input, instance, inputPathsTree, ()->{
 							execute(appContext, request, outputBuilder, input, instance, objectMapper, rawOutput->{
 								clearProhibitedOutputFields(appContext, outputBuilder, rawOutput, instance, objectMapper, callContext, executionContext, def, security);
@@ -88,7 +113,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		ObjectMapper objectMapper = JsonUtils.createMapper();
 		
 		try {
-			Object input = objectMapper.readValue(request.getInputJson(), def.getInputType());
+			Object input = objectMapper.convertValue(request.getInput(), def.getInputType());
 
 			ExecutionContext<TAppContext, TCallContext> executionContext = new ExecutionContext<>(appContext);
 			
@@ -147,7 +172,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	@SuppressWarnings("rawtypes")
 	private void clearProhibitedInputFields(TAppContext appContext, Builder outputBuilder, Object rawInput, MethodImplementation instance, 
 			ObjectMapper objectMapper, TCallContext callContext, MethodSecurity<TAppContext, TCallContext> security, MethodDefinition def, 
-			BiConsumer<Object, ObjectPathsTree> block) {
+			JsonRequest request, BiFunction<String, StructurePath, JsonNode> getPreviousOutput, BiConsumer<Object, ObjectPathsTree> block) {
 		try {
 			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(rawInput);
 			
@@ -166,17 +191,33 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			}
 			
 			outputBuilder.allowedInputFields(inputPathsTree);
-			
+
 			Object input;
 			
-			if (doCleaning) {
-				int todo;
-				input = rawInput;
+			if (doCleaning || !request.getInputMappings().isEmpty()) {
+				JsonNode inputNode = objectMapper.valueToTree(rawInput);
+				
+				if (doCleaning) {
+					int todo;
+				}
+				
+				request.getInputMappings().forEach(m->{
+					logger.debug("Copying output of {} on path {} to current input on path {}", m.getFromUuid(), m.getFromPath().toDebug(), m.getToPath().toDebug());
+					JsonNode repl = getPreviousOutput.apply(m.getFromUuid(), m.getFromPath());
+					JsonAccessor.setNodeAt(inputNode, m.getToPath(), repl);
+				});
+				
+				input = objectMapper.convertValue(inputNode, def.getInputType());
 			} else {
 				input = rawInput;
 			}
 			
-			block.accept(input, inputPathsTree);
+			if (request.getRequestType()==RequestType.INPUT_FIELDS_SECURITY) {
+				outputBuilder
+				.status(ResponseStatus.SUCCESS);
+			} else {
+				block.accept(input, inputPathsTree);
+			}
 		} catch (Throwable t) {
 			logger.error("Error during clearProhibitedInputFields()", t);
 			
@@ -270,7 +311,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 
 			outputBuilder
 				.status(ResponseStatus.SUCCESS)
-				.outputJson(objectMapper.writeValueAsString(output));
+				.output(objectMapper.valueToTree(output));
 		} catch (Throwable t) {
 			logger.error("Error during clearProhibitedOutputFields()", t);
 			
