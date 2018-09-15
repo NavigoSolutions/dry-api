@@ -64,7 +64,9 @@ public abstract class GetMethodMetadataImpl<TAppContext extends AppContext, TCal
 	private void fillDefinition(ImmutableMethodFullDescription.Builder builder, MethodDefinition definition) {
 		builder
 			.qualifiedName(definition.getQualifiedName())
-			.description(definition.getDescription());
+			.description(definition.getDescription())
+			.inputTypeSchema(definition.getInputSchema())
+			.outputTypeSchema(definition.getOutputSchema());
 	}
 
 	private void fillSecurity(ImmutableMethodFullDescription.Builder builder, MethodSecurity<TAppContext,TCallContext> security) {

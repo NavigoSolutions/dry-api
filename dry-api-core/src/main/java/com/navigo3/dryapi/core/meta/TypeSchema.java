@@ -318,18 +318,10 @@ public class TypeSchema {
 	public void throwIfPathNotExists(TypePath path) {
 		TypeDefinition actType = definitions.get(rootDefinition);
 		FieldDefinition actField = null;
-		
-//		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-//		System.out.println(path.getDebug());
-		
+
 		for (int i=0;i<path.getItems().size();++i) {
 			TypePathItem item = path.getItems().get(i);
 
-			
-//			System.out.println("----------------"+item+"-----------------");
-//			System.out.println(actType);
-//			System.out.println(actField);
-			
 			try {
 				Validate.oneNotNull(actType, actField);
 

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.navigo3.dryapi.core.def.MethodDefinition;
+import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.predefined.def.GetMethodMetadataEndpoint.MethodFullDescription;
 import com.navigo3.dryapi.predefined.params.QualifiedNameParam;
 
@@ -26,6 +27,10 @@ public class GetMethodMetadataEndpoint extends MethodDefinition<QualifiedNamePar
 	public interface MethodFullDescription {
 		String getQualifiedName();
 		String getDescription();
+		
+		TypeSchema getInputTypeSchema();
+		
+		TypeSchema getOutputTypeSchema();
 		
 		SecurityNode getAuthorization();
 	}
