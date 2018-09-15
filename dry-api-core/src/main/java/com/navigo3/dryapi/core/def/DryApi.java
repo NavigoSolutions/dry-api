@@ -1,8 +1,10 @@
 package com.navigo3.dryapi.core.def;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.immutables.value.Value;
 
@@ -31,6 +33,8 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 		
 		MethodSecurity<TAppContext, TCallContext> getSecurity();
 	}
+
+	private Map<String, Entry<TAppContext, TCallContext>> entries = new HashMap<>();
 
 	public <TInput, TOutput> void register(
 			MethodDefinition<TInput, TOutput> definition, 
@@ -69,8 +73,6 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 		
 		entries.put(qualifiedName, builder.build());
 	}
-
-	private Map<String, Entry<TAppContext, TCallContext>> entries = new HashMap<>();
 	
 	@SuppressWarnings("rawtypes")
 	public Optional<MethodDefinition> lookupDefinition(String qualifiedName) {
@@ -84,5 +86,13 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 	
 	public Optional<MethodSecurity<TAppContext, TCallContext>> lookupSecurity(String qualifiedName) {
 		return Optional.ofNullable(entries.get(qualifiedName)).map(Entry::getSecurity);
+	}
+	
+	public List<String> getAllQualifiedNames() {
+		return entries
+			.keySet()
+			.stream()
+			.sorted()
+			.collect(Collectors.toList());
 	}
 }
