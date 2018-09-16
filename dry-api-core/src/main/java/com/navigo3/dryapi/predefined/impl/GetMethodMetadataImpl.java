@@ -1,4 +1,4 @@
-package com.navigo3.dryapi.impl;
+package com.navigo3.dryapi.predefined.impl;
 
 import java.util.List;
 import java.util.Optional;
