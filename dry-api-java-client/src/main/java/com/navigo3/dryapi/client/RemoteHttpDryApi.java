@@ -232,6 +232,7 @@ public class RemoteHttpDryApi {
 		});
 	}
 
+	@SuppressWarnings("unchecked")
 	private JsonBatchRequest buildBatch(ObjectMapper mapper, RequestsBatchData requestsBatch) {
 		Validate.notEmpty(requestsBatch.getRequests());
 		

@@ -210,7 +210,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			if (doCleaning || !request.getInputMappings().isEmpty()) {
 				JsonNode inputNode = objectMapper.valueToTree(rawInput);
 				
-				int todo;
+				JsonAccessor.cleanMissingFields(inputPathsTree, inputNode);
 				
 				input = objectMapper.convertValue(inputNode, def.getInputType());
 			} else {
@@ -308,8 +308,11 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			Object output;
 			
 			if (doCleaning) {
-				int todo;
-				output = rawOutput;
+				JsonNode outputNode = objectMapper.valueToTree(rawOutput);
+				
+				JsonAccessor.cleanMissingFields(outputPathsTree, outputNode);
+				
+				output = objectMapper.convertValue(outputNode, def.getOutputType());
 			} else {
 				output = rawOutput;
 			}

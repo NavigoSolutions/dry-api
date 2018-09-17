@@ -15,7 +15,7 @@ publishing {
             artifact sourcesJar
 
             pom {
-                name = "dry-api core"
+                name = "dry-api-core"
                 description = "Core library of dry-api project"
                 url = "https://github.com/NavigoSolutions/dry-api"
                 licenses {

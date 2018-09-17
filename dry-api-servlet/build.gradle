@@ -8,14 +8,14 @@ group = 'com.navigo3'
 version = jar.version
 
 publishing {
-		publications {
+    publications {
         myLibrary(MavenPublication) {
             from components.java
-						artifactId = 'dry-api-servlet'
-						artifact sourcesJar
+            artifactId = 'dry-api-servlet'
+            artifact sourcesJar
 
-						pom {
-                name = "dry-api servlet"
+            pom {
+                name = "dry-api-servlet"
                 description = "Library that provides Servlet that allows to provide dry-api"
                 url = "https://github.com/NavigoSolutions/dry-api"
                 licenses {

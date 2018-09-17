@@ -41,7 +41,7 @@ public interface ObjectPathsTree {
 	default boolean throwIfPathDoesNotExists(StructurePath path) {
 		StringBuilder errorMessage = new StringBuilder();
 		
-		if (!keyExists(path, Optional.of(errorMessage))) {
+		if (!keyExists(path, Optional.of(errorMessage), true)) {
 			throw new RuntimeException(errorMessage.toString());
 		}
 		
@@ -49,10 +49,14 @@ public interface ObjectPathsTree {
 	}
 	
 	default boolean keyExists(StructurePath path) {
-		return keyExists(path, Optional.empty());
+		return keyExists(path, Optional.empty(), true);
 	}
 	
-	default boolean keyExists(StructurePath path, Optional<StringBuilder> errorMessage) {
+	default boolean keyExistsLenient(StructurePath path) {
+		return keyExists(path, Optional.empty(), false);
+	}
+	
+	default boolean keyExists(StructurePath path, Optional<StringBuilder> errorMessage, boolean errorIfNotLeaf) {
 		List<ObjectPathsTreeNode> actOptions = getItems();
 		
 		int i = 0;
@@ -87,7 +91,7 @@ public interface ObjectPathsTree {
 			++i;
 		}
 		
-		if (!actOptions.isEmpty()) {
+		if (errorIfNotLeaf && !actOptions.isEmpty()) {
 			List<ObjectPathsTreeNode> fiActOptions = actOptions;
 			
 			errorMessage.ifPresent(b->b.append(StringUtils.subst(
