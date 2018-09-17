@@ -3,3 +3,40 @@ dependencies {
 	
 	compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
 }
+
+group = 'com.navigo3'
+version = jar.version
+
+publishing {
+		publications {
+        myLibrary(MavenPublication) {
+            from components.java
+						artifactId = 'dry-api-servlet'
+						artifact sourcesJar
+
+						pom {
+                name = "dry-api servlet"
+                description = "Library that provides Servlet that allows to provide dry-api"
+                url = "https://github.com/NavigoSolutions/dry-api"
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "kubos"
+                        name = "Jaroslav Kuboš"
+                        email = "jaroslav.kubos@navigo3.com"
+                    }
+                }
+                scm {
+                    connection = "scm:git:git@github.com:NavigoSolutions/dry-api.git"
+                    developerConnection = "scm:git:git@github.com:NavigoSolutions/dry-api.git"
+                    url = "https://github.com/NavigoSolutions/dry-api"
+                }
+            }
+        }
+    }
+}
