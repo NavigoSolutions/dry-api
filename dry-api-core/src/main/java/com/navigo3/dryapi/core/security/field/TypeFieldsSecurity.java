@@ -10,7 +10,6 @@ import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.meta.ObjectPathsTreeNode;
-import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.path.StructureSelectorType;
 import com.navigo3.dryapi.core.path.TypePath;
@@ -18,15 +17,14 @@ import com.navigo3.dryapi.core.path.TypePathItem;
 import com.navigo3.dryapi.core.path.TypeSelectorType;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
 
-public class TypeFieldsSecurity<TAppContext extends AppContext, TCallContext extends CallContext> implements FieldsSecurity<TAppContext, TCallContext> {
+public class TypeFieldsSecurity<TAppContext extends AppContext, TCallContext extends CallContext> {
 	private Map<TypePath, SecurityCheck<TAppContext, TCallContext>> securityPerField;
 
 	public TypeFieldsSecurity(Map<TypePath, SecurityCheck<TAppContext, TCallContext>> securityPerField) {
 		this.securityPerField = securityPerField;
 	}
 
-	@Override
-	public ObjectPathsTree getAllowedPaths(TAppContext appContext, TCallContext callContext, TypeSchema schema, ObjectPathsTree pathsTree) {
+	public ObjectPathsTree getAllowedPaths(TAppContext appContext, TCallContext callContext, ObjectPathsTree validPaths) {
 		List<CacheEntry<TAppContext, TCallContext>> cache = new ArrayList<>();
 		
 		List<TypePath> allowedTypePaths = securityPerField
@@ -53,7 +51,7 @@ public class TypeFieldsSecurity<TAppContext extends AppContext, TCallContext ext
 
 		List<StructurePath> res = new ArrayList<>();
 		
-		pathsTree.getItems().forEach(node->{
+		validPaths.getItems().forEach(node->{
 			addLeafsPath(res, node, 0, filterMatching(allowedTypePaths, node, 0), StructurePath.empty());
 		});		
 		

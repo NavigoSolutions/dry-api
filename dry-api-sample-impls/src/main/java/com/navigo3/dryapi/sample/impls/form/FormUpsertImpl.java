@@ -1,24 +1,21 @@
 package com.navigo3.dryapi.sample.impls.form;
 
-import java.util.Optional;
-
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.path.TypePath;
 import com.navigo3.dryapi.core.security.logic.False;
 import com.navigo3.dryapi.core.security.logic.True;
-import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.core.validation.ValidationItem.Severity;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.IdResult;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.defs.form.ImmutableIdResult;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
-import com.navigo3.dryapi.sample.impls.TestAppValidator;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
+import com.navigo3.dryapi.sample.impls.TestValidator;
 
-public class FormUpsertImpl extends MethodImplementation<Person, IdResult, FormUpsertEndpoint, TestAppContext, TestCallContext> {
+public class FormUpsertImpl extends MethodImplementation<Person, IdResult, FormUpsertEndpoint, TestAppContext, TestCallContext, TestValidator> {
 	
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
@@ -39,15 +36,13 @@ public class FormUpsertImpl extends MethodImplementation<Person, IdResult, FormU
 	}
 
 	@Override
-	public Optional<ValidationData> validate(Person input) {
-		return TestAppValidator.build(builder->{
-			builder.checkNotBlank(StructurePath.key("name"), input.getName());
-			builder.checkNotBlank(StructurePath.key("surname"), input.getSurname());
-			
-			if (input.getAge()<18) {
-				builder.addValidationItem(Severity.WARNING, StructurePath.key("age"), "You should be of age 18 or more");
-			}
-		});
+	public void validate(Person input, TestValidator validator) {
+		validator.checkNotBlank(StructurePath.key("name"), input.getName());
+		validator.checkNotBlank(StructurePath.key("surname"), input.getSurname());
+		
+		if (input.getAge()<18) {
+			validator.addItem(Severity.WARNING, StructurePath.key("age"), "You should be of age 18 or more");
+		}
 	}
 
 	@Override

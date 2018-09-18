@@ -1,17 +1,13 @@
 package com.navigo3.dryapi.core.impl;
 
-import java.util.Optional;
-
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.def.MethodDefinition;
-import com.navigo3.dryapi.core.meta.ObjectPathsTree;
-import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
-import com.navigo3.dryapi.core.validation.ImmutableValidationData;
-import com.navigo3.dryapi.core.validation.ValidationData;
+import com.navigo3.dryapi.core.validation.Validator;
 
-public abstract class MethodImplementation<TInput, TOutput, TDef extends MethodDefinition<TInput, TOutput>, TAppContext extends AppContext, TCallContext extends CallContext> {
+public abstract class MethodImplementation<TInput, TOutput, TDef 
+	extends MethodDefinition<TInput, TOutput>, TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
 
 	private boolean initialized = false;
 	
@@ -33,7 +29,7 @@ public abstract class MethodImplementation<TInput, TOutput, TDef extends MethodD
 	
 	public abstract TCallContext prepareCallContext(TInput input);
 	
-	public abstract Optional<ValidationData> validate(TInput input);
+	public abstract void validate(TInput input, TValidator validator);
 	
 	public abstract TOutput execute(TInput input);
 	
@@ -93,26 +89,5 @@ public abstract class MethodImplementation<TInput, TOutput, TDef extends MethodD
 		Validate.notNull(security);
 		
 		this.security = security;
-	}
-
-	public ValidationData securedValidate(TInput input, ObjectPathsTree tree) {
-		Optional<ValidationData> res = validate(input);
-		
-		Validate.notNull(res);
-		
-		res.ifPresent(validatorData->{
-			validatorData.getItems().forEach(item->{
-				try {
-					tree.throwIfPathDoesNotExists(item.getPath());
-				} catch (Throwable t) {
-					throw new RuntimeException(
-						StringUtils.subst("There is no path [{}] at {}.validate()", item.getPath().toDebug(), getClass().getName()), 
-						t
-					);
-				}	
-			});
-		});
-		
-		return res.orElse(ImmutableValidationData.builder().build());
 	}
 }

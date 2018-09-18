@@ -13,8 +13,8 @@ import com.navigo3.dryapi.core.util.Validate;
 
 public class ObjectFieldsSecurityBuilder<TAppContext extends AppContext, TCallContext extends CallContext> {
 	public static <TAppContext extends AppContext, TCallContext extends CallContext> Map<StructurePath, SecurityCheck<TAppContext, TCallContext>>
-		build(ObjectPathsTree tree, Consumer<ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
-		ObjectFieldsSecurityBuilder<TAppContext, TCallContext> builder = new ObjectFieldsSecurityBuilder<>(tree);
+		build(ObjectPathsTree validPaths, Consumer<ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+		ObjectFieldsSecurityBuilder<TAppContext, TCallContext> builder = new ObjectFieldsSecurityBuilder<>(validPaths);
 		
 		block.accept(builder);
 		
@@ -22,10 +22,10 @@ public class ObjectFieldsSecurityBuilder<TAppContext extends AppContext, TCallCo
 	}
 	
 	private Map<StructurePath, SecurityCheck<TAppContext, TCallContext>> securityPerField = new HashMap<>();
-	private ObjectPathsTree tree;
+	private ObjectPathsTree validPaths;
 	
-	public ObjectFieldsSecurityBuilder(ObjectPathsTree tree) {
-		this.tree = tree;
+	public ObjectFieldsSecurityBuilder(ObjectPathsTree validPaths) {
+		this.validPaths = validPaths;
 	}
 	
 	private Map<StructurePath, SecurityCheck<TAppContext, TCallContext>> build() {
@@ -44,7 +44,7 @@ public class ObjectFieldsSecurityBuilder<TAppContext extends AppContext, TCallCo
 		Validate.notNull(security);
 		Validate.keyNotContained(securityPerField, path);
 		
-		tree.throwIfPathDoesNotExists(path);
+		validPaths.throwIfPathDoesNotExists(path);
 
 		securityPerField.put(path, security);
 	}

@@ -7,8 +7,8 @@ import org.immutables.value.Value;
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
-import com.navigo3.dryapi.core.security.field.FieldsSecurity;
 import com.navigo3.dryapi.core.security.field.ObjectFieldsSecurityBuilder;
+import com.navigo3.dryapi.core.security.field.TypeFieldsSecurity;
 import com.navigo3.dryapi.core.util.Consumer3;
 import com.navigo3.dryapi.core.util.Validate;
 
@@ -16,9 +16,9 @@ import com.navigo3.dryapi.core.util.Validate;
 public interface MethodSecurity<TAppContext extends AppContext, TCallContext extends CallContext> {
 	SecurityCheck<TAppContext, TCallContext> getAuthorization();
 	
-	Optional<FieldsSecurity<TAppContext, TCallContext>> getInputFieldsTypeSecurity();
+	Optional<TypeFieldsSecurity<TAppContext, TCallContext>> getInputFieldsTypeSecurity();
 	
-	Optional<FieldsSecurity<TAppContext, TCallContext>> getOutputFieldsTypeSecurity();
+	Optional<TypeFieldsSecurity<TAppContext, TCallContext>> getOutputFieldsTypeSecurity();
 	
 	Optional<Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>>> getInputFieldsObjectSecurity();
 	

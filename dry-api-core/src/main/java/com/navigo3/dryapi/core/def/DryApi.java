@@ -17,8 +17,9 @@ import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
+import com.navigo3.dryapi.core.validation.Validator;
 
-public class DryApi<TAppContext extends AppContext, TCallContext extends CallContext> {
+public class DryApi<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
 	
 	public static final String IDENTIFIER_PATTERN = "[a-z](([A-Za-z0-9]-)*[A-Za-z0-9])*";
 	public static final String PATH_PATTERN = StringUtils.subst("({}/)*({})", IDENTIFIER_PATTERN, IDENTIFIER_PATTERN);
@@ -38,7 +39,7 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 
 	public <TInput, TOutput> void register(
 			MethodDefinition<TInput, TOutput> definition, 
-			Class<? extends MethodImplementation<TInput, TOutput, ? extends MethodDefinition<TInput, TOutput>, TAppContext, TCallContext>> implClass
+			Class<? extends MethodImplementation<TInput, TOutput, ? extends MethodDefinition<TInput, TOutput>, TAppContext, TCallContext, TValidator>> implClass
 	) {
 		Validate.notNull(definition);
 		Validate.notNull(implClass);
@@ -50,7 +51,8 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 		Validate.passRegex(qualifiedName, PATH_PATTERN);
 		Validate.keyNotContained(entries, qualifiedName);
 		
-		MethodImplementation<TInput, TOutput, ? extends MethodDefinition<TInput, TOutput>, TAppContext, TCallContext> implementation = ReflectionUtils.createInstance(implClass);
+		MethodImplementation<TInput, TOutput, ? extends MethodDefinition<TInput, TOutput>, TAppContext, TCallContext, TValidator> implementation = 
+				ReflectionUtils.createInstance(implClass);
 		
 		Validate.notNull(implementation);
 		

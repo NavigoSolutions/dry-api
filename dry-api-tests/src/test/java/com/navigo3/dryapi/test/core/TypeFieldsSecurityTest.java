@@ -14,7 +14,7 @@ import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.path.TypePath;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
-import com.navigo3.dryapi.core.security.field.FieldsSecurity;
+import com.navigo3.dryapi.core.security.field.TypeFieldsSecurity;
 import com.navigo3.dryapi.core.security.field.TypeFieldsSecurityBuilder;
 import com.navigo3.dryapi.core.security.logic.False;
 import com.navigo3.dryapi.core.security.logic.True;
@@ -48,7 +48,7 @@ public class TypeFieldsSecurityTest {
 	
 	@Test
 	public void test() {		
-		FieldsSecurity<TestAppContext, TestCallContext> typeFieldsSecurity = TypeFieldsSecurityBuilder.<TestAppContext, TestCallContext>build(schema, builder->{
+		TypeFieldsSecurity<TestAppContext, TestCallContext> typeFieldsSecurity = TypeFieldsSecurityBuilder.<TestAppContext, TestCallContext>build(schema, builder->{
 			SecurityCheck<TestAppContext, TestCallContext> everyone = new True<>();
 			SecurityCheck<TestAppContext, TestCallContext> nobody = new False<>();
 			
@@ -59,7 +59,7 @@ public class TypeFieldsSecurityTest {
 			builder.add(TypePath.field("colorsToFavoriteNumbers").addKey().addIndex(), everyone);
 		});
 		
-		ObjectPathsTree clearanceTree = typeFieldsSecurity.getAllowedPaths(appContext, callContext, schema, pathsTree);
+		ObjectPathsTree clearanceTree = typeFieldsSecurity.getAllowedPaths(appContext, callContext, pathsTree);
 		
 		assertTrue(clearanceTree.keyExists(StructurePath.key("name")));
 		assertTrue(clearanceTree.keyExists(StructurePath.key("surname")));

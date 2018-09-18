@@ -63,7 +63,7 @@ public class ObjectFieldsSecurityTest {
 				builder.add(StructurePath.key("colorsToFavoriteNumbers").addKey("blue").addIndex(1), nobody);
 			});
 		
-		ObjectPathsTree clearanceTree = dynamicFieldsSecurity.getAllowedPaths(appContext, callContext, schema, pathsTree);
+		ObjectPathsTree clearanceTree = dynamicFieldsSecurity.getAllowedPaths(appContext, callContext, pathsTree);
 		
 		assertTrue(clearanceTree.keyExists(StructurePath.key("name")));
 		assertTrue(clearanceTree.keyExists(StructurePath.key("surname")));

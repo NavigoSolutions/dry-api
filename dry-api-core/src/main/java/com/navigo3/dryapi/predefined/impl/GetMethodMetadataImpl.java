@@ -1,7 +1,6 @@
 package com.navigo3.dryapi.predefined.impl;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.navigo3.dryapi.core.context.AppContext;
@@ -13,10 +12,8 @@ import com.navigo3.dryapi.core.impl.MethodSecurity;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.security.core.ParentSecurityCheck;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
-import com.navigo3.dryapi.core.validation.ImmutableValidationData;
-import com.navigo3.dryapi.core.validation.ImmutableValidationItem;
-import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.core.validation.ValidationItem.Severity;
+import com.navigo3.dryapi.core.validation.Validator;
 import com.navigo3.dryapi.predefined.def.GetMethodMetadataEndpoint;
 import com.navigo3.dryapi.predefined.def.GetMethodMetadataEndpoint.MethodFullDescription;
 import com.navigo3.dryapi.predefined.def.GetMethodMetadataEndpoint.SecurityNode;
@@ -24,25 +21,16 @@ import com.navigo3.dryapi.predefined.def.ImmutableMethodFullDescription;
 import com.navigo3.dryapi.predefined.def.ImmutableSecurityNode;
 import com.navigo3.dryapi.predefined.params.QualifiedNameParam;
 
-public abstract class GetMethodMetadataImpl<TAppContext extends AppContext, TCallContext extends CallContext> 
-	extends MethodImplementation<QualifiedNameParam, MethodFullDescription, GetMethodMetadataEndpoint, TAppContext, TCallContext> {
+public abstract class GetMethodMetadataImpl<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> 
+	extends MethodImplementation<QualifiedNameParam, MethodFullDescription, GetMethodMetadataEndpoint, TAppContext, TCallContext, TValidator> {
 
-	public abstract DryApi<TAppContext, TCallContext> getApi();
+	public abstract DryApi<TAppContext, TCallContext, TValidator> getApi();
 	
 	@Override
-	public Optional<ValidationData> validate(QualifiedNameParam input) {
-		ImmutableValidationData.Builder builder = ImmutableValidationData.builder();
-	
+	public void validate(QualifiedNameParam input, TValidator validator) {
 		if (!getApi().lookupDefinition(input.getQualifiedName()).isPresent()) {
-			builder.addItems(ImmutableValidationItem
-				.builder()
-				.severity(Severity.ERROR)
-				.path(StructurePath.key("qualifiedName"))
-				.message("There is no such method defined")
-				.build());
+			validator.addItem(Severity.ERROR, StructurePath.key("qualifiedName"), "There is no such method defined");
 		}
-		
-		return Optional.of(builder.build());
 	}
 
 	@SuppressWarnings("rawtypes")

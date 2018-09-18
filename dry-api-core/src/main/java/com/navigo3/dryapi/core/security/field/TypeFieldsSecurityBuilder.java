@@ -12,7 +12,7 @@ import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.util.Validate;
 
 public class TypeFieldsSecurityBuilder<TAppContext extends AppContext, TCallContext extends CallContext> {
-	public static <TAppContext extends AppContext, TCallContext extends CallContext> FieldsSecurity<TAppContext, TCallContext> 
+	public static <TAppContext extends AppContext, TCallContext extends CallContext> TypeFieldsSecurity<TAppContext, TCallContext> 
 		build(TypeSchema schema, Consumer<TypeFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
 		TypeFieldsSecurityBuilder<TAppContext, TCallContext> builder = new TypeFieldsSecurityBuilder<>(schema);
 		
@@ -29,7 +29,7 @@ public class TypeFieldsSecurityBuilder<TAppContext extends AppContext, TCallCont
 		this.schema = schema;
 	}
 	
-	private FieldsSecurity<TAppContext, TCallContext> build() {
+	private TypeFieldsSecurity<TAppContext, TCallContext> build() {
 		throwIfNotFullyCovered();
 		
 		return new TypeFieldsSecurity<>(securityPerField);

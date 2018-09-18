@@ -7,4 +7,6 @@ public interface AppContext {
 	void transaction(Runnable block);
 	
 	void executeAfterCommit(Runnable block);
+	
+	void reportException(Throwable t);
 }

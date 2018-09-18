@@ -28,24 +28,28 @@ import com.navigo3.dryapi.core.exec.json.JsonBatchRequest;
 import com.navigo3.dryapi.core.exec.json.JsonBatchResponse;
 import com.navigo3.dryapi.core.exec.json.JsonExecutor;
 import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
+import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
+import com.navigo3.dryapi.core.util.Function3;
 import com.navigo3.dryapi.core.util.JsonUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
+import com.navigo3.dryapi.core.validation.Validator;
 import com.navigo3.dryapi.predefined.params.DownloadParam;
 
-public class DryApiServlet<TAppContext extends AppContext, TCallContext extends CallContext> extends HttpServlet {
+public class DryApiServlet<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(DryApiServlet.class);
     
 	private static final long serialVersionUID = 1L;
 
-	private DryApi<TAppContext, TCallContext> api;
-	private final JsonExecutor<TAppContext, TCallContext> executor;
+	private DryApi<TAppContext, TCallContext, TValidator> api;
+	private final JsonExecutor<TAppContext, TCallContext, TValidator> executor;
 	private Function<HttpServletRequest, TAppContext> contextProvider;
 	
-	public DryApiServlet(DryApi<TAppContext, TCallContext> api, Function<HttpServletRequest, TAppContext> contextProvider) {
+	public DryApiServlet(DryApi<TAppContext, TCallContext, TValidator> api, Function<HttpServletRequest, TAppContext> contextProvider, 
+			Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider) {
 		this.api = api;
-		this.executor = new JsonExecutor<>(api);
+		this.executor = new JsonExecutor<>(api, validatorProvider);
 		this.contextProvider = contextProvider;
 	}
 
@@ -157,6 +161,12 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			TAppContext tmpAppContext = appContext;
 			
 			res = executor.execute(tmpAppContext, batchRequest);	
+		} catch (Throwable t) {
+			if (appContext!=null) {
+				appContext.reportException(t);
+			}
+			
+			throw t;
 		} finally {
 			if (appContext!=null) {
 				appContext.destroy();

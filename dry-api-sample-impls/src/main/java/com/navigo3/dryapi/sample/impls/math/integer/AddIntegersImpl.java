@@ -1,21 +1,18 @@
 package com.navigo3.dryapi.sample.impls.math.integer;
 
-import java.util.Optional;
-
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.security.logic.True;
-import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOperands;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
 import com.navigo3.dryapi.sample.defs.math.integer.ImmutableIntegerResult;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
-import com.navigo3.dryapi.sample.impls.TestAppValidator;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
+import com.navigo3.dryapi.sample.impls.TestValidator;
 
-public class AddIntegersImpl extends MethodImplementation<IntegerOperands, IntegerResult, AddIntegersEndpoint, TestAppContext, TestCallContext> {
+public class AddIntegersImpl extends MethodImplementation<IntegerOperands, IntegerResult, AddIntegersEndpoint, TestAppContext, TestCallContext, TestValidator> {
 
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
@@ -28,11 +25,9 @@ public class AddIntegersImpl extends MethodImplementation<IntegerOperands, Integ
 	}
 
 	@Override
-	public Optional<ValidationData> validate(IntegerOperands input) {
-		return TestAppValidator.build(builder->{
-			builder.checkPresent(StructurePath.key("a"), input.getA());
-			builder.checkPresent(StructurePath.key("b"), input.getB());
-		});
+	public void validate(IntegerOperands input, TestValidator validator) {
+		validator.checkPresent(StructurePath.key("a"), input.getA());
+		validator.checkPresent(StructurePath.key("b"), input.getB());
 	}
 	
 	@Override

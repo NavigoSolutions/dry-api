@@ -10,11 +10,12 @@ import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.def.DryApi;
 import com.navigo3.dryapi.core.util.Validate;
+import com.navigo3.dryapi.core.validation.Validator;
 
 import io.undertow.server.HttpServerExchange;
 
 @Value.Immutable
-public interface HttpServerSettings<TAppContext extends AppContext, TCallContext extends CallContext> {
+public interface HttpServerSettings<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
 	@Value.Immutable
 	public interface HttpInterface {
 		String getHost();
@@ -27,9 +28,9 @@ public interface HttpServerSettings<TAppContext extends AppContext, TCallContext
 	}
 	
 	@Value.Immutable
-	public interface ApiMount<TAppContext extends AppContext, TCallContext extends CallContext> {
+	public interface ApiMount<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
 		String getBasePath();
-		DryApi<TAppContext, TCallContext> getDryApi();
+		DryApi<TAppContext, TCallContext, TValidator> getDryApi();
 		
 		@Check
 		default void check() {
@@ -39,7 +40,7 @@ public interface HttpServerSettings<TAppContext extends AppContext, TCallContext
 	
 	List<HttpInterface> getHttpInterfaces();
 	
-	List<ApiMount<TAppContext, TCallContext>> getApiMounts();
+	List<ApiMount<TAppContext, TCallContext, TValidator>> getApiMounts();
 	
 	Function<HttpServerExchange, TAppContext> getAppContextProvider();
 	

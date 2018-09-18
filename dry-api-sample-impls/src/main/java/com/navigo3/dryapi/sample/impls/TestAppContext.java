@@ -35,4 +35,9 @@ public class TestAppContext implements AppContext {
 	public void executeAfterCommit(Runnable block) {
 		runAfterCommit.add(block);
 	}
+
+	@Override
+	public void reportException(Throwable t) {
+		//
+	}
 }

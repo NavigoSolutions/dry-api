@@ -3,19 +3,18 @@ package com.navigo3.dryapi.sample.impls.list;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.security.logic.True;
-import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.defs.form.ImmutablePerson;
 import com.navigo3.dryapi.sample.defs.list.ListPersonsEndpoint;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
+import com.navigo3.dryapi.sample.impls.TestValidator;
 
-public class ListPersonsImpl extends MethodImplementation<Map<String, List<Person>>, List<Person>, ListPersonsEndpoint, TestAppContext, TestCallContext> {
+public class ListPersonsImpl extends MethodImplementation<Map<String, List<Person>>, List<Person>, ListPersonsEndpoint, TestAppContext, TestCallContext, TestValidator> {
 
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
@@ -28,8 +27,7 @@ public class ListPersonsImpl extends MethodImplementation<Map<String, List<Perso
 	}
 
 	@Override
-	public Optional<ValidationData> validate(Map<String, List<Person>> input) {
-		return Optional.empty();
+	public void validate(Map<String, List<Person>> input, TestValidator validator) {
 	}
 
 	@Override

@@ -1,19 +1,16 @@
 package com.navigo3.dryapi.sample.impls.math.integer;
 
-import java.util.Optional;
-
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.security.logic.True;
-import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
 import com.navigo3.dryapi.sample.defs.math.integer.ImmutableIntegerResult;
 import com.navigo3.dryapi.sample.defs.math.integer.NegateIntegersEndpoint;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
-import com.navigo3.dryapi.sample.impls.TestAppValidator;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
+import com.navigo3.dryapi.sample.impls.TestValidator;
 
-public class NegateIntegersImpl extends MethodImplementation<IntegerResult, IntegerResult, NegateIntegersEndpoint, TestAppContext, TestCallContext> {
+public class NegateIntegersImpl extends MethodImplementation<IntegerResult, IntegerResult, NegateIntegersEndpoint, TestAppContext, TestCallContext, TestValidator> {
 
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
@@ -26,9 +23,7 @@ public class NegateIntegersImpl extends MethodImplementation<IntegerResult, Inte
 	}
 
 	@Override
-	public Optional<ValidationData> validate(IntegerResult input) {
-		return TestAppValidator.build(builder->{
-		});
+	public void validate(IntegerResult input, TestValidator validator) {
 	}
 	
 	@Override

@@ -2,22 +2,21 @@ package com.navigo3.dryapi.sample.impls.download;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Optional;
 
 import com.navigo3.dryapi.core.impl.MethodImplementation;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
-import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.predefined.params.DownloadParam;
 import com.navigo3.dryapi.predefined.params.ImmutableDownloadParam;
 import com.navigo3.dryapi.sample.defs.download.DownloadPersonEndpoint;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
+import com.navigo3.dryapi.sample.impls.TestValidator;
 
-public class DownloadPersonImpl extends MethodImplementation<Person, DownloadParam, DownloadPersonEndpoint, TestAppContext, TestCallContext> {
+public class DownloadPersonImpl extends MethodImplementation<Person, DownloadParam, DownloadPersonEndpoint, TestAppContext, TestCallContext, TestValidator> {
 
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> securityBuilder) {
@@ -30,8 +29,7 @@ public class DownloadPersonImpl extends MethodImplementation<Person, DownloadPar
 	}
 
 	@Override
-	public Optional<ValidationData> validate(Person input) {
-		return Optional.empty();
+	public void validate(Person input, TestValidator validator) {
 	}
 
 	@Override
