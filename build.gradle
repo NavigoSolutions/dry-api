@@ -2,6 +2,12 @@ plugins {
   id 'org.inferred.processors' version '1.2.15'
 }
 
+ext {
+  libVersion = '0.0.4'
+}
+
+println("Building version ${libVersion}")
+
 subprojects {
   apply plugin: 'java'
   apply plugin: 'eclipse'
@@ -26,9 +32,22 @@ subprojects {
   }
 
   jar {
-    version "0.0.4"
+    version libVersion
   }
 
+  eclipse {
+      project {
+          resourceFilter {
+              appliesTo = 'FOLDERS'
+              type = 'EXCLUDE_ALL'
+              matcher {
+                  id = 'org.eclipse.ui.ide.multiFilter'
+                  arguments = '1.0-name-matches-false-false-build'
+              }
+          }
+      }
+  }
+  
   task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     version jar.version
@@ -48,3 +67,4 @@ subprojects {
     }
   }
 }
+
