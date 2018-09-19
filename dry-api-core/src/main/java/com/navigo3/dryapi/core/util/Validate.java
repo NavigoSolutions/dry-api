@@ -202,4 +202,14 @@ public class Validate {
 			throw new RuntimeException(StringUtils.subst("Index {} out of collection range <0, {})", index, coll.size()));
 		}
 	}
+	
+	public static <T> void contained(Collection<T> coll, T item) {
+		contained(coll, item, StringUtils.subst("Item '{}' not found in collection", item));
+	}
+
+	public static <T> void contained(Collection<T> coll, T item, String message) {
+		if (!coll.contains(item)) {
+			throw new RuntimeException(message);
+		}
+	}
 }

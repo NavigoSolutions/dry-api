@@ -1,6 +1,7 @@
 package com.navigo3.dryapi.servlet;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
@@ -32,6 +33,7 @@ import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.Function3;
 import com.navigo3.dryapi.core.util.JsonUtils;
+import com.navigo3.dryapi.core.util.LambdaUtils.ConsumerWithException;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.Validator;
@@ -55,9 +57,9 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		logger.debug("Handling request");
+		logger.debug("Handling POST request");
 		
-		try {
+		safelyHandleRequest(req, resp, appContext->{
 			logger.debug("Reading request");
 			
 			String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
@@ -68,28 +70,26 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			
 			JsonBatchRequest batchRequest = ExceptionUtils.withRuntimeException(()->mapper.readValue(body, new TypeReference<JsonBatchRequest>() {}));
 			
-			JsonBatchResponse res = executeBatch(batchRequest, req);
+			JsonBatchResponse res = executeBatch(batchRequest, req, appContext);
 			
 			logger.debug("Sending answer");
 			
 			resp.setCharacterEncoding("UTF-8");
-			resp.setStatus(res.getOverallSuccess() ? 200 : 500);
+			resp.setStatus(res.getOverallSuccess() ? 200 : 400);
 			resp.setContentType("application/json;charset=UTF-8");
 			
-			resp.getWriter().println(mapper.writeValueAsString(res));
+			mapper.writeValue(resp.getWriter(), res);
 			
 			logger.debug("Done");
-		} catch (Throwable t) {
-			logger.error("Exception during request handling", t);
-			
-			throw t;
-		}
+		});
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		try {
+		logger.debug("Handling GET request");
+		
+		safelyHandleRequest(req, resp, appContext->{
 			ObjectMapper mapper = JsonUtils.createMapper();
 			
 			logger.debug("Extracting params");
@@ -122,7 +122,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			
 			logger.debug("Sending answer");
 			
-			JsonBatchResponse res = executeBatch(batchRequest, req);
+			JsonBatchResponse res = executeBatch(batchRequest, req, appContext);
 			
 			Validate.isTrue(res.getOverallSuccess());
 			
@@ -136,14 +136,63 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			resp.setContentLength(data.length);
 			
 			resp.getOutputStream().write(data);		
+		});
+	}
+	
+	private void safelyHandleRequest(HttpServletRequest req, HttpServletResponse resp, ConsumerWithException<TAppContext> block) throws IOException {
+		TAppContext appContext = null;
+		
+		try {
+			logger.debug("Getting context");
+			appContext = contextProvider.apply(req);
+			
+			if (!appContext.getIsAuthenticated()) {
+				logger.info("Not authorized");
+				resp.setStatus(401);
+				resp.setContentType("text/plain");
+				resp.getWriter().println("Not authorized");
+				return;
+			}
+			
+			InetAddress clientAddress = InetAddress.getByName(req.getRemoteAddr());
+			
+			logger.debug("Calling API from IP {}", clientAddress);
+			
+			if (appContext.getAllowedIpAddresses().isPresent()) {
+				if (!appContext.getAllowedIpAddresses().get().contains(clientAddress)) {
+					logger.info("Calling from IP that is not allowed");
+					resp.setStatus(403);
+					resp.setContentType("text/plain");
+					resp.getWriter().println(StringUtils.subst("Access from your IP ({}) is not allowed", clientAddress));
+					
+					return;
+				}
+			}
+			
+			block.accept(appContext);
 		} catch (Throwable t) {
 			logger.error("Exception during request handling", t);
 			
-			throw t;
+			if (appContext!=null) {
+				appContext.reportException(t);
+			}
+			
+			resp.setStatus(500);
+			resp.setContentType("text/plain");
+
+			if (appContext!=null && appContext.getIsDevelopmentInstance()) {
+				resp.getWriter().println(ExceptionUtils.extractStacktrace("Internal error", t));
+			} else {
+				resp.getWriter().println("Internal error");
+			}
+		} finally {
+			if (appContext!=null) {
+				appContext.destroy();
+			}
 		}
 	}
 	
-	private JsonBatchResponse executeBatch(JsonBatchRequest batchRequest, HttpServletRequest req) {
+	private JsonBatchResponse executeBatch(JsonBatchRequest batchRequest, HttpServletRequest req, TAppContext appContext) {
 		logger.info("Executing:\n{}", batchRequest
 			.getRequests()
 			.stream()
@@ -151,26 +200,12 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			.collect(Collectors.joining("\n"))
 		);
 		
-		TAppContext appContext = null;
-		
 		JsonBatchResponse res = null;
 		
 		try {
-			appContext = contextProvider.apply(req);
-			
-			TAppContext tmpAppContext = appContext;
-			
-			res = executor.execute(tmpAppContext, batchRequest);	
+			res = executor.execute(appContext, batchRequest);	
 		} catch (Throwable t) {
-			if (appContext!=null) {
-				appContext.reportException(t);
-			}
-			
-			throw t;
-		} finally {
-			if (appContext!=null) {
-				appContext.destroy();
-			}
+			throw new RuntimeException(t);
 		}
 		
 		logger.debug("Execution done:\n{}", res

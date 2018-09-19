@@ -1,5 +1,7 @@
 package com.navigo3.dryapi.server;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -18,6 +20,7 @@ import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.Function3;
 import com.navigo3.dryapi.core.util.JsonUtils;
+import com.navigo3.dryapi.core.util.LambdaUtils.ConsumerWithException;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.validation.Validator;
 import com.navigo3.dryapi.server.HttpServerSettings.ApiMount;
@@ -63,50 +66,38 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 	}
 	
 	private void handleRequest(HttpServerExchange exchange) throws Exception {
-		logger.debug("Handling request");
+		logger.debug("Handling POST request");
 		
-		if (exchange.getRelativePath().equals("/shutdown")) {
+		safelyHandleRequest(exchange, appContext->{
+			logger.debug("Looking for API for relative path '{}'", exchange.getRelativePath());
 			
-			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-			exchange.setStatusCode(StatusCodes.OK);
-	        exchange.getResponseSender().send("Stopping");
-	        stop();
-	        
-	        return;
-		}
-		
-		logger.debug("Looking for API for relative path '{}'", exchange.getRelativePath());
-		
-		DryApi<TAppContext, TCallContext, TValidator> api = mounts.get(exchange.getRelativePath());
-		
-		if (api==null) {
-			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-			exchange.setStatusCode(StatusCodes.NOT_FOUND);
-	        exchange.getResponseSender().send("Not found");
-	        return;
-		}
-		
-		logger.debug("Reading request");
-		
-		exchange.getRequestReceiver().receiveFullBytes((ex, data) -> {
-			ObjectMapper mapper = JsonUtils.createMapper();
+			DryApi<TAppContext, TCallContext, TValidator> api = mounts.get(exchange.getRelativePath());
 			
-			logger.debug("Parsing request");
+			if (api==null) {
+				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+				exchange.setStatusCode(StatusCodes.NOT_FOUND);
+		        exchange.getResponseSender().send("API not found");
+		        return;
+			}
 			
-			JsonBatchRequest batch = ExceptionUtils.withRuntimeException(()->mapper.readValue(new String(data, "utf-8"), new TypeReference<JsonBatchRequest>() {}));
+			logger.debug("Reading request");
 			
-			logger.info("Executing:\n{}", batch
-				.getRequests()
-				.stream()
-				.map(r->StringUtils.subst("\tuuid={} qualifiedName={} type={}", r.getRequestUuid(), r.getQualifiedName(), r.getRequestType()))
-				.collect(Collectors.joining("\n"))
-			);
-			
-			JsonExecutor<TAppContext, TCallContext, TValidator> gate = new JsonExecutor<>(api, validatorProvider);
-			
-			TAppContext appContext = settings.getAppContextProvider().apply(ex);
-			
-			try {
+			exchange.getRequestReceiver().receiveFullBytes((ex, data) -> {
+				ObjectMapper mapper = JsonUtils.createMapper();
+				
+				logger.debug("Parsing request");
+				
+				JsonBatchRequest batch = ExceptionUtils.withRuntimeException(()->mapper.readValue(new String(data, "utf-8"), new TypeReference<JsonBatchRequest>() {}));
+				
+				logger.info("Executing:\n{}", batch
+					.getRequests()
+					.stream()
+					.map(r->StringUtils.subst("\tuuid={} qualifiedName={} type={}", r.getRequestUuid(), r.getQualifiedName(), r.getRequestType()))
+					.collect(Collectors.joining("\n"))
+				);
+				
+				JsonExecutor<TAppContext, TCallContext, TValidator> gate = new JsonExecutor<>(api, validatorProvider);
+
 				JsonBatchResponse res = gate.execute(appContext, batch);
 	
 				logger.debug("Execution done:\n{}", res
@@ -119,20 +110,67 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 				logger.debug("Sending answer");
 				
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-				exchange.setStatusCode(StatusCodes.OK);
+				exchange.setStatusCode(res.getOverallSuccess() ? StatusCodes.OK : StatusCodes.BAD_REQUEST);
 		        exchange.getResponseSender().send(ExceptionUtils.withRuntimeException(()->mapper.writeValueAsString(res)));
 		        
 		        logger.debug("Done");
-			} catch (Throwable t) {
+
+			}, (ex, e) -> {
+				logger.error("Exception during request handling", e);
+				throw new RuntimeException(e);
+			});
+		});
+	}
+	
+	private void safelyHandleRequest(HttpServerExchange exchange, ConsumerWithException<TAppContext> block) throws IOException {
+		TAppContext appContext = null;
+		
+		try {
+			logger.debug("Getting context");
+			appContext = settings.getAppContextProvider().apply(exchange);
+			
+			if (!appContext.getIsAuthenticated()) {
+				logger.info("Not authorized");
+				exchange.setStatusCode(401);
+				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+				exchange.getResponseSender().send("Not authorized");
+				return;
+			}
+			
+			InetAddress clientAddress = exchange.getSourceAddress().getAddress();
+			
+			logger.debug("Calling API from IP {}", clientAddress);
+			
+			if (appContext.getAllowedIpAddresses().isPresent()) {
+				if (!appContext.getAllowedIpAddresses().get().contains(clientAddress)) {
+					logger.info("Calling from IP that is not allowed");
+					exchange.setStatusCode(403);
+					exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+					exchange.getResponseSender().send(StringUtils.subst("Access from your IP ({}) is not allowed", clientAddress));
+					return;
+				}
+			}
+			
+			block.accept(appContext);
+		} catch (Throwable t) {
+			logger.error("Exception during request handling", t);
+			
+			if (appContext!=null) {
 				appContext.reportException(t);
-				
-				throw t;
-			} finally {
+			}
+			
+			exchange.setStatusCode(500);
+			exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+
+			if (appContext!=null && appContext.getIsDevelopmentInstance()) {
+				exchange.getResponseSender().send(ExceptionUtils.extractStacktrace("Internal error", t));
+			} else {
+				exchange.getResponseSender().send("Internal error");
+			}
+		} finally {
+			if (appContext!=null) {
 				appContext.destroy();
 			}
-		}, (ex, e) -> {
-			logger.error("Exception during request handling", e);
-			throw new RuntimeException(e);
-		});
+		}
 	}
 }

@@ -22,6 +22,7 @@ import com.navigo3.dryapi.core.exec.json.JsonBatchResponse;
 import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.JsonUtils;
+import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.ImmutableValidationData;
 import com.navigo3.dryapi.core.validation.ValidationData;
@@ -190,6 +191,10 @@ public class RemoteHttpDryApi {
 			@Override
 			public void onResponse(Call call, Response httpResponse) throws IOException {
 				try {
+					if (httpResponse.code()!=200 && httpResponse.code()!=400) {
+						throw new RuntimeException(StringUtils.subst("Unexpected error code {}. Content:\n{}", httpResponse.code(), httpResponse.body().string()));
+					}					
+					
 					JsonBatchResponse batchResponse = ExceptionUtils.withRuntimeException(()->mapper.readValue(httpResponse.body().string(), JsonBatchResponse.class));
 
 					Validate.sameSize(batchResponse.getResponses(), requestsBatch.getRequests());
@@ -217,7 +222,6 @@ public class RemoteHttpDryApi {
 					
 					requestsBatch.getFuture().complete(requestsBatch);
 				} catch (Throwable t) {
-					t.printStackTrace();
 					requestsBatch.getOnFail().orElse(settings.getGlobalErrorHandler().orElse(Throwable::printStackTrace));
 					requestsBatch.getFuture().completeExceptionally(t);
 				}
@@ -225,7 +229,6 @@ public class RemoteHttpDryApi {
 			
 			@Override
 			public void onFailure(Call call, IOException e) {
-				e.printStackTrace();
 				requestsBatch.getOnFail().orElse(settings.getGlobalErrorHandler().orElse(Throwable::printStackTrace));
 				requestsBatch.getFuture().completeExceptionally(e);
 			}

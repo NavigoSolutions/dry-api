@@ -3,6 +3,7 @@ package com.navigo3.dryapi.core.exec.json;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -49,28 +50,46 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		this.validatorProvider = validatorProvider;
 	}
 	
-	public JsonBatchResponse execute(TAppContext appContext, JsonBatchRequest batch) {
+	public JsonBatchResponse execute(TAppContext appContext, JsonBatchRequest batch) {	
 		ImmutableJsonBatchResponse.Builder builder = ImmutableJsonBatchResponse.builder();
 		
 		Map<String, JsonNode> previousResults = new HashMap<>();
 		
+		AtomicBoolean skipRest = new AtomicBoolean(false);
+		
 		appContext.transaction(()->{
 			batch.getRequests().forEach(request->{
-				JsonResponse resp = executeRequest(appContext, request, (uuid, path)->{
-					Validate.keyContained(previousResults, uuid, "");
-		
-					return JsonAccessor.getNodeAt(previousResults.get(uuid), path);
-				});
-				
-				if (resp.getRequestType()==RequestType.EXECUTE) {
-					if (resp.getStatus()==ResponseStatus.SUCCESS) {
-						if (resp.getOutput().isPresent()) {
-							Validate.keyNotContained(previousResults, resp.getRequestUuid());
-							previousResults.put(resp.getRequestUuid(), resp.getOutput().get());
+				JsonResponse resp;
+						
+				if (!skipRest.get()) {
+					resp = executeRequest(appContext, request, (uuid, path)->{
+						Validate.keyContained(previousResults, uuid, "");
+			
+						return JsonAccessor.getNodeAt(previousResults.get(uuid), path);
+					});
+					
+					if (resp.getStatus()!=ResponseStatus.SUCCESS) {
+						skipRest.set(true);
+					}
+					
+					if (resp.getRequestType()==RequestType.EXECUTE) {
+						if (resp.getStatus()==ResponseStatus.SUCCESS) {
+							if (resp.getOutput().isPresent()) {
+								Validate.keyNotContained(previousResults, resp.getRequestUuid());
+								previousResults.put(resp.getRequestUuid(), resp.getOutput().get());
+							}
 						}
 					}
+				} else {
+					resp = ImmutableJsonResponse
+						.builder()
+						.qualifiedName(request.getQualifiedName())
+						.requestType(request.getRequestType())
+						.requestUuid(request.getRequestUuid())
+						.status(ResponseStatus.NOT_PROCESSED_DUE_TO_PREVIOUS_ERRORS)
+						.build();
 				}
-			
+							
 				builder.addResponses(resp);
 			});
 		});
@@ -85,6 +104,16 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			.requestUuid(request.getRequestUuid())
 			.requestType(request.getRequestType())
 			.qualifiedName(request.getQualifiedName());
+		
+		if (appContext.getAllowedQualifiedNames().isPresent()) {
+			if (!appContext.getAllowedQualifiedNames().get().contains(request.getQualifiedName())) {
+				outputBuilder
+					.status(ResponseStatus.METHOD_NOT_ALLOWED)
+					.errorMessage(Optional.ofNullable(appContext.getIsDevelopmentInstance() ? StringUtils.subst("Calling method '{}' not allowed by settings", request.getQualifiedName()) : null));
+					
+				return outputBuilder.build();
+			}
+		}
 		
 		findMethod(appContext, request, outputBuilder, def->{
 			parseInputJson(appContext, request, outputBuilder, def, getPreviousOutput, (rawInput, objectMapper, executionContext)->{

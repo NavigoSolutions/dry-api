@@ -1,7 +1,12 @@
 package com.navigo3.dryapi.core.context;
 
+import java.net.InetAddress;
+import java.util.Optional;
+import java.util.Set;
+
 public interface AppContext {
 	boolean getIsDevelopmentInstance();
+	
 	void destroy();
 
 	void transaction(Runnable block);
@@ -9,4 +14,10 @@ public interface AppContext {
 	void executeAfterCommit(Runnable block);
 	
 	void reportException(Throwable t);
+	
+	boolean getIsAuthenticated();
+	
+	Optional<Set<String>> getAllowedQualifiedNames(); 
+	
+	Optional<Set<InetAddress>> getAllowedIpAddresses();
 }

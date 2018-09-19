@@ -12,6 +12,11 @@ public class LambdaUtils {
 	}
 	
 	@FunctionalInterface
+	public interface ConsumerWithException<T> {
+		void accept(T param) throws Throwable;
+	}
+	
+	@FunctionalInterface
 	public interface FunctionWithException<T, U> {
 		U apply(T param) throws Throwable;
 	}
