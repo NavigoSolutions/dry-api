@@ -124,18 +124,23 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			
 			JsonBatchResponse res = executeBatch(batchRequest, req, appContext);
 			
-			Validate.isTrue(res.getOverallSuccess());
-			
-			DownloadParam downloadData = mapper.convertValue(res.getResponses().get(0).getOutput().get(), new TypeReference<DownloadParam>(){});
-			
-			byte[] data = Base64.getDecoder().decode(downloadData.getContentBase64());
-			
-			resp.setStatus(200);
-			resp.setContentType(downloadData.getName());
-			resp.setHeader("Content-Disposition", StringUtils.subst("{}; filename=\"{}\"", forceDownload==false ? "inline" : "attachment", downloadData.getName()));
-			resp.setContentLength(data.length);
-			
-			resp.getOutputStream().write(data);		
+			if (res.getOverallSuccess()) {
+				DownloadParam downloadData = mapper.convertValue(res.getResponses().get(0).getOutput().get(), new TypeReference<DownloadParam>(){});
+				
+				byte[] data = Base64.getDecoder().decode(downloadData.getContentBase64());
+				
+				resp.setStatus(200);
+				resp.setContentType(downloadData.getName());
+				resp.setHeader("Content-Disposition", StringUtils.subst("{}; filename=\"{}\"", forceDownload==false ? "inline" : "attachment", downloadData.getName()));
+				resp.setContentLength(data.length);
+				
+				resp.getOutputStream().write(data);	
+			} else {
+				resp.setStatus(500);
+				resp.setContentType("text/plain");
+
+				resp.getOutputStream().write("Cannot download file. We are sorry.".getBytes());	
+			}
 		});
 	}
 	
