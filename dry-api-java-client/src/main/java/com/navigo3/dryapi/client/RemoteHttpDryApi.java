@@ -198,7 +198,7 @@ public class RemoteHttpDryApi {
 					JsonBatchResponse batchResponse = ExceptionUtils.withRuntimeException(()->mapper.readValue(httpResponse.body().string(), JsonBatchResponse.class));
 
 					Validate.sameSize(batchResponse.getResponses(), requestsBatch.getRequests());
-					
+
 					batchResponse.getResponses().forEach(response->{
 						@SuppressWarnings("rawtypes")
 						Optional<? extends ModifiableRequestData> requestData = requestsBatch
