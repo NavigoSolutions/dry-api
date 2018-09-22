@@ -46,11 +46,11 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	
 	private final Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider;
 
-	private BiConsumer<String, Duration> statsConsumer;
+	private Consumer3<String, Duration, TAppContext> statsConsumer;
 
 	public JsonExecutor(DryApi<TAppContext, TCallContext, TValidator> api, 
 			Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider,
-			BiConsumer<String, Duration> statsConsumer) {
+			Consumer3<String, Duration, TAppContext> statsConsumer) {
 		Validate.notNull(api);
 		Validate.notNull(validatorProvider);
 		Validate.notNull(statsConsumer);
@@ -105,7 +105,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				builder.addResponses(resp);
 				
 				if (api.lookupDefinition(request.getQualifiedName()).isPresent()) {
-					statsConsumer.accept(request.getQualifiedName(), Duration.ofMillis(System.currentTimeMillis()-startedAt));
+					statsConsumer.accept(request.getQualifiedName(), Duration.ofMillis(System.currentTimeMillis()-startedAt), appContext);
 				}
 			});
 		});

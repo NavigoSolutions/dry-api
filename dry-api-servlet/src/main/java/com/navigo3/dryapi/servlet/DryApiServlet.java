@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -32,6 +31,7 @@ import com.navigo3.dryapi.core.exec.json.JsonBatchResponse;
 import com.navigo3.dryapi.core.exec.json.JsonExecutor;
 import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
+import com.navigo3.dryapi.core.util.Consumer3;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.Function3;
 import com.navigo3.dryapi.core.util.JsonUtils;
@@ -51,7 +51,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 	private Function<HttpServletRequest, TAppContext> contextProvider;
 	
 	public DryApiServlet(DryApi<TAppContext, TCallContext, TValidator> api, Function<HttpServletRequest, TAppContext> contextProvider, 
-			Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider, BiConsumer<String, Duration> statsConsumer) {
+			Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider, Consumer3<String, Duration, TAppContext> statsConsumer) {
 		this.api = api;
 		this.executor = new JsonExecutor<>(api, validatorProvider, statsConsumer);
 		this.contextProvider = contextProvider;
