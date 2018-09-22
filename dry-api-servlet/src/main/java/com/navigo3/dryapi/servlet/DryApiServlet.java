@@ -2,9 +2,11 @@ package com.navigo3.dryapi.servlet;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -49,9 +51,9 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 	private Function<HttpServletRequest, TAppContext> contextProvider;
 	
 	public DryApiServlet(DryApi<TAppContext, TCallContext, TValidator> api, Function<HttpServletRequest, TAppContext> contextProvider, 
-			Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider) {
+			Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider, BiConsumer<String, Duration> statsConsumer) {
 		this.api = api;
-		this.executor = new JsonExecutor<>(api, validatorProvider);
+		this.executor = new JsonExecutor<>(api, validatorProvider, statsConsumer);
 		this.contextProvider = contextProvider;
 	}
 

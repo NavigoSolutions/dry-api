@@ -96,7 +96,7 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 					.collect(Collectors.joining("\n"))
 				);
 				
-				JsonExecutor<TAppContext, TCallContext, TValidator> gate = new JsonExecutor<>(api, validatorProvider);
+				JsonExecutor<TAppContext, TCallContext, TValidator> gate = new JsonExecutor<>(api, validatorProvider, (qualifiedName, duration)->{});
 
 				JsonBatchResponse res = gate.execute(appContext, batch);
 	

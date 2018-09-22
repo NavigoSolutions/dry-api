@@ -1,5 +1,6 @@
 package com.navigo3.dryapi.core.exec.json;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -45,9 +46,18 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	
 	private final Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider;
 
-	public JsonExecutor(DryApi<TAppContext, TCallContext, TValidator> api, Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider) {
+	private BiConsumer<String, Duration> statsConsumer;
+
+	public JsonExecutor(DryApi<TAppContext, TCallContext, TValidator> api, 
+			Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider,
+			BiConsumer<String, Duration> statsConsumer) {
+		Validate.notNull(api);
+		Validate.notNull(validatorProvider);
+		Validate.notNull(statsConsumer);
+		
 		this.api = api;
 		this.validatorProvider = validatorProvider;
+		this.statsConsumer = statsConsumer;
 	}
 	
 	public JsonBatchResponse execute(TAppContext appContext, JsonBatchRequest batch) {	
@@ -59,6 +69,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		
 		appContext.transaction(()->{
 			batch.getRequests().forEach(request->{
+				long startedAt = System.currentTimeMillis();
+				
 				JsonResponse resp;
 						
 				if (!skipRest.get()) {
@@ -91,6 +103,10 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				}
 							
 				builder.addResponses(resp);
+				
+				if (api.lookupDefinition(request.getQualifiedName()).isPresent()) {
+					statsConsumer.accept(request.getQualifiedName(), Duration.ofMillis(System.currentTimeMillis()-startedAt));
+				}
 			});
 		});
 				
