@@ -1,6 +1,5 @@
 package com.navigo3.dryapi.core.context;
 
-import java.net.InetAddress;
 import java.util.Optional;
 import java.util.Set;
 
@@ -17,7 +16,5 @@ public interface AppContext {
 	
 	boolean getIsAuthenticated();
 	
-	Optional<Set<String>> getAllowedQualifiedNames(); 
-	
-	Optional<Set<InetAddress>> getAllowedIpAddresses();
+	Optional<Set<String>> getAllowedQualifiedNames();
 }

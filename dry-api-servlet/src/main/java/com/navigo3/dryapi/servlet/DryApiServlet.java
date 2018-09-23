@@ -1,7 +1,6 @@
 package com.navigo3.dryapi.servlet;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Optional;
@@ -159,21 +158,6 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 				resp.setContentType("text/plain");
 				resp.getWriter().println("Not authorized");
 				return;
-			}
-			
-			InetAddress clientAddress = InetAddress.getByName(req.getRemoteAddr());
-			
-			logger.debug("Calling API from IP {}", clientAddress);
-			
-			if (appContext.getAllowedIpAddresses().isPresent()) {
-				if (!appContext.getAllowedIpAddresses().get().contains(clientAddress)) {
-					logger.info("Calling from IP that is not allowed");
-					resp.setStatus(403);
-					resp.setContentType("text/plain");
-					resp.getWriter().println(StringUtils.subst("Access from your IP ({}) is not allowed", clientAddress));
-					
-					return;
-				}
 			}
 			
 			block.accept(appContext);

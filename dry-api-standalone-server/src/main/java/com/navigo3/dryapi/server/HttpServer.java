@@ -1,7 +1,6 @@
 package com.navigo3.dryapi.server;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -135,20 +134,6 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
 				exchange.getResponseSender().send("Not authorized");
 				return;
-			}
-			
-			InetAddress clientAddress = exchange.getSourceAddress().getAddress();
-			
-			logger.debug("Calling API from IP {}", clientAddress);
-			
-			if (appContext.getAllowedIpAddresses().isPresent()) {
-				if (!appContext.getAllowedIpAddresses().get().contains(clientAddress)) {
-					logger.info("Calling from IP that is not allowed");
-					exchange.setStatusCode(403);
-					exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-					exchange.getResponseSender().send(StringUtils.subst("Access from your IP ({}) is not allowed", clientAddress));
-					return;
-				}
 			}
 			
 			block.accept(appContext);
