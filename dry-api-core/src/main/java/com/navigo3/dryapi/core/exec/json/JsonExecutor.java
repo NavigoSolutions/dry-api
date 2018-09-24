@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.security.field.ObjectFieldsSecurity;
 import com.navigo3.dryapi.core.util.Consumer3;
+import com.navigo3.dryapi.core.util.Consumer4;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.Function3;
 import com.navigo3.dryapi.core.util.JsonAccessor;
@@ -133,8 +135,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		
 		findMethod(appContext, request, outputBuilder, def->{
 			parseInputJson(appContext, request, outputBuilder, def, getPreviousOutput, (rawInput, objectMapper, executionContext)->{
-				checkSecurity(appContext, request, outputBuilder, rawInput, executionContext, objectMapper, def, (instance, callContext, security)->{
-					clearProhibitedInputFields(appContext, outputBuilder, rawInput, instance, objectMapper, callContext, security, def, request, (input, inputPathsTree)->{
+				checkSecurity(appContext, request, outputBuilder, rawInput, executionContext, objectMapper, def, (instance, callContext, security, securityPassed)->{
+					clearProhibitedInputFields(appContext, outputBuilder, rawInput, instance, objectMapper, callContext, security, def, request, securityPassed, (input, inputPathsTree)->{
 						validate(appContext, request, outputBuilder, input, instance, inputPathsTree, callContext, ()->{
 							execute(appContext, request, outputBuilder, input, instance, objectMapper, rawOutput->{
 								clearProhibitedOutputFields(appContext, outputBuilder, rawOutput, instance, objectMapper, callContext, executionContext, def, security);
@@ -191,7 +193,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void checkSecurity(TAppContext appContext, JsonRequest request, Builder outputBuilder, Object rawInput, ExecutionContext<TAppContext, TCallContext> executionContext,
-			ObjectMapper objectMapper, MethodDefinition def, Consumer3<MethodImplementation, TCallContext, MethodSecurity<TAppContext, TCallContext>> onSuccess) {
+			ObjectMapper objectMapper, MethodDefinition def, Consumer4<MethodImplementation, TCallContext, MethodSecurity<TAppContext, TCallContext>, Boolean> onSuccess) {
 		try {
 			Optional<Class<? extends MethodImplementation>> impl = api.lookupImplementationClass(request.getQualifiedName());
 			
@@ -214,8 +216,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			
 			boolean pass = security.get().getAuthorization().pass(appContext, callContext);
 						
-			if (pass) {
-				onSuccess.accept(instance, callContext, security.get());
+			if (pass || request.getRequestType()==RequestType.INPUT_FIELDS_SECURITY) {
+				onSuccess.accept(instance, callContext, security.get(), pass);
 			} else {
 				logger.info("Not authorized checkSecurity()");
 				
@@ -238,7 +240,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	@SuppressWarnings("rawtypes")
 	private void clearProhibitedInputFields(TAppContext appContext, Builder outputBuilder, Object rawInput, MethodImplementation instance, 
 			ObjectMapper objectMapper, TCallContext callContext, MethodSecurity<TAppContext, TCallContext> security, MethodDefinition def, 
-			JsonRequest request, BiConsumer<Object, ObjectPathsTree> block) {
+			JsonRequest request, boolean securityPassed, BiConsumer<Object, ObjectPathsTree> block) {
 		try {
 			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(rawInput);
 			
@@ -256,25 +258,34 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				doCleaning = false;
 			}
 			
-			outputBuilder.allowedInputFields(inputPathsTree);
-
-			Object input;
-			
-			if (doCleaning || !request.getInputMappings().isEmpty()) {
-				JsonNode inputNode = objectMapper.valueToTree(rawInput);
-				
-				JsonAccessor.cleanMissingFields(inputPathsTree, inputNode);
-				
-				input = objectMapper.convertValue(inputNode, def.getInputType());
-			} else {
-				input = rawInput;
+			if (!securityPassed) {
+				Validate.isEmpty(inputPathsTree.getItems(),
+					StringUtils.subst(
+						"If this request did not passed through security check, there should be no allowed fields! Namely:\n{}", 
+						inputPathsTree.toPaths().stream().map(p->"\t"+p.toDebug()).collect(Collectors.joining("\n"))
+					)
+				);
 			}
 			
-			if (request.getRequestType()==RequestType.INPUT_FIELDS_SECURITY) {
-				outputBuilder
-				.status(ResponseStatus.SUCCESS);
-			} else {
+			outputBuilder.allowedInputFields(inputPathsTree);
+			
+			if (request.getRequestType()!=RequestType.INPUT_FIELDS_SECURITY) {
+				Object input;
+				
+				if (doCleaning || !request.getInputMappings().isEmpty()) {
+					JsonNode inputNode = objectMapper.valueToTree(rawInput);
+					
+					JsonAccessor.cleanMissingFields(inputPathsTree, inputNode);
+					
+					input = objectMapper.convertValue(inputNode, def.getInputType());
+				} else {
+					input = rawInput;
+				}
+				
 				block.accept(input, inputPathsTree);
+			} else {
+				outputBuilder
+					.status(ResponseStatus.SUCCESS);
 			}
 		} catch (Throwable t) {
 			logger.error("Error during clearProhibitedInputFields()", t);
