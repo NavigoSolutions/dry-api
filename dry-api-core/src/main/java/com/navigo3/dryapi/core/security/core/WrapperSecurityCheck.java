@@ -7,7 +7,7 @@ import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.util.Validate;
 
-public class WrapperSecurityCheck<TAppContext extends AppContext, TCallContext extends CallContext> 
+public abstract class WrapperSecurityCheck<TAppContext extends AppContext, TCallContext extends CallContext> 
 	implements SecurityCheck<TAppContext, TCallContext>, ParentSecurityCheck<TAppContext, TCallContext> {
 
 	private List<SecurityCheck<TAppContext, TCallContext>> items;
@@ -21,11 +21,6 @@ public class WrapperSecurityCheck<TAppContext extends AppContext, TCallContext e
 	@Override
 	public boolean pass(TAppContext appContext, TCallContext callContext) {
 		return items.get(0).pass(appContext, callContext);
-	}
-
-	@Override
-	public String getDescription() {
-		return items.get(0).getDescription();
 	}
 
 	@Override
