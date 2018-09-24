@@ -1,5 +1,6 @@
 package com.navigo3.dryapi.core.meta;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -108,6 +109,14 @@ public interface ObjectPathsTree {
 		
 		return true;
 	}
+	
+	default List<StructurePath> toPaths() {
+		List<StructurePath> res = new ArrayList<>();
+		
+		getItems().forEach(node->node.addToPaths(StructurePath.empty(), res));
+		
+		return res;
+	} 
 
 	static ObjectPathsTree from(List<StructurePath> allowedPaths) {
 		ImmutableObjectPathsTree.Builder builder = ImmutableObjectPathsTree.builder();

@@ -7,6 +7,7 @@ import org.immutables.value.Value;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.path.StructureSelectorType;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
@@ -44,6 +45,24 @@ public interface ObjectPathsTreeNode {
 			return StringUtils.subst("[{}]", getIndex().get());			
 		} else {
 			throw new RuntimeException(StringUtils.subst("Unknown type {}", getType()));
+		}
+	}
+	
+	default void addToPaths(StructurePath basePath, List<StructurePath> res) {
+		StructurePath myPath;
+		
+		if (getType()==StructureSelectorType.KEY) {
+			myPath = basePath.addKey(getKey().get());
+		} else if (getType()==StructureSelectorType.INDEX) {
+			myPath = basePath.addIndex(getIndex().get());
+		} else {
+			throw new RuntimeException("Unsupported key type "+getType());
+		}
+		
+		if (!getItems().isPresent() || getItems().get().isEmpty()) {
+			res.add(myPath);
+		} else {
+			getItems().get().forEach(node->node.addToPaths(myPath, res));
 		}
 	}
 }
