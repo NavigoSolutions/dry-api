@@ -76,6 +76,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				JsonResponse resp;
 						
 				if (!skipRest.get()) {
+					logger.debug("Executing method={}, uuid={}", request.getQualifiedName(), request.getRequestUuid());
+					
 					resp = executeRequest(appContext, request, (uuid, path)->{
 						Validate.keyContained(previousResults, uuid, "");
 			
@@ -95,6 +97,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 						}
 					}
 				} else {
+					logger.debug("Skipping due to previous errors method={} uuid={}", request.getQualifiedName(), request.getRequestUuid());
+					
 					resp = ImmutableJsonResponse
 						.builder()
 						.qualifiedName(request.getQualifiedName())
@@ -139,7 +143,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 					clearProhibitedInputFields(appContext, outputBuilder, rawInput, instance, objectMapper, callContext, security, def, request, securityPassed, (input, inputPathsTree)->{
 						validate(appContext, request, outputBuilder, input, instance, inputPathsTree, callContext, ()->{
 							execute(appContext, request, outputBuilder, input, instance, objectMapper, rawOutput->{
-								clearProhibitedOutputFields(appContext, outputBuilder, rawOutput, instance, objectMapper, callContext, executionContext, def, security);
+								clearProhibitedOutputFields(request, appContext, outputBuilder, rawOutput, instance, objectMapper, callContext, executionContext, def, security);
 							});
 						});
 					});
@@ -181,7 +185,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			
 			onSuccess.accept(rawInput, objectMapper, executionContext);
 		} catch (Throwable t) {
-			logger.error("Error during parseInputJson", t);
+			logger.error("Error during parseInputJson method={} uuid={}", request.getQualifiedName(), request.getRequestUuid(), t);
 			
 			appContext.reportException(t);
 			
@@ -227,7 +231,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			}
 			
 		} catch (Throwable t) {
-			logger.error("Error during checkSecurity()", t);
+			logger.error("Error during checkSecurity() method={} uuid={}", request.getQualifiedName(), request.getRequestUuid(), t);
 			
 			appContext.reportException(t);
 			
@@ -288,7 +292,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 					.status(ResponseStatus.SUCCESS);
 			}
 		} catch (Throwable t) {
-			logger.error("Error during clearProhibitedInputFields()", t);
+			logger.error("Error during clearProhibitedInputFields() method={} uuid={}", request.getQualifiedName(), request.getRequestUuid(), t);
 			
 			appContext.reportException(t);
 			
@@ -328,7 +332,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				throw new RuntimeException(StringUtils.subst("Unknown type: {}", request.getRequestType()));
 			}			
 		} catch (Throwable t) {
-			logger.error("Error during validate()", t);
+			logger.error("Error during validate() method={} uuid={}", request.getQualifiedName(), request.getRequestUuid(), t);
 			
 			appContext.reportException(t);
 			
@@ -346,7 +350,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			
 			onSuccess.accept(output);
 		} catch (Throwable t) {
-			logger.error("Error during execute()", t);
+			logger.error("Error during execute() method={} uuid={}", request.getQualifiedName(), request.getRequestUuid(), t);
 			
 			appContext.reportException(t);
 			
@@ -357,7 +361,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private void clearProhibitedOutputFields(TAppContext appContext, Builder outputBuilder, Object rawOutput,
+	private void clearProhibitedOutputFields(JsonRequest request, TAppContext appContext, Builder outputBuilder, Object rawOutput,
 			MethodImplementation instance, ObjectMapper objectMapper, TCallContext callContext, ExecutionContext executionContext,
 			MethodDefinition def, MethodSecurity<TAppContext, TCallContext> security) {
 		try {
@@ -395,7 +399,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				.status(ResponseStatus.SUCCESS)
 				.output(objectMapper.valueToTree(output));
 		} catch (Throwable t) {
-			logger.error("Error during clearProhibitedOutputFields()", t);
+			logger.error("Error during clearProhibitedOutputFields() method={} uuid={}", request.getQualifiedName(), request.getRequestUuid(), t);
 			
 			appContext.reportException(t);
 			
