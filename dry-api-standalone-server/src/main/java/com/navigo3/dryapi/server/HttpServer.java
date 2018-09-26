@@ -2,6 +2,7 @@ package com.navigo3.dryapi.server;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -68,6 +69,24 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 		logger.debug("Handling POST request");
 		
 		safelyHandleRequest(exchange, appContext->{
+			String rawContentType = exchange.getRequestHeaders().get(Headers.CONTENT_TYPE).getFirst();
+			
+			String contentType = StringUtils
+				.defaultString(rawContentType)
+				.trim()
+				.replaceAll("\\s", "")
+				.toLowerCase();
+			
+			if (!Objects.equals(contentType, "application/json;charset=utf-8")) {
+				logger.info("Content type '{}' not supported", rawContentType);
+
+				exchange.setStatusCode(415);
+				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+				exchange.getResponseSender().send("Please use content type: application/json;charset=utf-8");
+				
+				return;
+			}
+			
 			logger.debug("Looking for API for relative path '{}'", exchange.getRelativePath());
 			
 			DryApi<TAppContext, TCallContext, TValidator> api = mounts.get(exchange.getRelativePath());

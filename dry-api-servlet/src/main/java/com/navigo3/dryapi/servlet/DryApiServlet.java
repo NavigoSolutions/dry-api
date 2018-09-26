@@ -3,6 +3,7 @@ package com.navigo3.dryapi.servlet;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -61,6 +62,19 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 		logger.debug("Handling POST request");
 		
 		safelyHandleRequest(req, resp, appContext->{
+			String contentType = StringUtils.defaultString(req.getContentType()).trim().replaceAll("\\s", "").toLowerCase();
+			
+			if (!Objects.equals(contentType, "application/json;charset=utf-8")) {
+				logger.info("Content type '{}' not supported", req.getContentType());
+				
+				resp.setCharacterEncoding("UTF-8");
+				resp.setStatus(415);
+				resp.setContentType("text/plain");
+				resp.getOutputStream().println("Please use content type: application/json;charset=utf-8");
+				
+				return;
+			}
+			
 			logger.debug("Reading request");
 			
 			String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
@@ -77,7 +91,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			
 			resp.setCharacterEncoding("UTF-8");
 			resp.setStatus(res.getOverallSuccess() ? 200 : 400);
-			resp.setContentType("application/json;charset=UTF-8");
+			resp.setContentType("application/json;charset=utf-8");
 			
 			mapper.writeValue(resp.getWriter(), res);
 			

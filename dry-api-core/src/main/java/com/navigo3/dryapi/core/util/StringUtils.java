@@ -78,4 +78,8 @@ public class StringUtils {
 		
 		return builder.toString();
 	}
+
+	public static String defaultString(String str) {
+		return str==null ? "" : str;
+	}
 }
