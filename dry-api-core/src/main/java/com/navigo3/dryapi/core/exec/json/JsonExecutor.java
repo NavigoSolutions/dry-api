@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -69,6 +70,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		
 		AtomicBoolean skipRest = new AtomicBoolean(false);
 		
+		AtomicReference<JsonBatchResponse> result = new AtomicReference<>();
+		
 		appContext.transaction(()->{
 			batch.getRequests().forEach(request->{
 				long startedAt = System.currentTimeMillis();
@@ -114,9 +117,13 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 					statsConsumer.accept(request.getQualifiedName(), Duration.ofMillis(System.currentTimeMillis()-startedAt), appContext);
 				}
 			});
+			
+			result.set(builder.build());
+			
+			return result.get().getOverallSuccess();
 		});
 				
-		return builder.build();
+		return result.get();
 	}
 
 	private JsonResponse executeRequest(TAppContext appContext, JsonRequest request, BiFunction<String, StructurePath, JsonNode> getPreviousOutput) {

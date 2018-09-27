@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import com.navigo3.dryapi.core.context.AppContext;
 
@@ -27,8 +28,10 @@ public class TestAppContext implements AppContext {
 	}
 
 	@Override
-	public void transaction(Runnable block) {
-		block.run();
+	public void transaction(Supplier<Boolean> block) {
+		boolean commit = block.get();
+		
+		System.out.println("Transaction: "+(commit ? "COMMIT" : "ROLLBACK"));
 		
 		runAfterCommit.forEach(Runnable::run);
 	}
