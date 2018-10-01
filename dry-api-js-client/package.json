@@ -1,0 +1,10 @@
+{
+    "name": "dry-api-js-client",
+    "author": "Jaroslav Kuboš",
+    "version": "0.0.1",
+    "private": true,
+    "main": "src/DryAPI.js",
+    "dependencies": {},
+    "devDependencies": {
+    }
+}
