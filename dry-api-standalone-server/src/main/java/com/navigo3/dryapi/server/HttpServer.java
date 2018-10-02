@@ -1,6 +1,7 @@
 package com.navigo3.dryapi.server;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -22,12 +23,14 @@ import com.navigo3.dryapi.core.util.Function3;
 import com.navigo3.dryapi.core.util.JsonUtils;
 import com.navigo3.dryapi.core.util.LambdaUtils.ConsumerWithException;
 import com.navigo3.dryapi.core.util.StringUtils;
+import com.navigo3.dryapi.core.util.ThreadUtils;
 import com.navigo3.dryapi.core.validation.Validator;
 import com.navigo3.dryapi.server.HttpServerSettings.ApiMount;
 
 import io.undertow.Undertow;
 import io.undertow.Undertow.Builder;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.util.HeaderValues;
 import io.undertow.util.Headers;
 import io.undertow.util.StatusCodes;
 
@@ -63,13 +66,21 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 
 	public void stop() {
 		server.stop();
+		waitForStopped();
+	}
+	
+	public void waitForStopped() {
+		while (!server.getWorker().isShutdown()) {
+			ThreadUtils.optimisticSleep(Duration.ofMillis(100));
+		}
 	}
 	
 	private void handleRequest(HttpServerExchange exchange) throws Exception {
 		logger.debug("Handling POST request");
 		
 		safelyHandleRequest(exchange, appContext->{
-			String rawContentType = exchange.getRequestHeaders().get(Headers.CONTENT_TYPE).getFirst();
+			HeaderValues contentTypeHeaders = exchange.getRequestHeaders().get(Headers.CONTENT_TYPE);
+			String rawContentType = contentTypeHeaders!=null ? contentTypeHeaders.getFirst() : "";
 			
 			String contentType = StringUtils
 				.defaultString(rawContentType)
