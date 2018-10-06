@@ -82,4 +82,8 @@ public class StringUtils {
 	public static String defaultString(String str) {
 		return str==null ? "" : str;
 	}
+
+	public static boolean isBlank(String str) {
+		return str==null || str.trim().isEmpty();
+	}
 }

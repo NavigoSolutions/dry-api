@@ -21,7 +21,7 @@ public class JsonAccessorTest {
 
 	@Before
 	public void setUp() throws Exception {
-		rootNode = JsonUtils.createMapper().valueToTree(TopAddressInput.createSampleData());
+		rootNode = JsonUtils.createJsonMapper().valueToTree(TopAddressInput.createSampleData());
 	}
 	
 	@Test
@@ -72,15 +72,15 @@ public class JsonAccessorTest {
 			StructurePath.key("corner"),
 			StructurePath.key("galaxy"),
 			StructurePath.key("middleAddress").addKey("continent"),
-			StructurePath.key("middleAddress").addKey("cronicles").addKey("2016-01-22T10:15:42"),
+			StructurePath.key("middleAddress").addKey("cronicles").addKey("2016-01-22 10:15:42"),
 			StructurePath.key("middleAddress").addKey("lowAddresses").addIndex(1).addKey("city"),
 			StructurePath.key("middleAddress").addKey("lowAddresses").addIndex(1).addKey("street")
 		));
 
 		JsonAccessor.cleanMissingFields(futureTree, rootNode);
 		
-		String outputJson = JsonUtils.createMapper().writeValueAsString(rootNode);
+		String outputJson = JsonUtils.createJsonMapper().writeValueAsString(rootNode);
 
-		JSONAssert.assertEquals(outputJson, "{\"corner\":\"left\",\"galaxy\":\"Milky way\",\"middleAddress\":{\"continent\":\"Europe\",\"country\":null,\"cronicles\":{\"2017-01-22T10:15:42\":null,\"2016-01-22T10:15:42\":\"two years ago\"},\"currentGalacticDateTime\":null,\"lowAddresses\":[null,{\"city\":\"Brno\",\"door\":null,\"number\":null,\"state\":null,\"street\":\"Charvatska\"}],\"mainAddress\":null,\"stringCodes\":null},\"planet\":null}\n", true);
+		JSONAssert.assertEquals(outputJson, "{\"corner\":\"left\",\"galaxy\":\"Milky way\",\"middleAddress\":{\"continent\":\"Europe\",\"country\":null,\"cronicles\":{\"2017-01-22 10:15:42\":null,\"2016-01-22 10:15:42\":\"two years ago\"},\"currentGalacticDateTime\":null,\"lowAddresses\":[null,{\"city\":\"Brno\",\"door\":null,\"number\":null,\"state\":null,\"street\":\"Charvatska\"}],\"mainAddress\":null,\"stringCodes\":null},\"planet\":null}\n", true);
 	}	
 }

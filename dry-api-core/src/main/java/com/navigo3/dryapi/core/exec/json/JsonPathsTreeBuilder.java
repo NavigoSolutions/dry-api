@@ -20,7 +20,7 @@ import com.navigo3.dryapi.core.util.Validate;
 public class JsonPathsTreeBuilder {
 	
 	public static ObjectPathsTree fromObject(Object o) {
-		ObjectMapper mapper = JsonUtils.createMapper();
+		ObjectMapper mapper = JsonUtils.createJsonMapper();
 		
 		return fromTree(mapper.valueToTree(o));
 	}

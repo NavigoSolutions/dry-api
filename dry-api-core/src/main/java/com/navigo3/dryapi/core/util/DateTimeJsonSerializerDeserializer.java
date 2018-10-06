@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
@@ -87,6 +88,82 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 					return LocalDateTime.parse(p.getText(), DATETIME_FORMATER);
 				} else {
 					return LocalDate.parse(p.getText(), DATE_FORMATER).atStartOfDay();
+				}
+			}
+		});
+		
+		//-------------------------------------------------------------------------------------------------------------
+		
+		addKeySerializer(LocalDate.class, new JsonSerializer<LocalDate>() {
+	        @Override
+	        public void serialize(LocalDate date, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) 
+	        		throws IOException, JsonProcessingException {
+	            jsonGenerator.writeFieldName(DATE_FORMATER.format(date));
+	        }
+	    });
+		
+		addKeySerializer(LocalTime.class, new JsonSerializer<LocalTime>() {
+	        @Override
+	        public void serialize(LocalTime date, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) 
+	        		throws IOException, JsonProcessingException {
+	            jsonGenerator.writeFieldName(TIME_FORMATER.format(date));
+	        }
+	    });
+		
+		addKeySerializer(LocalDateTime.class, new JsonSerializer<LocalDateTime>() {
+	        @Override
+	        public void serialize(LocalDateTime date, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) 
+	        		throws IOException, JsonProcessingException {
+	            jsonGenerator.writeFieldName(DATETIME_FORMATER.format(date));
+	        }
+	    });
+	    
+		addKeyDeserializer(LocalDate.class, new KeyDeserializer() {
+
+			@Override
+			public LocalDate deserializeKey(String key, DeserializationContext ctxt)
+					throws IOException, JsonProcessingException {
+				
+				if (StringUtils.isBlank(key)) {
+					return null;
+				}
+				
+				if (key.contains(" ")) {
+					return LocalDateTime.parse(key, DATETIME_FORMATER).toLocalDate();
+				} else {
+					return LocalDate.parse(key, DATE_FORMATER);
+				}
+			}
+		});
+	    
+		addKeyDeserializer(LocalTime.class, new KeyDeserializer() {
+
+			@Override
+			public LocalTime deserializeKey(String key, DeserializationContext ctxt)
+					throws IOException, JsonProcessingException {
+				
+				if (StringUtils.isBlank(key)) {
+					return null;
+				}
+				
+				return LocalTime.parse(key, TIME_FORMATER);
+			}
+		});
+	    
+		addKeyDeserializer(LocalDateTime.class, new KeyDeserializer() {
+
+			@Override
+			public LocalDateTime deserializeKey(String key, DeserializationContext ctxt)
+					throws IOException, JsonProcessingException {
+				
+				if (StringUtils.isBlank(key)) {
+					return null;
+				}
+				
+				if (key.contains(" ")) {
+					return LocalDateTime.parse(key, DATETIME_FORMATER);
+				} else {
+					return LocalDate.parse(key, DATE_FORMATER).atStartOfDay();
 				}
 			}
 		});

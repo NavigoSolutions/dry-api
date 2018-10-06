@@ -70,7 +70,7 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 	}
 	
 	public void waitForStopped() {
-		while (!server.getWorker().isShutdown()) {
+		while (server!=null && server.getWorker()!=null && !server.getWorker().isShutdown()) {
 			ThreadUtils.optimisticSleep(Duration.ofMillis(100));
 		}
 	}
@@ -112,7 +112,7 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 			logger.debug("Reading request");
 			
 			exchange.getRequestReceiver().receiveFullBytes((ex, data) -> {
-				ObjectMapper mapper = JsonUtils.createMapper();
+				ObjectMapper mapper = JsonUtils.createJsonMapper();
 				
 				logger.debug("Parsing request");
 				

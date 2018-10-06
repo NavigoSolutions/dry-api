@@ -7,7 +7,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 public class JsonUtils {
 
-	public static ObjectMapper createMapper() {
+	public static ObjectMapper createJsonMapper() {
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.registerModule(new Jdk8Module());
 		objectMapper.registerModule(new DateTimeJsonSerializerDeserializer());
@@ -18,7 +18,7 @@ public class JsonUtils {
 
 	public static String prettyGet(Object o) {
 		return ExceptionUtils.withRuntimeException(()->{
-			ObjectMapper mapper = JsonUtils.createMapper();
+			ObjectMapper mapper = JsonUtils.createJsonMapper();
 			mapper.setSerializationInclusion(Include.NON_ABSENT);
 
 			return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(o);

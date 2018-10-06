@@ -175,7 +175,7 @@ public class RemoteHttpDryApi {
 	private void processTask(RequestsBatchData requestsBatch) {
 		Validate.notEmpty(requestsBatch.getRequests());
 		
-		ObjectMapper mapper = JsonUtils.createMapper();
+		ObjectMapper mapper = JsonUtils.createJsonMapper();
 		
 		JsonBatchRequest batch = buildBatch(mapper, requestsBatch);
 		

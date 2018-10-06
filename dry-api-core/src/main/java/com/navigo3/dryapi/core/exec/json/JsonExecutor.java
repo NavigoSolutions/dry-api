@@ -176,7 +176,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	@SuppressWarnings("rawtypes")
 	private void parseInputJson(TAppContext appContext, JsonRequest request, Builder outputBuilder, MethodDefinition def, 
 			BiFunction<String, StructurePath, JsonNode> getPreviousOutput, Consumer3<Object, ObjectMapper, ExecutionContext<TAppContext, TCallContext>> onSuccess) {
-		ObjectMapper objectMapper = JsonUtils.createMapper();
+		ObjectMapper objectMapper = JsonUtils.createJsonMapper();
 		
 		try {
 			request.getInputMappings().forEach(m->{
