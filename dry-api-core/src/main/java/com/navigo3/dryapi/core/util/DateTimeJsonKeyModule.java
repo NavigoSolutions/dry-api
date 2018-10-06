@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -16,25 +15,15 @@ import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-public class DateTimeJsonSerializerDeserializer extends SimpleModule {
+public class DateTimeJsonKeyModule extends SimpleModule {
 	private static final long serialVersionUID = 1L;
 	
-	private static final String DATE_FORMAT = "yyyy-MM-dd";
-	private static final String TIME_FORMAT = "HH:mm:ss";
-	private static final String DATETIME_FORMAT = DATE_FORMAT+" "+TIME_FORMAT;
-	
-	private static final DateTimeFormatter DATE_FORMATER = DateTimeFormatter.ofPattern(DATE_FORMAT);
-	
-	private static final DateTimeFormatter TIME_FORMATER = DateTimeFormatter.ofPattern(TIME_FORMAT);
-	
-	private static final DateTimeFormatter DATETIME_FORMATER = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
-	
-	public DateTimeJsonSerializerDeserializer() {
+	public DateTimeJsonKeyModule() {
 		addSerializer(LocalDate.class, new JsonSerializer<LocalDate>() {
 	        @Override
 	        public void serialize(LocalDate date, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) 
 	        		throws IOException, JsonProcessingException {
-	            jsonGenerator.writeString(DATE_FORMATER.format(date));
+	            jsonGenerator.writeString(DryApiConstants.DATE_FORMATER.format(date));
 	        }
 	    });
 		
@@ -42,7 +31,7 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 	        @Override
 	        public void serialize(LocalTime date, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) 
 	        		throws IOException, JsonProcessingException {
-	            jsonGenerator.writeString(TIME_FORMATER.format(date));
+	            jsonGenerator.writeString(DryApiConstants.TIME_FORMATER.format(date));
 	        }
 	    });
 		
@@ -50,7 +39,7 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 	        @Override
 	        public void serialize(LocalDateTime date, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) 
 	        		throws IOException, JsonProcessingException {
-	            jsonGenerator.writeString(DATETIME_FORMATER.format(date));
+	            jsonGenerator.writeString(DryApiConstants.DATETIME_FORMATER.format(date));
 	        }
 	    });
 	    
@@ -61,9 +50,9 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 					throws IOException, JsonProcessingException {
 				
 				if (p.getText().contains(" ")) {
-					return LocalDateTime.parse(p.getText(), DATETIME_FORMATER).toLocalDate();
+					return LocalDateTime.parse(p.getText(), DryApiConstants.DATETIME_FORMATER).toLocalDate();
 				} else {
-					return LocalDate.parse(p.getText(), DATE_FORMATER);
+					return LocalDate.parse(p.getText(), DryApiConstants.DATE_FORMATER);
 				}
 			}
 		});
@@ -74,7 +63,7 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 			public LocalTime deserialize(JsonParser p, DeserializationContext ctxt)
 					throws IOException, JsonProcessingException {
 				
-				return LocalTime.parse(p.getText(), TIME_FORMATER);
+				return LocalTime.parse(p.getText(), DryApiConstants.TIME_FORMATER);
 			}
 		});
 	    
@@ -85,9 +74,9 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 					throws IOException, JsonProcessingException {
 				
 				if (p.getText().contains(" ")) {
-					return LocalDateTime.parse(p.getText(), DATETIME_FORMATER);
+					return LocalDateTime.parse(p.getText(), DryApiConstants.DATETIME_FORMATER);
 				} else {
-					return LocalDate.parse(p.getText(), DATE_FORMATER).atStartOfDay();
+					return LocalDate.parse(p.getText(), DryApiConstants.DATE_FORMATER).atStartOfDay();
 				}
 			}
 		});
@@ -98,7 +87,7 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 	        @Override
 	        public void serialize(LocalDate date, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) 
 	        		throws IOException, JsonProcessingException {
-	            jsonGenerator.writeFieldName(DATE_FORMATER.format(date));
+	            jsonGenerator.writeFieldName(DryApiConstants.DATE_FORMATER.format(date));
 	        }
 	    });
 		
@@ -106,7 +95,7 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 	        @Override
 	        public void serialize(LocalTime date, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) 
 	        		throws IOException, JsonProcessingException {
-	            jsonGenerator.writeFieldName(TIME_FORMATER.format(date));
+	            jsonGenerator.writeFieldName(DryApiConstants.TIME_FORMATER.format(date));
 	        }
 	    });
 		
@@ -114,7 +103,7 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 	        @Override
 	        public void serialize(LocalDateTime date, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) 
 	        		throws IOException, JsonProcessingException {
-	            jsonGenerator.writeFieldName(DATETIME_FORMATER.format(date));
+	            jsonGenerator.writeFieldName(DryApiConstants.DATETIME_FORMATER.format(date));
 	        }
 	    });
 	    
@@ -129,9 +118,9 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 				}
 				
 				if (key.contains(" ")) {
-					return LocalDateTime.parse(key, DATETIME_FORMATER).toLocalDate();
+					return LocalDateTime.parse(key, DryApiConstants.DATETIME_FORMATER).toLocalDate();
 				} else {
-					return LocalDate.parse(key, DATE_FORMATER);
+					return LocalDate.parse(key, DryApiConstants.DATE_FORMATER);
 				}
 			}
 		});
@@ -146,7 +135,7 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 					return null;
 				}
 				
-				return LocalTime.parse(key, TIME_FORMATER);
+				return LocalTime.parse(key, DryApiConstants.TIME_FORMATER);
 			}
 		});
 	    
@@ -161,11 +150,12 @@ public class DateTimeJsonSerializerDeserializer extends SimpleModule {
 				}
 				
 				if (key.contains(" ")) {
-					return LocalDateTime.parse(key, DATETIME_FORMATER);
+					return LocalDateTime.parse(key, DryApiConstants.DATETIME_FORMATER);
 				} else {
-					return LocalDate.parse(key, DATE_FORMATER).atStartOfDay();
+					return LocalDate.parse(key, DryApiConstants.DATE_FORMATER).atStartOfDay();
 				}
 			}
 		});
+		
 	}
 }

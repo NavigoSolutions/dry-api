@@ -4,8 +4,12 @@ import java.util.Arrays;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.navigo3.dryapi.core.util.JacksonUtils;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.defs.form.ImmutablePerson;
@@ -49,5 +53,21 @@ public class Sandbox {
 		/*IntegerResult output2 = */env.getApi().executeBlocking(new SolveEverythingEndpoint(), TopAddressInput.createSampleData());
 	
 //		JsonUtils.prettyPrint(output2);
+	}
+	
+	@Test
+	@Ignore
+	public void test3() throws Exception {
+		try {
+			ObjectMapper mapper = JacksonUtils.createXmlMapper();
+			
+			String xml = mapper.writeValueAsString(TopAddressInput.createSampleData());
+					
+			System.out.println(xml);
+			
+			JacksonUtils.prettyPrint(mapper.readValue(xml, new TypeReference<TopAddressInput>(){}));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

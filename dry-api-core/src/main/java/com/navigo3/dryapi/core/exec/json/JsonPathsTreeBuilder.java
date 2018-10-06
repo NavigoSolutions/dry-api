@@ -13,14 +13,14 @@ import com.navigo3.dryapi.core.meta.ImmutableObjectPathsTreeNode.Builder;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.meta.ObjectPathsTreeNode;
 import com.navigo3.dryapi.core.path.StructureSelectorType;
-import com.navigo3.dryapi.core.util.JsonUtils;
+import com.navigo3.dryapi.core.util.JacksonUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 
 public class JsonPathsTreeBuilder {
 	
 	public static ObjectPathsTree fromObject(Object o) {
-		ObjectMapper mapper = JsonUtils.createJsonMapper();
+		ObjectMapper mapper = JacksonUtils.createJsonMapper();
 		
 		return fromTree(mapper.valueToTree(o));
 	}

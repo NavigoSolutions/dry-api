@@ -3,7 +3,6 @@ package com.navigo3.dryapi.server;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -18,9 +17,11 @@ import com.navigo3.dryapi.core.exec.json.JsonBatchRequest;
 import com.navigo3.dryapi.core.exec.json.JsonBatchResponse;
 import com.navigo3.dryapi.core.exec.json.JsonExecutor;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
+import com.navigo3.dryapi.core.util.DryApiConstants;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.Function3;
-import com.navigo3.dryapi.core.util.JsonUtils;
+import com.navigo3.dryapi.core.util.JacksonUtils;
+import com.navigo3.dryapi.core.util.JacksonUtils.DataFormat;
 import com.navigo3.dryapi.core.util.LambdaUtils.ConsumerWithException;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.ThreadUtils;
@@ -88,13 +89,19 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 				.replaceAll("\\s", "")
 				.toLowerCase();
 			
-			if (!Objects.equals(contentType, "application/json;charset=utf-8")) {
+			DataFormat format;
+			
+			if (DryApiConstants.JSON_MIME.equals(contentType)) {
+				format = DataFormat.JSON;
+			} else if (DryApiConstants.XML_MIME.equals(contentType)) {
+				format = DataFormat.XML;
+			} else {
 				logger.info("Content type '{}' not supported", rawContentType);
 
 				exchange.setStatusCode(415);
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-				exchange.getResponseSender().send("Please use content type: application/json;charset=utf-8");
-				
+				exchange.getResponseSender().send(StringUtils.subst("Please use content type: '{}' or '{}'", DryApiConstants.JSON_MIME, DryApiConstants.XML_MIME));
+
 				return;
 			}
 			
@@ -110,14 +117,14 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 			}
 			
 			logger.debug("Reading request");
-			
+
 			exchange.getRequestReceiver().receiveFullBytes((ex, data) -> {
-				ObjectMapper mapper = JsonUtils.createJsonMapper();
+				ObjectMapper objectMapper = JacksonUtils.createMapper(format);
 				
 				logger.debug("Parsing request");
 				
-				JsonBatchRequest batch = ExceptionUtils.withRuntimeException(()->mapper.readValue(new String(data, "utf-8"), new TypeReference<JsonBatchRequest>() {}));
-				
+				JsonBatchRequest batch = ExceptionUtils.withRuntimeException(()->objectMapper.readValue(new String(data, "utf-8"), new TypeReference<JsonBatchRequest>() {}));
+
 				logger.info("Executing:\n{}", batch
 					.getRequests()
 					.stream()
@@ -127,8 +134,8 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 				
 				JsonExecutor<TAppContext, TCallContext, TValidator> gate = new JsonExecutor<>(api, validatorProvider, (qualifiedName, duration, context)->{});
 
-				JsonBatchResponse res = gate.execute(appContext, batch);
-	
+				JsonBatchResponse res = gate.execute(appContext, batch, objectMapper);
+
 				logger.debug("Execution done:\n{}", res
 					.getResponses()
 					.stream()
@@ -140,7 +147,7 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 				
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
 				exchange.setStatusCode(res.getOverallSuccess() ? StatusCodes.OK : StatusCodes.BAD_REQUEST);
-		        exchange.getResponseSender().send(ExceptionUtils.withRuntimeException(()->mapper.writeValueAsString(res)));
+		        exchange.getResponseSender().send(ExceptionUtils.withRuntimeException(()->objectMapper.writeValueAsString(res)));
 		        
 		        logger.debug("Done");
 

@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.util.JsonAccessor;
-import com.navigo3.dryapi.core.util.JsonUtils;
+import com.navigo3.dryapi.core.util.JacksonUtils;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 
 public class JsonAccessorTest {
@@ -21,7 +21,7 @@ public class JsonAccessorTest {
 
 	@Before
 	public void setUp() throws Exception {
-		rootNode = JsonUtils.createJsonMapper().valueToTree(TopAddressInput.createSampleData());
+		rootNode = JacksonUtils.createJsonMapper().valueToTree(TopAddressInput.createSampleData());
 	}
 	
 	@Test
@@ -79,7 +79,7 @@ public class JsonAccessorTest {
 
 		JsonAccessor.cleanMissingFields(futureTree, rootNode);
 		
-		String outputJson = JsonUtils.createJsonMapper().writeValueAsString(rootNode);
+		String outputJson = JacksonUtils.createJsonMapper().writeValueAsString(rootNode);
 
 		JSONAssert.assertEquals(outputJson, "{\"corner\":\"left\",\"galaxy\":\"Milky way\",\"middleAddress\":{\"continent\":\"Europe\",\"country\":null,\"cronicles\":{\"2017-01-22 10:15:42\":null,\"2016-01-22 10:15:42\":\"two years ago\"},\"currentGalacticDateTime\":null,\"lowAddresses\":[null,{\"city\":\"Brno\",\"door\":null,\"number\":null,\"state\":null,\"street\":\"Charvatska\"}],\"mainAddress\":null,\"stringCodes\":null},\"planet\":null}\n", true);
 	}	

@@ -6,6 +6,8 @@ import java.util.function.Consumer;
 
 import org.immutables.value.Value;
 
+import com.navigo3.dryapi.core.util.JacksonUtils.DataFormat;
+
 @Value.Immutable
 public interface RemoteHttpDryApiSettings {
 	@Value.Default
@@ -29,5 +31,10 @@ public interface RemoteHttpDryApiSettings {
 		return ImmutableRemoteHttpDryApiSettings
 			.builder()
 			.build();
+	}
+	
+	@Value.Default
+	default DataFormat getDataFormat() {
+		return DataFormat.JSON;
 	}
 }

@@ -34,7 +34,6 @@ import com.navigo3.dryapi.core.util.Consumer4;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.Function3;
 import com.navigo3.dryapi.core.util.JsonAccessor;
-import com.navigo3.dryapi.core.util.JsonUtils;
 import com.navigo3.dryapi.core.util.OptionalUtils;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
@@ -63,7 +62,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		this.statsConsumer = statsConsumer;
 	}
 	
-	public JsonBatchResponse execute(TAppContext appContext, JsonBatchRequest batch) {	
+	public JsonBatchResponse execute(TAppContext appContext, JsonBatchRequest batch, ObjectMapper objectMapper) {	
 		ImmutableJsonBatchResponse.Builder builder = ImmutableJsonBatchResponse.builder();
 		
 		Map<String, JsonNode> previousResults = new HashMap<>();
@@ -81,7 +80,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				if (!skipRest.get()) {
 					logger.debug("Executing method={}, uuid={}", request.getQualifiedName(), request.getRequestUuid());
 					
-					resp = executeRequest(appContext, request, (uuid, path)->{
+					resp = executeRequest(appContext, request, objectMapper, (uuid, path)->{
 						Validate.keyContained(previousResults, uuid, "");
 			
 						return JsonAccessor.getNodeAt(previousResults.get(uuid), path);
@@ -126,7 +125,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		return result.get();
 	}
 
-	private JsonResponse executeRequest(TAppContext appContext, JsonRequest request, BiFunction<String, StructurePath, JsonNode> getPreviousOutput) {
+	private JsonResponse executeRequest(TAppContext appContext, JsonRequest request, ObjectMapper objectMapper,
+			BiFunction<String, StructurePath, JsonNode> getPreviousOutput) {
 		
 		ImmutableJsonResponse.Builder outputBuilder = ImmutableJsonResponse
 			.builder()
@@ -145,12 +145,12 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		}
 		
 		findMethod(appContext, request, outputBuilder, def->{
-			parseInputJson(appContext, request, outputBuilder, def, getPreviousOutput, (rawInput, objectMapper, executionContext)->{
-				checkSecurity(appContext, request, outputBuilder, rawInput, executionContext, objectMapper, def, (instance, callContext, security, securityPassed)->{
-					clearProhibitedInputFields(appContext, outputBuilder, rawInput, instance, objectMapper, callContext, security, def, request, securityPassed, (input, inputPathsTree)->{
+			parseInputJson(appContext, request, outputBuilder, def, objectMapper, getPreviousOutput, (rawInput, executionContext)->{
+				checkSecurity(appContext, request, outputBuilder, rawInput, executionContext, def, (instance, callContext, security, securityPassed)->{
+					clearProhibitedInputFields(appContext, outputBuilder, rawInput, instance, callContext, security, def, request, securityPassed, objectMapper, (input, inputPathsTree)->{
 						validate(appContext, request, outputBuilder, input, instance, inputPathsTree, callContext, ()->{
-							execute(appContext, request, outputBuilder, input, instance, objectMapper, rawOutput->{
-								clearProhibitedOutputFields(request, appContext, outputBuilder, rawOutput, instance, objectMapper, callContext, executionContext, def, security);
+							execute(appContext, request, outputBuilder, input, instance, rawOutput->{
+								clearProhibitedOutputFields(request, appContext, outputBuilder, rawOutput, instance, callContext, executionContext, def, objectMapper, security);
 							});
 						});
 					});
@@ -174,10 +174,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	}
 
 	@SuppressWarnings("rawtypes")
-	private void parseInputJson(TAppContext appContext, JsonRequest request, Builder outputBuilder, MethodDefinition def, 
-			BiFunction<String, StructurePath, JsonNode> getPreviousOutput, Consumer3<Object, ObjectMapper, ExecutionContext<TAppContext, TCallContext>> onSuccess) {
-		ObjectMapper objectMapper = JsonUtils.createJsonMapper();
-		
+	private void parseInputJson(TAppContext appContext, JsonRequest request, Builder outputBuilder, MethodDefinition def, ObjectMapper objectMapper,
+			BiFunction<String, StructurePath, JsonNode> getPreviousOutput, BiConsumer<Object, ExecutionContext<TAppContext, TCallContext>> onSuccess) {
 		try {
 			request.getInputMappings().forEach(m->{
 				logger.debug("Copying output of {} on path {} to current input on path {}", m.getFromUuid(), m.getFromPath().toDebug(), m.getToPath().toDebug());
@@ -190,7 +188,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 
 			ExecutionContext<TAppContext, TCallContext> executionContext = new ExecutionContext<>(appContext);
 			
-			onSuccess.accept(rawInput, objectMapper, executionContext);
+			onSuccess.accept(rawInput, executionContext);
 		} catch (Throwable t) {
 			logger.error("Error during parseInputJson method={} uuid={}", request.getQualifiedName(), request.getRequestUuid(), t);
 			
@@ -204,7 +202,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void checkSecurity(TAppContext appContext, JsonRequest request, Builder outputBuilder, Object rawInput, ExecutionContext<TAppContext, TCallContext> executionContext,
-			ObjectMapper objectMapper, MethodDefinition def, Consumer4<MethodImplementation, TCallContext, MethodSecurity<TAppContext, TCallContext>, Boolean> onSuccess) {
+			MethodDefinition def, Consumer4<MethodImplementation, TCallContext, MethodSecurity<TAppContext, TCallContext>, Boolean> onSuccess) {
 		try {
 			Optional<Class<? extends MethodImplementation>> impl = api.lookupImplementationClass(request.getQualifiedName());
 			
@@ -250,8 +248,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	
 	@SuppressWarnings("rawtypes")
 	private void clearProhibitedInputFields(TAppContext appContext, Builder outputBuilder, Object rawInput, MethodImplementation instance, 
-			ObjectMapper objectMapper, TCallContext callContext, MethodSecurity<TAppContext, TCallContext> security, MethodDefinition def, 
-			JsonRequest request, boolean securityPassed, BiConsumer<Object, ObjectPathsTree> block) {
+			TCallContext callContext, MethodSecurity<TAppContext, TCallContext> security, MethodDefinition def, 
+			JsonRequest request, boolean securityPassed, ObjectMapper objectMapper, BiConsumer<Object, ObjectPathsTree> block) {
 		try {
 			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(rawInput);
 			
@@ -350,7 +348,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private void execute(TAppContext appContext, JsonRequest request, Builder outputBuilder, Object input, MethodImplementation instance, ObjectMapper objectMapper,
+	private void execute(TAppContext appContext, JsonRequest request, Builder outputBuilder, Object input, MethodImplementation instance,
 			Consumer<Object> onSuccess) {
 		try {
 			Object output = instance.execute(input);
@@ -369,8 +367,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	
 	@SuppressWarnings("rawtypes")
 	private void clearProhibitedOutputFields(JsonRequest request, TAppContext appContext, Builder outputBuilder, Object rawOutput,
-			MethodImplementation instance, ObjectMapper objectMapper, TCallContext callContext, ExecutionContext executionContext,
-			MethodDefinition def, MethodSecurity<TAppContext, TCallContext> security) {
+			MethodImplementation instance, TCallContext callContext, ExecutionContext executionContext,
+			MethodDefinition def, ObjectMapper objectMapper, MethodSecurity<TAppContext, TCallContext> security) {
 		try {
 			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(rawOutput);
 			

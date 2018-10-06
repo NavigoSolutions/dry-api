@@ -1,48 +1,51 @@
 package com.navigo3.dryapi.core.path;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.immutables.value.Value;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 
-public class StructurePath {
-	private List<StructurePathItem> items = new ArrayList<>();
+@Value.Immutable
+@JsonSerialize(as = ImmutableStructurePath.class)
+@JsonDeserialize(as = ImmutableStructurePath.class)
+public interface StructurePath {
 	
 	public static StructurePath empty() {
-		return new StructurePath();
+		return ImmutableStructurePath
+			.builder()
+			.build();
 	}
 	
 	public static StructurePath key(String key) {
 		Validate.notBlank(key);
-		
-		return new StructurePath(Optional.empty(), StructurePathItem.createKey(key));
+
+		return ImmutableStructurePath
+			.builder()
+			.addItems(StructurePathItem.createKey(key))
+			.build();
 	}
 	
 	public static StructurePath index(int index) {
 		Validate.nonNegative(index);
 		
-		return new StructurePath(Optional.empty(), StructurePathItem.createIndex(index));
+		return ImmutableStructurePath
+			.builder()
+			.addItems(StructurePathItem.createIndex(index))
+			.build();
 	}
 	
-	private StructurePath() {
-		//
-	}
+	List<StructurePathItem> getItems();
 
-	private StructurePath(Optional<StructurePath> base, StructurePathItem item) {
-		Validate.notNull(item);
-		
-		base.ifPresent(o->items.addAll(o.getItems()));
-		items.add(item);
-	}
-
-	public String toDebug() {
+	default String toDebug() {
 		return toDebug(getItems().size());
 	}
 	
-	public String toDebug(int maxIndex) {
+	default String toDebug(int maxIndex) {
 		return getItems()
 			.stream()
 			.limit(maxIndex+1)
@@ -56,19 +59,23 @@ public class StructurePath {
 			.collect(Collectors.joining("."));
 	}
 
-	public List<StructurePathItem> getItems() {
-		return items;
-	}
-	
-	public StructurePath addKey(String key) {
+	default StructurePath addKey(String key) {
 		Validate.notBlank(key);
-		
-		return new StructurePath(Optional.of(this), StructurePathItem.createKey(key));
+
+		return ImmutableStructurePath
+			.builder()
+			.addAllItems(getItems())
+			.addItems(StructurePathItem.createKey(key))
+			.build();
 	}
 	
-	public StructurePath addIndex(int index) {
+	default StructurePath addIndex(int index) {
 		Validate.nonNegative(index);
 		
-		return new StructurePath(Optional.of(this), StructurePathItem.createIndex(index));
+		return ImmutableStructurePath
+			.builder()
+			.addAllItems(getItems())
+			.addItems(StructurePathItem.createIndex(index))
+			.build();
 	}
 }

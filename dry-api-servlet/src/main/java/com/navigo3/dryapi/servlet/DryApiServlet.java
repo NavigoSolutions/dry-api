@@ -3,7 +3,6 @@ package com.navigo3.dryapi.servlet;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Base64;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -32,9 +31,11 @@ import com.navigo3.dryapi.core.exec.json.JsonExecutor;
 import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.util.Consumer3;
+import com.navigo3.dryapi.core.util.DryApiConstants;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.Function3;
-import com.navigo3.dryapi.core.util.JsonUtils;
+import com.navigo3.dryapi.core.util.JacksonUtils;
+import com.navigo3.dryapi.core.util.JacksonUtils.DataFormat;
 import com.navigo3.dryapi.core.util.LambdaUtils.ConsumerWithException;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
@@ -64,13 +65,19 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 		safelyHandleRequest(req, resp, appContext->{
 			String contentType = StringUtils.defaultString(req.getContentType()).trim().replaceAll("\\s", "").toLowerCase();
 			
-			if (!Objects.equals(contentType, "application/json;charset=utf-8")) {
+			DataFormat format;
+			
+			if (DryApiConstants.JSON_MIME.equals(contentType)) {
+				format = DataFormat.JSON;
+			} else if (DryApiConstants.XML_MIME.equals(contentType)) {
+				format = DataFormat.XML;
+			} else {
 				logger.info("Content type '{}' not supported", req.getContentType());
 				
 				resp.setCharacterEncoding("UTF-8");
 				resp.setStatus(415);
 				resp.setContentType("text/plain");
-				resp.getOutputStream().println("Please use content type: application/json;charset=utf-8");
+				resp.getOutputStream().println(StringUtils.subst("Please use content type: '{}' or '{}'", DryApiConstants.JSON_MIME, DryApiConstants.XML_MIME));
 				
 				return;
 			}
@@ -79,13 +86,13 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			
 			String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 			
-			ObjectMapper mapper = JsonUtils.createJsonMapper();
+			ObjectMapper objectMapper = JacksonUtils.createMapper(format);
 			
 			logger.debug("Parsing request");
 			
-			JsonBatchRequest batchRequest = ExceptionUtils.withRuntimeException(()->mapper.readValue(body, new TypeReference<JsonBatchRequest>() {}));
+			JsonBatchRequest batchRequest = ExceptionUtils.withRuntimeException(()->objectMapper.readValue(body, new TypeReference<JsonBatchRequest>() {}));
 			
-			JsonBatchResponse res = executeBatch(batchRequest, req, appContext);
+			JsonBatchResponse res = executeBatch(batchRequest, req, appContext, objectMapper);
 			
 			logger.debug("Sending answer");
 			
@@ -93,7 +100,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			resp.setStatus(res.getOverallSuccess() ? 200 : 400);
 			resp.setContentType("application/json;charset=utf-8");
 			
-			mapper.writeValue(resp.getWriter(), res);
+			objectMapper.writeValue(resp.getWriter(), res);
 			
 			logger.debug("Done");
 		});
@@ -105,12 +112,12 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 		logger.debug("Handling GET request");
 		
 		safelyHandleRequest(req, resp, appContext->{
-			ObjectMapper mapper = JsonUtils.createJsonMapper();
+			ObjectMapper objectMapper = JacksonUtils.createJsonMapper();
 			
 			logger.debug("Extracting params");
 			
 			String qualifiedName = req.getParameter("qualifiedName");
-			JsonNode input = mapper.readTree(req.getParameter("input"));
+			JsonNode input = objectMapper.readTree(req.getParameter("input"));
 			boolean forceDownload = Boolean.valueOf(req.getParameter("forceDownload"));
 	
 			logger.debug("Checking that method returns DownloadParam");
@@ -137,10 +144,10 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			
 			logger.debug("Sending answer");
 			
-			JsonBatchResponse res = executeBatch(batchRequest, req, appContext);
+			JsonBatchResponse res = executeBatch(batchRequest, req, appContext, objectMapper);
 			
 			if (res.getOverallSuccess()) {
-				DownloadParam downloadData = mapper.convertValue(res.getResponses().get(0).getOutput().get(), new TypeReference<DownloadParam>(){});
+				DownloadParam downloadData = objectMapper.convertValue(res.getResponses().get(0).getOutput().get(), new TypeReference<DownloadParam>(){});
 				
 				byte[] data = Base64.getDecoder().decode(downloadData.getContentBase64());
 				
@@ -197,7 +204,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 		}
 	}
 	
-	private JsonBatchResponse executeBatch(JsonBatchRequest batchRequest, HttpServletRequest req, TAppContext appContext) {
+	private JsonBatchResponse executeBatch(JsonBatchRequest batchRequest, HttpServletRequest req, TAppContext appContext, ObjectMapper objectMapper) {
 		logger.info("Executing:\n{}", batchRequest
 			.getRequests()
 			.stream()
@@ -208,7 +215,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 		JsonBatchResponse res = null;
 		
 		try {
-			res = executor.execute(appContext, batchRequest);	
+			res = executor.execute(appContext, batchRequest, objectMapper);	
 		} catch (Throwable t) {
 			throw new RuntimeException(t);
 		}

@@ -21,7 +21,7 @@ import com.navigo3.dryapi.core.exec.json.JsonBatchRequest;
 import com.navigo3.dryapi.core.exec.json.JsonBatchResponse;
 import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
-import com.navigo3.dryapi.core.util.JsonUtils;
+import com.navigo3.dryapi.core.util.JacksonUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.ImmutableValidationData;
@@ -38,9 +38,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class RemoteHttpDryApi {
-	
-	private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-
 	private HttpUrl apiUrl;
 	private RemoteHttpDryApiSettings settings;
 	private List<RequestsBatchData> newTasks = new ArrayList<>();
@@ -175,11 +172,13 @@ public class RemoteHttpDryApi {
 	private void processTask(RequestsBatchData requestsBatch) {
 		Validate.notEmpty(requestsBatch.getRequests());
 		
-		ObjectMapper mapper = JsonUtils.createJsonMapper();
+		ObjectMapper objectMapper = JacksonUtils.createMapper(settings.getDataFormat());
 		
-		JsonBatchRequest batch = buildBatch(mapper, requestsBatch);
+		JsonBatchRequest batch = buildBatch(objectMapper, requestsBatch);
 		
-		RequestBody body = ExceptionUtils.withRuntimeException(()->RequestBody.create(JSON, mapper.writeValueAsString(batch)));
+		String mime = JacksonUtils.getMimeForFormat(settings.getDataFormat());
+		
+		RequestBody body = ExceptionUtils.withRuntimeException(()->RequestBody.create(MediaType.get(mime), objectMapper.writeValueAsString(batch)));
 			
 		Request request = new Request.Builder()
 			.url(apiUrl)
@@ -195,7 +194,7 @@ public class RemoteHttpDryApi {
 						throw new RuntimeException(StringUtils.subst("Unexpected error code {}. Content:\n{}", httpResponse.code(), httpResponse.body().string()));
 					}					
 					
-					JsonBatchResponse batchResponse = ExceptionUtils.withRuntimeException(()->mapper.readValue(httpResponse.body().string(), JsonBatchResponse.class));
+					JsonBatchResponse batchResponse = ExceptionUtils.withRuntimeException(()->objectMapper.readValue(httpResponse.body().string(), JsonBatchResponse.class));
 
 					Validate.sameSize(batchResponse.getResponses(), requestsBatch.getRequests());
 
@@ -213,7 +212,7 @@ public class RemoteHttpDryApi {
 						
 						if (response.getOutput().isPresent()) {
 							Object output = ExceptionUtils
-									.withRuntimeException(()->mapper.convertValue(response.getOutput().get(), requestData.get().getMethod().getOutputType()));
+									.withRuntimeException(()->objectMapper.convertValue(response.getOutput().get(), requestData.get().getMethod().getOutputType()));
 							
 							requestData.get().setOutput(Optional.of(output));
 						}

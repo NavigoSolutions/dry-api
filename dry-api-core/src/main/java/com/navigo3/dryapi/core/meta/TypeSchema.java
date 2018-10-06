@@ -29,7 +29,7 @@ import com.navigo3.dryapi.core.path.TypePathItem;
 import com.navigo3.dryapi.core.path.TypeSelectorType;
 import com.navigo3.dryapi.core.util.CollectionUtils;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
-import com.navigo3.dryapi.core.util.JsonUtils;
+import com.navigo3.dryapi.core.util.JacksonUtils;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
@@ -412,7 +412,7 @@ public class TypeSchema {
 					actField = null;
 				}	
 			} catch (Throwable t) {
-				throw new RuntimeException(StringUtils.subst("Problem with path on item {} of schema {}", path.getDebug(i), JsonUtils.prettyGet(this)), t);
+				throw new RuntimeException(StringUtils.subst("Problem with path on item {} of schema {}", path.getDebug(i), JacksonUtils.prettyGet(this)), t);
 			}
 		}
 		
