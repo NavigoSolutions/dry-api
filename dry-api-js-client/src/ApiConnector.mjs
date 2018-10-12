@@ -1,9 +1,9 @@
-const request = require('request')
-const util = require('util')
+import request from 'request'
 
-class DryApi {
-    constructor(baseAddress) {
+export class ApiConnector {
+    constructor(baseAddress, extraHeaders={}) {
         this.baseAddress = baseAddress
+        this.extraHeaders = extraHeaders
     }
 
     async execute(method, input) {
@@ -24,18 +24,25 @@ class DryApi {
                 method: "POST",
                 uri: this.baseAddress,
                 headers: {
-                    'content-type': 'application/json;charset=utf-8'
+                    'content-type': 'application/json;charset=utf-8',
+                    ...this.extraHeaders
                 },
                 json: r
             }, (err, res, body) => {
-                resolve(body.responses[0].output)
+                if (err || (res.statusCode!=200 && res.statusCode!=400)) {
+                    reject(err || `Status code was unexpected: ${res.statusCode}`)
+                } else {
+                    const resp = body.responses[0]
 
-                // console.log(JSON.stringify(body, null, 4))
+                    if (body.overallSuccess) {
+                        resolve(resp.output)
+                    } else {
+                        reject(resp)
+                    }
+                }
             })
         })
 
         return promise
     }
 }
-
-module.exports.DryApi = DryApi

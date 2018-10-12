@@ -1,11 +1,10 @@
 {
-    "name": "dry-api-js-client",
+    "name": "clearance-validator",
     "author": "Jaroslav Kuboš",
     "version": "0.0.1",
     "private": true,
-    "main": "src/ApiConnector.mjs",
+    "main": "src/ClearanceValidator.mjs",
     "dependencies": {
-        "request": "2.88.0"
     },
     "devDependencies": {}
 }

@@ -5,7 +5,7 @@
     "private": true,
     "main": "src/DryAPI.js",
     "scripts": {
-        "start": "node src/test.js"
+        "start": "node --experimental-modules src/test.mjs"
     },
     "dependencies": {
         "dry-api-js-client": "file:../dry-api-js-client"

@@ -1,7 +1,6 @@
-const {DryApi} = require('dry-api-js-client')
+import {ApiConnector} from 'dry-api-js-client'
 
-
-const api = new DryApi("http://localhost:8080/api")
+const api = new ApiConnector("http://localhost:8080/api")
 
 async function run() {
 
