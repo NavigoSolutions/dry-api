@@ -30,6 +30,7 @@ export class ApiConnector {
                 json: r
             }, (err, res, body) => {
                 if (err || (res.statusCode!=200 && res.statusCode!=400)) {
+                    console.log(body)
                     reject(err || `Status code was unexpected: ${res.statusCode}`)
                 } else {
                     const resp = body.responses[0]
