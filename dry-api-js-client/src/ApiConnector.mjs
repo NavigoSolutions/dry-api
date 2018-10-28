@@ -1,12 +1,17 @@
 import request from 'request'
 
 export class ApiConnector {
-    constructor(baseAddress, extraHeaders={}) {
+    constructor(baseAddress, extraHeaders={}, printCalls=false) {
         this.baseAddress = baseAddress
         this.extraHeaders = extraHeaders
+        this.printCalls = printCalls
     }
 
     async execute(method, input) {
+        if (this.printCalls) {
+            console.log(`[CALL] ${method}`)            
+        }
+
         const r = {
             "requests" : [
                 { 

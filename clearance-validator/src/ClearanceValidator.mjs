@@ -128,4 +128,19 @@ export class ClearanceValidator {
             throw new Error(message || `Object ${object} not found in map`)
         }
     }
+
+    static notContained(map, object, message = undefined) {
+        if ((object in map)) {
+            throw new Error(message || `Object ${object} is already in map`)
+        }
+    }
+
+    static regexp(str, regexp, message = undefined) {
+        this.isA(str, String)
+        this.isA(regexp, RegExp)
+
+        if (!regexp.test(str)) {
+            throw new Error(message || `String "${str}" does not match pattern "${regexp}"`)
+        }
+    }
 }
