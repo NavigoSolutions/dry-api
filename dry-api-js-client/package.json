@@ -5,7 +5,8 @@
     "private": true,
     "main": "src/ApiConnector.mjs",
     "dependencies": {
-        "request": "2.88.0"
+        "request": "2.88.0",
+        "sync-request": "6.0.0"
     },
     "devDependencies": {}
 }
