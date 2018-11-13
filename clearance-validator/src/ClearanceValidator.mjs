@@ -79,6 +79,15 @@ export class ClearanceValidator {
         }
     }
 
+    static lessThan(number, ref, message = undefined) {
+        this.isA(number, Number)
+        this.isA(ref, Number)
+
+        if (number >= ref) {
+            throw new Error(message || `Expected positive number lesser than ${ref} but got ${number}`)
+        }
+    }
+
     static positiveNumber(number, message = undefined) {
         this.isA(number, Number)
 
