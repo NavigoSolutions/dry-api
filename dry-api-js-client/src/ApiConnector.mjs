@@ -82,12 +82,27 @@ export class ApiConnector {
             console.log(res.getBody('utf8'))
             throw `Status code was unexpected: ${res.statusCode}`
         } else {
-            const body = JSON.parse(res.getBody('utf8'))
+            const rawBody = res.body.toString('utf8')
+
+            const body = JSON.parse(rawBody)
+
             const resp = body.responses[0]
 
             if (body.overallSuccess) {
                 return resp.output
             } else {
+
+                if (resp.validation && resp.validation.items) {
+                    console.log("################ERROR################")
+                    console.log("Found issues:")
+                    resp.validation.items.forEach(i=>{
+                        console.log(`\t${i.message} (${i.path.items.map(p=>p.key?p.key:`[${p.index}]`).join('.')})`)
+                    })
+                } else {
+                    console.error(resp)
+                }
+                // resp.validation.items
+
                 throw `Request partially failed`
             }
         }
