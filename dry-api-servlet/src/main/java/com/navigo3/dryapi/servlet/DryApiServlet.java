@@ -162,6 +162,8 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 				resp.setContentType("text/plain");
 				
 				logger.error(res.getResponses().get(0).getErrorMessage().orElse("?"));
+				
+				appContext.reportException(new RuntimeException(res.getResponses().get(0).getErrorMessage().orElse("?")));
 
 				resp.getOutputStream().write("Cannot download file. We are sorry.".getBytes());	
 			}
