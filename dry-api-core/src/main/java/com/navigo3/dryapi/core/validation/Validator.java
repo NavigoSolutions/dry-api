@@ -17,7 +17,14 @@ public abstract class Validator {
 	}
 	
 	public void addItem(Severity severity, StructurePath path, String message) {
-		allowedPaths.throwIfPathDoesNotExists(path);
+		addItem(severity, path, message, true);
+	}
+	
+	public void addItem(Severity severity, StructurePath path, String message, boolean checkPathExistence) {
+		
+		if (checkPathExistence) {
+			allowedPaths.throwIfPathDoesNotExists(path);
+		}
 		
 		items.add(ImmutableValidationItem
 			.builder()
@@ -34,5 +41,9 @@ public abstract class Validator {
 
 	public ValidationData build() {
 		return ImmutableValidationData.builder().items(items).build();
+	}
+
+	public ObjectPathsTree getAllowedPaths() {
+		return allowedPaths;
 	}
 }
