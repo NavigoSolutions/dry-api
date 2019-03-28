@@ -1,6 +1,7 @@
 package com.navigo3.dryapi.server;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.immutables.value.Value;
@@ -43,6 +44,8 @@ public interface HttpServerSettings<TAppContext extends AppContext, TCallContext
 	List<ApiMount<TAppContext, TCallContext, TValidator>> getApiMounts();
 	
 	Function<HttpServerExchange, TAppContext> getAppContextProvider();
+	
+	Set<String> getAllowedOrigins();
 	
 	@Check
 	default void check() {

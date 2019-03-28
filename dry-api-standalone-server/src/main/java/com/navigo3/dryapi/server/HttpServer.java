@@ -33,6 +33,7 @@ import io.undertow.Undertow.Builder;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import io.undertow.util.Headers;
+import io.undertow.util.HttpString;
 import io.undertow.util.StatusCodes;
 
 public class HttpServer<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
@@ -77,7 +78,29 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 	}
 	
 	private void handleRequest(HttpServerExchange exchange) throws Exception {
-		logger.debug("Handling POST request");
+		logger.debug("Handling {} request", exchange.getRequestMethod().toString());
+		
+		String origin = exchange.getRequestHeaders().getFirst("Origin");
+		
+		if (exchange.getRequestMethod().equalToString("OPTIONS")) {
+			exchange.setStatusCode(200);
+			
+			logger.debug("Handling OPTION request for origin {}", origin);
+			
+			if (settings.getAllowedOrigins().isEmpty() || settings.getAllowedOrigins().contains(origin)) {
+				exchange.getResponseHeaders().put(new HttpString("Access-Control-Allow-Origin"), origin);
+				exchange.getResponseHeaders().put(new HttpString("Access-Control-Allow-Headers"), "*");
+				exchange.getResponseHeaders().put(new HttpString("Access-Control-Allow-Methods"), "*");
+				
+				exchange.getResponseSender().send("OK");
+			} else {
+				exchange.getResponseSender().send("This origin is not allowed, please add supported origins into HttpServerSettings of DryApi");
+			}
+			
+			return;
+		}
+		
+		exchange.getResponseHeaders().put(new HttpString("Access-Control-Allow-Origin"), origin);
 		
 		safelyHandleRequest(exchange, appContext->{
 			HeaderValues contentTypeHeaders = exchange.getRequestHeaders().get(Headers.CONTENT_TYPE);
@@ -90,11 +113,14 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 				.toLowerCase();
 			
 			DataFormat format;
+			String outputContentType;
 			
 			if (DryApiConstants.JSON_MIME.equals(contentType)) {
 				format = DataFormat.JSON;
+				outputContentType = DryApiConstants.JSON_MIME;
 			} else if (DryApiConstants.XML_MIME.equals(contentType)) {
 				format = DataFormat.XML;
+				outputContentType = DryApiConstants.XML_MIME;
 			} else {
 				logger.info("Content type '{}' not supported", rawContentType);
 
@@ -145,7 +171,7 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 				
 				logger.debug("Sending answer");
 				
-				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, outputContentType);
 				exchange.setStatusCode(res.getOverallSuccess() ? StatusCodes.OK : StatusCodes.BAD_REQUEST);
 		        exchange.getResponseSender().send(ExceptionUtils.withRuntimeException(()->objectMapper.writeValueAsString(res)));
 		        
