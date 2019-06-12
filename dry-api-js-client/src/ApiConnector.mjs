@@ -35,8 +35,8 @@ export class ApiConnector {
                 },
                 json: r
             }, (err, res, body) => {
-                if (err || (res.statusCode!=200 && res.statusCode!=400)) {
-                    console.log(body)
+                if (err || (res.statusCode!=200 && res.statusCode!=400)) {     
+                    console.log(body.replace(/\\n/g, '\n'))
                     reject(err || `Status code was unexpected: ${res.statusCode}`)
                 } else {
                     const resp = body.responses[0]
@@ -91,19 +91,17 @@ export class ApiConnector {
             if (body.overallSuccess) {
                 return resp.output
             } else {
-
                 if (resp.validation && resp.validation.items) {
                     console.log("################ERROR################")
                     console.log("Found issues:")
                     resp.validation.items.forEach(i=>{
                         console.log(`\t${i.message} (${i.path.items.map(p=>p.key?p.key:`[${p.index}]`).join('.')})`)
                     })
+                    throw `Request validation failed`
                 } else {
                     console.error(resp)
+                    throw `Request partially failed:\n`+(resp.errorMessage||'').replace(/\\n/g, '\n')
                 }
-                // resp.validation.items
-
-                throw `Request partially failed`
             }
         }
     }
