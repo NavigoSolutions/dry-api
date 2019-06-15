@@ -91,7 +91,7 @@ export class ApiConnector {
             if (body.overallSuccess) {
                 return resp.output
             } else {
-                if (resp.validation && resp.validation.items) {
+                if (resp.validation && resp.validation.items && resp.validation.items.length>0) {
                     console.log("################ERROR################")
                     console.log("Found issues:")
                     resp.validation.items.forEach(i=>{
