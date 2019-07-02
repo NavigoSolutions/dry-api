@@ -95,7 +95,7 @@ export class ApiConnector {
                 return body.responses
             } else {
                 body.responses.forEach(resp=>{
-                    if (resp.validation && resp.validation.items) {
+                    if (resp.validation && resp.validation.items && resp.validation.items.length>0) {
                         console.log(`################ERROR - ${resp.requestUuid}################`)
                         console.log("Found issues:")
                         resp.validation.items.forEach(i=>{
