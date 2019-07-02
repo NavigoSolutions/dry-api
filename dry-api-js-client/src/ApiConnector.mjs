@@ -1,5 +1,6 @@
 import request from 'request'
 import syncRequest from 'sync-request'
+import generateUuid from 'uuid/v1'
 
 export class ApiConnector {
     constructor(baseAddress, extraHeaders={}, printCalls=false) {
@@ -20,7 +21,7 @@ export class ApiConnector {
                     "inputMappings" : null, 
                     "qualifiedName" : method, 
                     "requestType" : "EXECUTE", 
-                    "requestUuid" : "{C19B0899-D54C-498F-81E3-7BCBD3BD20F3}" 
+                    "requestUuid" : generateUuid()
                 }
             ] 
         }
@@ -54,20 +55,24 @@ export class ApiConnector {
     }
 
     executeSync(method, input) {
+        const res = this.executeSyncRaw([{ 
+            "input" : input, 
+            "inputMappings" : null, 
+            "qualifiedName" : method, 
+            "requestType" : "EXECUTE", 
+            "requestUuid" : generateUuid()
+        }])
+
+        return res[0].output
+    }
+
+    executeSyncRaw(requests) {
         if (this.printCalls) {
-            console.log(`[CALL] ${method}`)            
+            console.log(`[CALL] ${requests.map(r=>r.qualifiedName).join(', ')}`)            
         }
 
         const r = {
-            "requests" : [
-                { 
-                    "input" : input, 
-                    "inputMappings" : null, 
-                    "qualifiedName" : method, 
-                    "requestType" : "EXECUTE", 
-                    "requestUuid" : "{C19B0899-D54C-498F-81E3-7BCBD3BD20F3}" 
-                }
-            ] 
+            requests
         }
 
         const res = syncRequest("POST", this.baseAddress, {
@@ -86,22 +91,22 @@ export class ApiConnector {
 
             const body = JSON.parse(rawBody)
 
-            const resp = body.responses[0]
-
             if (body.overallSuccess) {
-                return resp.output
+                return body.responses
             } else {
-                if (resp.validation && resp.validation.items) {
-                    console.log("################ERROR################")
-                    console.log("Found issues:")
-                    resp.validation.items.forEach(i=>{
-                        console.log(`\t${i.message} (${i.path.items.map(p=>p.key?p.key:`[${p.index}]`).join('.')})`)
-                    })
-                    throw `Request validation failed`
-                } else {
-                    console.error(resp)
-                    throw `Request partially failed:\n`+(resp.errorMessage||'').replace(/\\n/g, '\n')
-                }
+                body.responses.forEach(resp=>{
+                    if (resp.validation && resp.validation.items) {
+                        console.log(`################ERROR - ${resp.requestUuid}################`)
+                        console.log("Found issues:")
+                        resp.validation.items.forEach(i=>{
+                            console.log(`\t${i.message} (${i.path.items.map(p=>p.key?p.key:`[${p.index}]`).join('.')})`)
+                        })
+                        throw `Request validation failed`
+                    } else {
+                        console.error(resp)
+                        throw `Request partially failed:\n`+(resp.errorMessage||'').replace(/\\n/g, '\n')
+                    }
+                })                
             }
         }
     }
