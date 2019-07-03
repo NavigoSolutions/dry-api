@@ -30,8 +30,6 @@ public class TypeFieldsSecurityBuilder<TAppContext extends AppContext, TCallCont
 	}
 	
 	private TypeFieldsSecurity<TAppContext, TCallContext> build() {
-		throwIfNotFullyCovered();
-		
 		return new TypeFieldsSecurity<>(securityPerField);
 	}
 	
@@ -43,9 +41,5 @@ public class TypeFieldsSecurityBuilder<TAppContext extends AppContext, TCallCont
 		schema.throwIfPathNotExists(path);
 		
 		securityPerField.put(path, security);
-	}
-	
-	public void throwIfNotFullyCovered() {
-		System.err.println("NOT IMPLEMENTED!!!!");
 	}
 }

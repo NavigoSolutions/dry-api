@@ -29,14 +29,7 @@ public class ObjectFieldsSecurityBuilder<TAppContext extends AppContext, TCallCo
 	}
 	
 	private Map<StructurePath, SecurityCheck<TAppContext, TCallContext>> build() {
-		
-		throwIfNotFullyCovered();
-		
 		return securityPerField;
-	}
-	
-	private void throwIfNotFullyCovered() {
-		System.err.println("NOT IMPLEMENTED!!!!");
 	}
 
 	public void add(StructurePath path, SecurityCheck<TAppContext, TCallContext> security) {
