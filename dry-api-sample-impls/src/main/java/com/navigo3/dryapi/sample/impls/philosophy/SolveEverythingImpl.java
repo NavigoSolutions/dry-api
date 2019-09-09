@@ -1,6 +1,7 @@
 package com.navigo3.dryapi.sample.impls.philosophy;
 
 import com.navigo3.dryapi.core.impl.MethodImplementation;
+import com.navigo3.dryapi.core.impl.MethodMetadataBuilder;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
@@ -12,6 +13,10 @@ import com.navigo3.dryapi.sample.impls.TestCallContext;
 import com.navigo3.dryapi.sample.impls.TestValidator;
 
 public class SolveEverythingImpl extends MethodImplementation<TopAddressInput, IntegerResult, SolveEverythingEndpoint, TestAppContext, TestCallContext, TestValidator> {
+	
+	@Override
+	public void fillClassMetadata(MethodMetadataBuilder<TestAppContext, TestCallContext> metadata) {
+	}
 	
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {

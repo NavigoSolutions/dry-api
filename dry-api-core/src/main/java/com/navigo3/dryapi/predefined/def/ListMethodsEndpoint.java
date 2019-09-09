@@ -1,6 +1,7 @@
 package com.navigo3.dryapi.predefined.def;
 
 import java.util.List;
+import java.util.Set;
 
 import org.immutables.value.Value;
 
@@ -19,6 +20,7 @@ public class ListMethodsEndpoint extends MethodDefinition<VoidParam, List<Method
 	public interface MethodBasicDescription {
 		String getQualifiedName();
 		String getDescription();
+		Set<String> getFlags();
 	}
 
 	@Override

@@ -21,6 +21,8 @@ public abstract class MethodImplementation<TInput, TOutput, TDef
 	 * Abstract methods for client implementation - security handling
 	 */
 	
+	public abstract void fillClassMetadata(MethodMetadataBuilder<TAppContext, TCallContext> metadataBuilder);
+	
 	public abstract void fillClassSecurity(MethodSecurityBuilder<TAppContext, TCallContext> securityBuilder);
 	
 	/**

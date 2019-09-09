@@ -1,0 +1,19 @@
+package com.navigo3.dryapi.core.impl;
+
+import com.navigo3.dryapi.core.context.AppContext;
+import com.navigo3.dryapi.core.context.CallContext;
+import com.navigo3.dryapi.core.util.Validate;
+
+public class MethodMetadataBuilder<TAppContext extends AppContext, TCallContext extends CallContext> {
+	private final ImmutableMethodMetadata.Builder<TAppContext, TCallContext> builder = ImmutableMethodMetadata.builder();
+	
+	public MethodMetadata<TAppContext, TCallContext> build() {
+		return builder.build();
+	}
+	
+	public void addFlag(String flag) {
+		Validate.notBlank(flag);
+		
+		builder.addFlags(flag);
+	}
+}

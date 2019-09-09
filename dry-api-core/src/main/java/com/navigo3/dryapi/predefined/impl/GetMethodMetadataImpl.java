@@ -45,6 +45,8 @@ public abstract class GetMethodMetadataImpl<TAppContext extends AppContext, TCal
 		
 		fillSecurity(builder, security);
 		
+		builder.flags(getApi().lookupFlags(input.getQualifiedName()).get().getFlags());
+		
 		return builder.build();
 	}
 

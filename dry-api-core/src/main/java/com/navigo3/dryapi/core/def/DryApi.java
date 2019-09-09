@@ -10,8 +10,9 @@ import org.immutables.value.Value;
 
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
-import com.navigo3.dryapi.core.def.ImmutableEntry.Builder;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
+import com.navigo3.dryapi.core.impl.MethodMetadata;
+import com.navigo3.dryapi.core.impl.MethodMetadataBuilder;
 import com.navigo3.dryapi.core.impl.MethodSecurity;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
@@ -33,6 +34,8 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 		Class<? extends MethodImplementation> getImplementationClass();
 		
 		MethodSecurity<TAppContext, TCallContext> getSecurity();
+		
+		MethodMetadata<TAppContext, TCallContext> getMetadata();
 	}
 
 	private Map<String, Entry<TAppContext, TCallContext>> entries = new HashMap<>();
@@ -58,20 +61,28 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 		
 		implementation.setDefinition(definition);
 		
-		Builder<TAppContext, TCallContext> builder = ImmutableEntry
+		ImmutableEntry.Builder<TAppContext, TCallContext> builder = ImmutableEntry
 			.<TAppContext, TCallContext>builder()
 			.definition(definition)
 			.implementationClass(implClass);
 		
-		MethodSecurityBuilder<TAppContext, TCallContext> methodBuilder = new MethodSecurityBuilder<>(definition.getInputSchema(), definition.getOutputSchema());
+		MethodSecurityBuilder<TAppContext, TCallContext> securityBuilder = new MethodSecurityBuilder<>(definition.getInputSchema(), definition.getOutputSchema());
 		
-		implementation.fillClassSecurity(methodBuilder);
+		implementation.fillClassSecurity(securityBuilder);
 		
-		MethodSecurity<TAppContext, TCallContext> security = methodBuilder.build();
+		MethodSecurity<TAppContext, TCallContext> security = securityBuilder.build();
 		
 		builder.security(security);
 		
 		implementation.setSecurity(security);
+		
+		MethodMetadataBuilder<TAppContext, TCallContext> metadataBuilder = new MethodMetadataBuilder<>();
+		
+		implementation.fillClassMetadata(metadataBuilder);
+		
+		MethodMetadata<TAppContext, TCallContext> metadata = metadataBuilder.build();
+		
+		builder.metadata(metadata);
 		
 		entries.put(qualifiedName, builder.build());
 	}
@@ -88,6 +99,10 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 	
 	public Optional<MethodSecurity<TAppContext, TCallContext>> lookupSecurity(String qualifiedName) {
 		return Optional.ofNullable(entries.get(qualifiedName)).map(Entry::getSecurity);
+	}
+	
+	public Optional<MethodMetadata<TAppContext, TCallContext>> lookupFlags(String qualifiedName) {
+		return Optional.ofNullable(entries.get(qualifiedName)).map(Entry::getMetadata);
 	}
 	
 	public List<String> getAllQualifiedNames() {

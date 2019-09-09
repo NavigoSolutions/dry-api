@@ -1,6 +1,7 @@
 package com.navigo3.dryapi.sample.impls.form;
 
 import com.navigo3.dryapi.core.impl.MethodImplementation;
+import com.navigo3.dryapi.core.impl.MethodMetadataBuilder;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.path.TypePath;
@@ -16,6 +17,10 @@ import com.navigo3.dryapi.sample.impls.TestCallContext;
 import com.navigo3.dryapi.sample.impls.TestValidator;
 
 public class FormUpsertImpl extends MethodImplementation<Person, IdResult, FormUpsertEndpoint, TestAppContext, TestCallContext, TestValidator> {
+	
+	@Override
+	public void fillClassMetadata(MethodMetadataBuilder<TestAppContext, TestCallContext> metadata) {
+	}
 	
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
