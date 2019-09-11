@@ -81,9 +81,13 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 					logger.debug("Executing method={}, uuid={}", request.getQualifiedName(), request.getRequestUuid());
 					
 					resp = executeRequest(appContext, request, objectMapper, (uuid, path)->{
-						Validate.keyContained(previousResults, uuid, "");
+						try {
+							Validate.keyContained(previousResults, uuid, "");
 			
-						return JsonAccessor.getNodeAt(previousResults.get(uuid), path);
+							return JsonAccessor.getNodeAt(previousResults.get(uuid), path);
+						} catch (Throwable t) {
+							throw new RuntimeException(StringUtils.subst("Error during try to mapping value on path '{}' from request '{}'", path.toDebug(), uuid), t);
+						}
 					});
 					
 					if (resp.getStatus()!=ResponseStatus.SUCCESS) {
