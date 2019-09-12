@@ -46,4 +46,8 @@ public abstract class Validator {
 	public ObjectPathsTree getAllowedPaths() {
 		return allowedPaths;
 	}
+	
+	public int getItemsCount() {
+		return items.size();
+	}
 }
