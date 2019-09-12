@@ -182,10 +182,19 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			BiFunction<String, StructurePath, JsonNode> getPreviousOutput, BiConsumer<Object, ExecutionContext<TAppContext, TCallContext>> onSuccess) {
 		try {
 			request.getInputMappings().forEach(m->{
-				logger.debug("Copying output of {} on path {} to current input on path {}", m.getFromUuid(), m.getFromPath().toDebug(), m.getToPath().toDebug());
-				JsonNode repl = getPreviousOutput.apply(m.getFromUuid(), m.getFromPath());
+				try {
+					logger.debug("Copying output of {} on path {} to current input on path {}", m.getFromUuid(), m.getFromPath().toDebug(), m.getToPath().toDebug());
+					JsonNode repl = getPreviousOutput.apply(m.getFromUuid(), m.getFromPath());
 				
-				JsonAccessor.setNodeAt(request.getInput(), m.getToPath(), repl);
+					JsonAccessor.setNodeAt(request.getInput(), m.getToPath(), repl);
+				} catch (Throwable t) {
+					throw new RuntimeException(StringUtils.subst(
+						"Error during try to mapping value on path '{}' from request '{}' to path '{}'",
+						m.getFromPath().toDebug(),
+						m.getFromUuid(),
+						m.getToPath().toDebug()
+					), t);
+				}
 			});
 
 			Object rawInput = objectMapper.convertValue(request.getInput(), def.getInputType());
