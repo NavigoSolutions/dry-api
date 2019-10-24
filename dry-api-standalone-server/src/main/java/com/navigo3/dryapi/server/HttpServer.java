@@ -126,7 +126,7 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 
 				exchange.setStatusCode(415);
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-				exchange.getResponseSender().send(StringUtils.subst("Please use content type: '{}' or '{}'", DryApiConstants.JSON_MIME, DryApiConstants.XML_MIME));
+				exchange.getResponseSender().send(StringUtils.subst("Please use content type: '{}' or '{}' instead of '{}'", DryApiConstants.JSON_MIME, DryApiConstants.XML_MIME, contentType));
 
 				return;
 			}
