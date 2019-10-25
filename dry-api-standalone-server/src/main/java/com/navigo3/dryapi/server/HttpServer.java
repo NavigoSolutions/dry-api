@@ -78,7 +78,14 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 	}
 	
 	private void handleRequest(HttpServerExchange exchange) throws Exception {
-		logger.debug("Handling {} request", exchange.getRequestMethod().toString());
+		logger.debug("Handling {} request {}", exchange.getRequestMethod().toString(), exchange.getRelativePath());
+		
+		if (settings.getExtraUriHandlers().containsKey(exchange.getRelativePath())) {
+			logger.debug("Using extra handler");
+			
+			settings.getExtraUriHandlers().get(exchange.getRelativePath()).accept(exchange);
+			return;
+		}
 		
 		String origin = exchange.getRequestHeaders().getFirst("Origin");
 		
