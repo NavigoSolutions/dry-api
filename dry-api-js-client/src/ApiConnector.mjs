@@ -42,9 +42,10 @@ export class ApiConnector {
             console.log((body || "").replace(/\\n/g, "\n"))
             reject(err || `Status code was unexpected: ${res.statusCode}`)
           } else {
-            const resp = body.responses[0]
+            const json = JSON.parse(body)
+            const resp = json.responses[0]
 
-            if (body.overallSuccess) {
+            if (json.overallSuccess) {
               resolve(resp.output)
             } else {
               reject(resp)
