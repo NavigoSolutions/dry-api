@@ -9,7 +9,7 @@ export class ApiConnector {
     this.printCalls = printCalls
   }
 
-  async executeAsync(method, input) {
+  async executeAsync(method, input, onValidationError) {
     if (this.printCalls) {
       console.log(`[CALL] ${method}`)
     }
@@ -47,6 +47,92 @@ export class ApiConnector {
 
             if (json.overallSuccess) {
               resolve(resp.output)
+            } else if (onValidationError && resp && resp.status === "INVALID_INPUT") {
+              onValidationError(resp)
+            } else {
+              reject(resp)
+            }
+          }
+        }
+      )
+    })
+
+    return promise
+  }
+
+  async validateAsync(method, input) {
+    if (this.printCalls) {
+      console.log(`[CALL] ${method}`)
+    }
+
+    const r = {
+      requests: [
+        {
+          input: input,
+          inputMappings: null,
+          qualifiedName: method,
+          requestType: "VALIDATE",
+          requestUuid: generateUuid()
+        }
+      ]
+    }
+
+    const promise = new Promise((resolve, reject) => {
+      request(
+        {
+          method: "POST",
+          uri: this.baseAddress,
+          headers: {
+            "content-type": "application/json;charset=utf-8",
+            ...this.extraHeaders
+          },
+          body: JSON.stringify(r)
+        },
+        (err, res, body) => {
+          if (err || (res.statusCode != 200 && res.statusCode != 400)) {
+            console.log((body || "").replace(/\\n/g, "\n"))
+            reject(err || `Status code was unexpected: ${res.statusCode}`)
+          } else {
+            const json = JSON.parse(body)
+            const resp = json.responses[0]
+
+            if (json.overallSuccess) {
+              resolve([resp.validation, resp])
+            } else {
+              reject(resp)
+            }
+          }
+        }
+      )
+    })
+
+    return promise
+  }
+
+  async callAsync(req) {
+    if (this.printCalls) {
+      console.log(`[CALL] ${req.map(r => r.qualifiedName).join(", ")}`)
+    }
+    const promise = new Promise((resolve, reject) => {
+      request(
+        {
+          method: "POST",
+          uri: this.baseAddress,
+          headers: {
+            "content-type": "application/json;charset=utf-8",
+            ...this.extraHeaders
+          },
+          body: JSON.stringify({ requests: req })
+        },
+        (err, res, body) => {
+          const json = JSON.parse(body)
+
+          if (err || (res.statusCode != 200 && res.statusCode != 400)) {
+            console.log((body || "").replace(/\\n/g, "\n"))
+            reject(err || `Status code was unexpected: ${res.statusCode}`)
+          } else {
+            if (json.overallSuccess) {
+              resolve(json)
             } else {
               reject(resp)
             }
@@ -115,5 +201,11 @@ export class ApiConnector {
         })
       }
     }
+  }
+
+  downloadLink(method, input, forceDownload) {
+    return `/API/execute?qualifiedName=${encodeURIComponent(method)}&forceDownload=${
+      forceDownload ? true : false
+    }&input=${encodeURIComponent(JSON.stringify(input))}`
   }
 }
