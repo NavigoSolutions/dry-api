@@ -30,7 +30,7 @@ export class ApiConnector {
       request(
         {
           method: "POST",
-          uri: this.baseAddress,
+          uri: `${this.baseAddress}?e=${encodeURIComponent(method)}`,
           headers: {
             "content-type": "application/json;charset=utf-8",
             ...this.extraHeaders
@@ -81,7 +81,7 @@ export class ApiConnector {
       request(
         {
           method: "POST",
-          uri: this.baseAddress,
+          uri: `${this.baseAddress}?v=${encodeURIComponent(method)}`,
           headers: {
             "content-type": "application/json;charset=utf-8",
             ...this.extraHeaders
@@ -117,7 +117,7 @@ export class ApiConnector {
       request(
         {
           method: "POST",
-          uri: this.baseAddress,
+          uri: `${this.baseAddress}?e=${encodeURIComponent(req.map(r => r.qualifiedName).join(", "))}`,
           headers: {
             "content-type": "application/json;charset=utf-8",
             ...this.extraHeaders
