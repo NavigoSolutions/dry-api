@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class Validate {
+public class Validate {	
 	public static <T> void keyNotContained(Map<T, ?> map, T key) {
 		if (map.containsKey(key)) {
 			throw new RuntimeException(StringUtils.subst("Key {} should not be contained in this map", key));
@@ -210,6 +210,30 @@ public class Validate {
 	public static <T> void contained(Collection<T> coll, T item, String message) {
 		if (!coll.contains(item)) {
 			throw new RuntimeException(message);
+		}
+	}
+	
+	public static <T extends Comparable<T>> void greaterThan(T value, T threshold) {
+		if (value.compareTo(threshold)<=0) {
+			throw new RuntimeException(StringUtils.subst("Expected value greather than {}, got {}", threshold, value));
+		}
+	}
+	
+	public static <T extends Comparable<T>> void greaterThanOrEqual(T value, T threshold) {
+		if (value.compareTo(threshold)<0) {
+			throw new RuntimeException(StringUtils.subst("Expected value greather than or equal to {}, got {}", threshold, value));
+		}
+	}
+	
+	public static <T extends Comparable<T>> void lessThan(T value, T threshold) {
+		if (value.compareTo(threshold)>=0) {
+			throw new RuntimeException(StringUtils.subst("Expected value less than {}, got {}", threshold, value));
+		}
+	}
+	
+	public static <T extends Comparable<T>> void lessThanOrEqual(T value, T threshold) {
+		if (value.compareTo(threshold)>0) {
+			throw new RuntimeException(StringUtils.subst("Expected value less than or equal to {}, got {}", threshold, value));
 		}
 	}
 }
