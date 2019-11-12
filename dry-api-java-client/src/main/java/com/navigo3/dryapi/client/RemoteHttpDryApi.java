@@ -20,6 +20,7 @@ import com.navigo3.dryapi.core.exec.json.ImmutableJsonRequest;
 import com.navigo3.dryapi.core.exec.json.JsonBatchRequest;
 import com.navigo3.dryapi.core.exec.json.JsonBatchResponse;
 import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
+import com.navigo3.dryapi.core.util.DryApiConstants;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.JacksonUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
@@ -34,6 +35,7 @@ import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
@@ -170,67 +172,77 @@ public class RemoteHttpDryApi {
 	}
 
 	private void processTask(RequestsBatchData requestsBatch) {
-		Validate.notEmpty(requestsBatch.getRequests());
-		
-		ObjectMapper objectMapper = JacksonUtils.createMapper(settings.getDataFormat());
-		
-		JsonBatchRequest batch = buildBatch(objectMapper, requestsBatch);
-		
-		String mime = JacksonUtils.getMimeForFormat(settings.getDataFormat());
-		
-		RequestBody body = ExceptionUtils.withRuntimeException(()->RequestBody.create(MediaType.get(mime), objectMapper.writeValueAsString(batch)));
+		ExceptionUtils.withRuntimeException(()->{
+			Validate.notEmpty(requestsBatch.getRequests());
 			
-		Request request = new Request.Builder()
-			.url(apiUrl)
-			.post(body)
-			.build();
-		
-		httpClient.newCall(request).enqueue(new Callback() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public void onResponse(Call call, Response httpResponse) throws IOException {
-				try {
-					if (httpResponse.code()!=200 && httpResponse.code()!=400) {
-						throw new RuntimeException(StringUtils.subst("Unexpected error code {}. Content:\n{}", httpResponse.code(), httpResponse.body().string()));
-					}					
-					
-					JsonBatchResponse batchResponse = ExceptionUtils.withRuntimeException(()->objectMapper.readValue(httpResponse.body().string(), JsonBatchResponse.class));
-
-					Validate.sameSize(batchResponse.getResponses(), requestsBatch.getRequests());
-
-					batchResponse.getResponses().forEach(response->{
-						@SuppressWarnings("rawtypes")
-						Optional<? extends ModifiableRequestData> requestData = requestsBatch
-							.getRequests()
-							.stream()
-							.filter(r->r.getUuid().equals(response.getRequestUuid()))
-							.findFirst();
+			ObjectMapper objectMapper = JacksonUtils.createMapper(settings.getDataFormat());
+			
+			JsonBatchRequest batch = buildBatch(objectMapper, requestsBatch);
+			
+			String mime = JacksonUtils.getMimeForFormat(settings.getDataFormat());
+			
+			String content = objectMapper.writeValueAsString(batch);
+			
+			RequestBody body = RequestBody.create(MediaType.get(mime), content);
+				
+			Builder reqBuilder = new Request.Builder()
+				.url(apiUrl)
+				.post(body);
+			
+			settings.getContentSigner().ifPresent(signer->{
+				String signature = signer.apply(content);
+				reqBuilder.addHeader(DryApiConstants.REQUEST_SIGNATURE_HEADER, signature);
+			});
+			
+			Request request = reqBuilder.build();
+			
+			httpClient.newCall(request).enqueue(new Callback() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public void onResponse(Call call, Response httpResponse) throws IOException {
+					try {
+						if (httpResponse.code()!=200 && httpResponse.code()!=400) {
+							throw new RuntimeException(StringUtils.subst("Unexpected error code {}. Content:\n{}", httpResponse.code(), httpResponse.body().string()));
+						}					
 						
-						Validate.isPresent(requestData, "There is no response for gived uuid!");
-						
-						requestData.get().setResponse(response);
-						
-						if (response.getOutput().isPresent()) {
-							Object output = ExceptionUtils
-									.withRuntimeException(()->objectMapper.convertValue(response.getOutput().get(), requestData.get().getMethod().getOutputType()));
+						JsonBatchResponse batchResponse = ExceptionUtils.withRuntimeException(()->objectMapper.readValue(httpResponse.body().string(), JsonBatchResponse.class));
+	
+						Validate.sameSize(batchResponse.getResponses(), requestsBatch.getRequests());
+	
+						batchResponse.getResponses().forEach(response->{
+							@SuppressWarnings("rawtypes")
+							Optional<? extends ModifiableRequestData> requestData = requestsBatch
+								.getRequests()
+								.stream()
+								.filter(r->r.getUuid().equals(response.getRequestUuid()))
+								.findFirst();
 							
-							requestData.get().setOutput(Optional.of(output));
-						}
+							Validate.isPresent(requestData, "There is no response for gived uuid!");
 							
-					});
-					
-					requestsBatch.getFuture().complete(requestsBatch);
-				} catch (Throwable t) {
-					requestsBatch.getOnFail().orElse(settings.getGlobalErrorHandler().orElse(Throwable::printStackTrace));
-					requestsBatch.getFuture().completeExceptionally(t);
+							requestData.get().setResponse(response);
+							
+							if (response.getOutput().isPresent()) {
+								Object output = ExceptionUtils
+										.withRuntimeException(()->objectMapper.convertValue(response.getOutput().get(), requestData.get().getMethod().getOutputType()));
+								
+								requestData.get().setOutput(Optional.of(output));
+							}
+								
+						});
+						
+						requestsBatch.getFuture().complete(requestsBatch);
+					} catch (Throwable t) {
+						requestsBatch.getOnFail().orElse(settings.getGlobalErrorHandler().orElse(Throwable::printStackTrace));
+						requestsBatch.getFuture().completeExceptionally(t);
+					}
 				}
-			}
-			
-			@Override
-			public void onFailure(Call call, IOException e) {
-				requestsBatch.getOnFail().orElse(settings.getGlobalErrorHandler().orElse(Throwable::printStackTrace));
-				requestsBatch.getFuture().completeExceptionally(e);
-			}
+				
+				@Override
+				public void onFailure(Call call, IOException e) {
+					requestsBatch.getOnFail().orElse(settings.getGlobalErrorHandler().orElse(Throwable::printStackTrace));
+					requestsBatch.getFuture().completeExceptionally(e);
+				}
+			});
 		});
 	}
 

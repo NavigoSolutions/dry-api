@@ -3,6 +3,7 @@ package com.navigo3.dryapi.client;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.immutables.value.Value;
 
@@ -37,4 +38,6 @@ public interface RemoteHttpDryApiSettings {
 	default DataFormat getDataFormat() {
 		return DataFormat.JSON;
 	}
+	
+	Optional<Function<String, String>> getContentSigner();
 }

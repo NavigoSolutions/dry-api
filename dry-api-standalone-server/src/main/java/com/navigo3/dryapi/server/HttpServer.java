@@ -25,6 +25,7 @@ import com.navigo3.dryapi.core.util.JacksonUtils.DataFormat;
 import com.navigo3.dryapi.core.util.LambdaUtils.ConsumerWithException;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.ThreadUtils;
+import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.Validator;
 import com.navigo3.dryapi.server.HttpServerSettings.ApiMount;
 
@@ -152,11 +153,28 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 			logger.debug("Reading request");
 
 			exchange.getRequestReceiver().receiveFullBytes((ex, data) -> {
+				
+				String content = ExceptionUtils.withRuntimeException(()->new String(data, "utf-8"));
+				
+				if (exchange.getRequestHeaders().contains(DryApiConstants.REQUEST_SIGNATURE_HEADER)) {
+					Validate.isPresent(settings.getContentSignatureChecker());
+					
+					logger.debug("Checking request signature");
+					
+					String signature = exchange.getRequestHeaders().get(DryApiConstants.REQUEST_SIGNATURE_HEADER).getFirst();
+					
+					if (!settings.getContentSignatureChecker().get().test(content, signature)) {
+						logger.debug("Signature test failed!");
+					}
+					
+					logger.debug("Signature is OK");
+				}
+				
 				ObjectMapper objectMapper = JacksonUtils.createMapper(format);
 				
 				logger.debug("Parsing request");
 				
-				JsonBatchRequest batch = ExceptionUtils.withRuntimeException(()->objectMapper.readValue(new String(data, "utf-8"), new TypeReference<JsonBatchRequest>() {}));
+				JsonBatchRequest batch = ExceptionUtils.withRuntimeException(()->objectMapper.readValue(content, new TypeReference<JsonBatchRequest>() {}));
 
 				logger.info("Executing:\n{}", batch
 					.getRequests()

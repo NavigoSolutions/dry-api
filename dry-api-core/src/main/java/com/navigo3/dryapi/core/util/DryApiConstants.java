@@ -16,4 +16,6 @@ public class DryApiConstants {
 	public static final String JSON_MIME = "application/json;charset=utf-8";
 	
 	public static final String XML_MIME = "application/xml;charset=utf-8";
+	
+	public static final String REQUEST_SIGNATURE_HEADER = "X-Dry-Api-Req-Signature";
 }
