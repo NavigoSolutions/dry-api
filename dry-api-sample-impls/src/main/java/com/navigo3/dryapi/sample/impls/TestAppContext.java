@@ -14,6 +14,9 @@ public class TestAppContext implements AppContext {
 	
 	private List<Runnable> runAfterCommit = new ArrayList<>();
 
+	@SuppressWarnings("unused")
+	private boolean signed;
+
 	public TestAppContext(boolean isDevelopmentInstance) {
 		this.isDevelopmentInstance = isDevelopmentInstance;
 	}
@@ -55,5 +58,10 @@ public class TestAppContext implements AppContext {
 	public boolean getIsAuthenticated() {
 		return true;
 //		return false;
+	}
+
+	@Override
+	public void markSigned() {
+		signed = true;
 	}
 }

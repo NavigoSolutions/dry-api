@@ -18,4 +18,6 @@ public interface AppContext {
 	boolean getIsAuthenticated();
 	
 	Optional<Set<String>> getAllowedQualifiedNames();
+	
+	void markSigned();
 }

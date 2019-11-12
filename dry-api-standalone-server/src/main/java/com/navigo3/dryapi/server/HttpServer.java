@@ -161,11 +161,15 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 					
 					logger.debug("Checking request signature");
 					
-					String signature = exchange.getRequestHeaders().get(DryApiConstants.REQUEST_SIGNATURE_HEADER).getFirst();
+					String signature = exchange.getRequestHeaders().get(DryApiConstants.REQUEST_SIGNATURE_HEADER).getFirst().trim();
 					
 					if (!settings.getContentSignatureChecker().get().test(content, signature)) {
 						logger.debug("Signature test failed!");
+						
+						throw new RuntimeException("Signature test failed!");
 					}
+					
+					appContext.markSigned();
 					
 					logger.debug("Signature is OK");
 				}
