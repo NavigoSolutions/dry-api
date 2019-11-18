@@ -17,6 +17,11 @@ public class LambdaUtils {
 	}
 	
 	@FunctionalInterface
+	public interface BiConsumerWithException<T, U> {
+		void accept(T param1, U param2) throws Throwable;
+	}
+	
+	@FunctionalInterface
 	public interface FunctionWithException<T, U> {
 		U apply(T param) throws Throwable;
 	}
