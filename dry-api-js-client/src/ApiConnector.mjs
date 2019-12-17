@@ -3,10 +3,11 @@ import syncRequest from "sync-request"
 import generateUuid from "uuid/v1"
 
 export class ApiConnector {
-  constructor(baseAddress, extraHeaders = {}, printCalls = false) {
+  constructor(baseAddress, extraHeaders = {}, printCalls = false, criticalErrorHandler = () => {}) {
     this.baseAddress = baseAddress
     this.extraHeaders = extraHeaders
     this.printCalls = printCalls
+    this._criticalErrorHandler = criticalErrorHandler
   }
 
   async executeAsync(method, input, onValidationError, options = {}) {
@@ -45,10 +46,11 @@ export class ApiConnector {
           body: JSON.stringify(r)
         },
         (err, res, body) => {
-          if (err || (res.statusCode != 200 && res.statusCode != 400)) {
-            console.log((body || "").replace(/\\n/g, "\n"))
-            reject(err || `Status code was unexpected: ${res.statusCode}`)
+          if (err || (res.statusCode != 200 && !(res.statusCode == 400 && onValidationError))) {
+            this._criticalErrorHandler(res, err, body)
           } else {
+            window._appStore.isOnline = true
+
             const json = JSON.parse(body)
             const resp = json.responses[0]
 
@@ -57,7 +59,7 @@ export class ApiConnector {
             } else if (onValidationError && resp && resp.status === "INVALID_INPUT") {
               onValidationError(resp)
             } else {
-              reject(resp)
+              reject(res)
             }
           }
         }
@@ -104,8 +106,7 @@ export class ApiConnector {
         },
         (err, res, body) => {
           if (err || (res.statusCode != 200 && res.statusCode != 400)) {
-            console.log((body || "").replace(/\\n/g, "\n"))
-            reject(err || `Status code was unexpected: ${res.statusCode}`)
+            this._criticalErrorHandler(res, err, body)
           } else {
             const json = JSON.parse(body)
             const resp = json.responses[0]
@@ -113,7 +114,7 @@ export class ApiConnector {
             if (json.overallSuccess) {
               resolve([resp.validation, resp])
             } else {
-              reject(resp)
+              reject(res)
             }
           }
         }
