@@ -49,8 +49,6 @@ export class ApiConnector {
           if (err || (res.statusCode != 200 && !(res.statusCode == 400 && onValidationError))) {
             this._criticalErrorHandler(res, err, body)
           } else {
-            window._appStore.isOnline = true
-
             const json = JSON.parse(body)
             const resp = json.responses[0]
 
