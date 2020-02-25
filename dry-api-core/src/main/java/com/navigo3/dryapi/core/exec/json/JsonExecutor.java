@@ -25,6 +25,8 @@ import com.navigo3.dryapi.core.exec.json.ImmutableJsonResponse.Builder;
 import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
 import com.navigo3.dryapi.core.impl.ExecutionContext;
 import com.navigo3.dryapi.core.impl.MethodImplementation;
+import com.navigo3.dryapi.core.impl.MethodMetadata;
+import com.navigo3.dryapi.core.impl.MethodMetadataBuilder;
 import com.navigo3.dryapi.core.impl.MethodSecurity;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.path.StructurePath;
@@ -129,6 +131,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		return result.get();
 	}
 
+	@SuppressWarnings("unchecked")
 	private JsonResponse executeRequest(TAppContext appContext, JsonRequest request, ObjectMapper objectMapper,
 			BiFunction<String, StructurePath, JsonNode> getPreviousOutput) {
 		
@@ -151,10 +154,15 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		findMethod(appContext, request, outputBuilder, def->{
 			parseInputJson(appContext, request, outputBuilder, def, objectMapper, getPreviousOutput, (rawInput, executionContext)->{
 				checkSecurity(appContext, request, outputBuilder, rawInput, executionContext, def, (instance, callContext, security, securityPassed)->{
-					clearProhibitedInputFields(appContext, outputBuilder, rawInput, instance, callContext, security, def, request, securityPassed, objectMapper, (input, inputPathsTree)->{
+					
+					MethodMetadataBuilder<TAppContext, TCallContext> metadataBuilder = new MethodMetadataBuilder<>();
+					instance.fillClassMetadata(metadataBuilder);
+					MethodMetadata<TAppContext, TCallContext> meta = metadataBuilder.build();
+					
+					clearProhibitedInputFields(appContext, outputBuilder, rawInput, instance, callContext, security, def, request, securityPassed, objectMapper, meta, (input, inputPathsTree)->{
 						validate(appContext, request, outputBuilder, input, instance, inputPathsTree, callContext, ()->{
 							execute(appContext, request, outputBuilder, input, instance, rawOutput->{
-								clearProhibitedOutputFields(request, appContext, outputBuilder, rawOutput, instance, callContext, executionContext, def, objectMapper, security);
+								clearProhibitedOutputFields(request, appContext, outputBuilder, rawOutput, instance, callContext, executionContext, def, objectMapper, security, meta);
 							});
 						});
 					});
@@ -262,7 +270,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	@SuppressWarnings("rawtypes")
 	private void clearProhibitedInputFields(TAppContext appContext, Builder outputBuilder, Object rawInput, MethodImplementation instance, 
 			TCallContext callContext, MethodSecurity<TAppContext, TCallContext> security, MethodDefinition def, 
-			JsonRequest request, boolean securityPassed, ObjectMapper objectMapper, BiConsumer<Object, ObjectPathsTree> block) {
+			JsonRequest request, boolean securityPassed, ObjectMapper objectMapper, MethodMetadata<TAppContext, TCallContext> meta,
+			BiConsumer<Object, ObjectPathsTree> block) {
 		try {
 			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(rawInput);
 			
@@ -289,7 +298,9 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				);
 			}
 			
-			outputBuilder.allowedInputFields(inputPathsTree);
+			if (!meta.getDisableAllowedFields()) {
+				outputBuilder.allowedInputFields(inputPathsTree);
+			}
 			
 			if (request.getRequestType()!=RequestType.INPUT_FIELDS_SECURITY) {
 				Object input;
@@ -381,7 +392,8 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	@SuppressWarnings("rawtypes")
 	private void clearProhibitedOutputFields(JsonRequest request, TAppContext appContext, Builder outputBuilder, Object rawOutput,
 			MethodImplementation instance, TCallContext callContext, ExecutionContext executionContext,
-			MethodDefinition def, ObjectMapper objectMapper, MethodSecurity<TAppContext, TCallContext> security) {
+			MethodDefinition def, ObjectMapper objectMapper, MethodSecurity<TAppContext, TCallContext> security, 
+			MethodMetadata<TAppContext, TCallContext> meta) {
 		try {
 			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(rawOutput);
 			
@@ -399,7 +411,9 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				doCleaning = false;
 			}
 			
-			outputBuilder.allowedOutputFields(outputPathsTree);
+			if (!meta.getDisableAllowedFields()) {
+				outputBuilder.allowedOutputFields(outputPathsTree);
+			}
 			
 			Object output;
 			

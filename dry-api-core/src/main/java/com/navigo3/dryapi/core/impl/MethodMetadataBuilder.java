@@ -11,9 +11,20 @@ public class MethodMetadataBuilder<TAppContext extends AppContext, TCallContext 
 		return builder.build();
 	}
 	
+	/**
+	 * Add flag used in documentation.
+	 * @param flag
+	 */
 	public void addFlag(String flag) {
 		Validate.notBlank(flag);
 		
 		builder.addFlags(flag);
+	}
+	
+	/**
+	 * Disable listing allowed fields in input/output. Can be used for reducing message size of huge lists.
+	 */
+	public void disableAllowedFields() {
+		builder.disableAllowedFields(true);
 	}
 }
