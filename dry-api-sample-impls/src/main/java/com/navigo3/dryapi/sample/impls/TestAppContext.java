@@ -38,8 +38,7 @@ public class TestAppContext implements AppContext {
 		
 		runAfterCommit.forEach(Runnable::run);
 	}
-	
-	@Override
+
 	public void executeAfterCommit(Runnable block) {
 		runAfterCommit.add(block);
 	}

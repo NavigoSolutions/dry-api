@@ -11,8 +11,6 @@ public interface AppContext {
 
 	void transaction(Supplier<Boolean> block);
 	
-	void executeAfterCommit(Runnable block);
-	
 	void reportException(Throwable t);
 	
 	boolean getIsAuthenticated();
