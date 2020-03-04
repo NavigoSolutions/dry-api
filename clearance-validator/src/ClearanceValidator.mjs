@@ -149,6 +149,22 @@ export class ClearanceValidator {
     }
   }
 
+  static included(array, object, message = undefined) {
+    this.isA(array, Array)
+
+    if (!array.includes(object)) {
+      throw new Error(message || `Object ${object} not found in array`)
+    }
+  }
+
+  static notIncluded(array, object, message = undefined) {
+    this.isA(array, Array)
+
+    if (array.includes(object)) {
+      throw new Error(message || `Object ${object} is already in array`)
+    }
+  }
+
   static regexp(str, regexp, message = undefined) {
     this.isA(str, String)
     this.isA(regexp, RegExp)
