@@ -79,7 +79,7 @@ public class TypeSchema {
 		
 		Optional<ContainerType> getContainerType();
 		
-		Optional<List<FieldDefinition>> getTemplateParams();
+		List<FieldDefinition> getTemplateParams();
 		
 		List<FieldDefinition> getFields();
 		
@@ -116,11 +116,17 @@ public class TypeSchema {
 		final Class<?> klass;
 		final Type[] templateParams;
 		
+		HashMap<String, String> templateParamTypes = new HashMap<>();
+		
 		if (type.getType() instanceof ParameterizedType) {
 			ParameterizedType paramType = (ParameterizedType)type.getType();
 			
 			klass = (Class<?>)paramType.getRawType();
 			templateParams = paramType.getActualTypeArguments();
+			
+			for (int i=0;i<templateParams.length;++i) {
+				templateParamTypes.put(klass.getTypeParameters()[i].getName(), templateParams[i].getTypeName());
+			}
 		} else {
 			klass = (Class<?>)type.getType();
 			templateParams = new Type[]{};
@@ -131,12 +137,12 @@ public class TypeSchema {
 		Set<Class<?>> classesToBeDefined = new HashSet<>();
 		classesToBeDefined.add(klass);
 		
-		parseIteratively(classesToBeDefined, templateParams);
+		parseIteratively(classesToBeDefined, templateParams, templateParamTypes);
 		
 		definitions = Collections.unmodifiableMap(definitions);
 	}
 
-	private void parseIteratively(Set<Class<?>> classesToBeDefined, Type[] templateParams) {
+	private void parseIteratively(Set<Class<?>> classesToBeDefined, Type[] templateParams, HashMap<String, String> templateParamTypes) {
 		boolean first = true;
 		
 		while (!classesToBeDefined.isEmpty()) {
@@ -178,7 +184,7 @@ public class TypeSchema {
 					String typeKlass = templateParams[typeFields.size()].getTypeName().split("<")[0];
 					
 					ExceptionUtils.withRuntimeException(()->{
-						setupField(Class.forName(typeKlass), templateParams[typeFields.size()].getTypeName(), fieldBuilder, classesToBeDefined);
+						setupField(Class.forName(typeKlass), templateParams[typeFields.size()].getTypeName(), fieldBuilder, classesToBeDefined, templateParamTypes);
 					});
 					
 					typeFields.add(fieldBuilder.build());
@@ -222,7 +228,7 @@ public class TypeSchema {
 					.builder()
 					.name(finalName.get());
 				
-				setupField(method, fieldBuilder, classesToBeDefined);
+				setupField(method, fieldBuilder, classesToBeDefined, templateParamTypes);
 
 				builder.addFields(fieldBuilder.build());
 			}
@@ -233,19 +239,19 @@ public class TypeSchema {
 		}
 	}
 	
-	private void setupField(Method getter, ImmutableFieldDefinition.Builder fieldBuilder, Set<Class<?>> classesToBeDefined) {
+	private void setupField(Method getter, ImmutableFieldDefinition.Builder fieldBuilder, Set<Class<?>> classesToBeDefined, Map<String, String> templateParamTypes) {
 		Class<?> klass = getter.getReturnType();
-		
-		setupField(klass, getter.getGenericReturnType().getTypeName(),  fieldBuilder, classesToBeDefined);
+	
+		setupField(klass, getter.getGenericReturnType().getTypeName(),  fieldBuilder, classesToBeDefined, templateParamTypes);
 	}
 
-	private void setupField(Class<?> klass, String returnTypeDesc, ImmutableFieldDefinition.Builder fieldBuilder, Set<Class<?>> classesToBeDefined) {
+	private void setupField(Class<?> klass, String returnTypeDesc, ImmutableFieldDefinition.Builder fieldBuilder, Set<Class<?>> classesToBeDefined, Map<String, String> templateParamTypes) {
 		if (String.class.isAssignableFrom(klass)) {
 			fieldBuilder.valueType(ValueType.STRING);
 		} else if (UUID.class.isAssignableFrom(klass)) {
 			fieldBuilder.valueType(ValueType.STRING);
 		} else if (
-			klass.isAssignableFrom(BigDecimal.class)
+			BigDecimal.class.isAssignableFrom(klass)
 			|| Integer.class.isAssignableFrom(klass)
 			|| int.class.isAssignableFrom(klass)
 			|| Long.class.isAssignableFrom(klass)
@@ -285,13 +291,34 @@ public class TypeSchema {
 			
 			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
 		} else {
-			if (!definitions.containsKey(klass.getName())) {
-				classesToBeDefined.add(klass);
+			String returnTypeDescReal = returnTypeDesc.split("<")[0];
+			returnTypeDescReal = returnTypeDesc.split("\\[")[0];
+
+			if (klass.getName().equals(returnTypeDescReal)) {
+				if (!definitions.containsKey(klass.getName())) {
+					classesToBeDefined.add(klass);
+				}
+				
+				fieldBuilder
+					.valueType(ValueType.REF)
+					.typeRef(klass.getName());
+			} else {
+				Validate.keyContained(templateParamTypes, returnTypeDescReal, StringUtils.subst("Missing field {} but there are [{}]", returnTypeDescReal, templateParamTypes.keySet().stream().collect(Collectors.joining(", "))));
+				
+				String klassNameReal = templateParamTypes.get(returnTypeDescReal);
+				
+				if (!definitions.containsKey(klassNameReal)) {
+					ExceptionUtils.withRuntimeException(()->{
+						classesToBeDefined.add(Class.forName(klassNameReal));
+					});
+				}
+				
+				fieldBuilder
+					.valueType(ValueType.REF)
+					.typeRef(klassNameReal);
+				
+				fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
 			}
-			
-			fieldBuilder
-				.valueType(ValueType.REF)
-				.typeRef(klass.getName());
 		}
 	}
 
@@ -306,7 +333,7 @@ public class TypeSchema {
 			String typeKlass = typeDesc.split("<")[0];
 			
 			ExceptionUtils.withRuntimeException(()->{
-				setupField(Class.forName(typeKlass), typeDesc, templateTypeBuilder, classesToBeDefined);
+				setupField(Class.forName(typeKlass), typeDesc, templateTypeBuilder, classesToBeDefined, new HashMap<>());
 			});
 			
 			return templateTypeBuilder.build();
@@ -334,10 +361,9 @@ public class TypeSchema {
 					Validate.isPresent(actType.getContainerType());
 					
 					if (actType.getContainerType().get()==ContainerType.OPTIONAL) {
-						Validate.isPresent(actType.getTemplateParams());
-						Validate.size(actType.getTemplateParams().get(), 1);
+						Validate.size(actType.getTemplateParams(), 1);
 						
-						actField = actType.getTemplateParams().get().get(0);
+						actField = actType.getTemplateParams().get(0);
 						actType = null;
 					}
 				}
@@ -348,17 +374,15 @@ public class TypeSchema {
 						
 						if (actType.getContainerType().get()==ContainerType.LIST) {
 							Validate.equals(item.getType(), TypeSelectorType.INDEX);
-							Validate.isPresent(actType.getTemplateParams());
-							Validate.size(actType.getTemplateParams().get(), 1);
+							Validate.size(actType.getTemplateParams(), 1);
 							
-							actField = actType.getTemplateParams().get().get(0);
+							actField = actType.getTemplateParams().get(0);
 							actType = null;
 						} else if (actType.getContainerType().get()==ContainerType.MAP) {
 							Validate.equals(item.getType(), TypeSelectorType.KEY);
-							Validate.isPresent(actType.getTemplateParams());
-							Validate.size(actType.getTemplateParams().get(), 2);
+							Validate.size(actType.getTemplateParams(), 2);
 							
-							actField = actType.getTemplateParams().get().get(1);
+							actField = actType.getTemplateParams().get(1);
 							actType = null;
 						} else {
 							throw new RuntimeException(StringUtils.subst("Unexpected container type {}", actType.getContainerType().get()));
@@ -418,5 +442,66 @@ public class TypeSchema {
 		
 		Validate.isTrue(actField!=null && actType==null, "It is expected last item will select field");
 		Validate.isTrue(actField.getValueType().isPresent(), "It seems path is too short and ends in collection, not field");
+	}
+	
+	public void debugPrint() {
+		Set<String> alreadyPrintedDefs = new HashSet<>();
+		
+		printDefinition(getDefinitions().get(getRootDefinition()), 0, alreadyPrintedDefs);
+	}
+
+	private void printDefinition(TypeDefinition def, int depth, Set<String> alreadyPrintedDefs) {
+		if (alreadyPrintedDefs.contains(def.getName())) {
+			System.out.println(StringUtils.repeat(depth, "    ")+" RECURSIVE "+def.getName());
+			
+			return;
+		}
+		
+		alreadyPrintedDefs.add(def.getName());
+		
+		System.out.println(StringUtils.repeat(depth, "    ")+getLabel(def.getContainerType(), def.getName(), Optional.empty()));
+		
+		def.getTemplateParams().forEach(par->{
+			System.out.println(StringUtils.repeat(depth+1, "    ")+"<"+getLabel(par.getContainerType(), par.getName(), par.getValueType())+">");
+			
+			if (par.getTypeRef().isPresent()) {
+				printDefinition(getDefinitions().get(par.getTypeRef().get()), depth+2, alreadyPrintedDefs);
+			} else if (par.getValueType().isPresent()) {
+				//
+			} else {
+				throw new RuntimeException("Unknown State");
+			}
+		});
+		
+		def.getFields().forEach(field->{
+			System.out.println(StringUtils.repeat(depth+1, "    ")+getLabel(field.getContainerType(), field.getName(), field.getValueType()));
+			
+			if (field.getTypeRef().isPresent()) {
+				printDefinition(getDefinitions().get(field.getTypeRef().get()), depth+2, alreadyPrintedDefs);
+			}
+		});
+		
+		
+		alreadyPrintedDefs.remove(def.getName());
+	}
+	
+	private String getLabel(Optional<ContainerType> type, String name, Optional<ValueType> valueType) {
+		if (type.isPresent()) {
+			if (type.get()==ContainerType.LIST) {
+				return "["+name+"]";
+			} else if (type.get()==ContainerType.MAP) {
+				return "{"+name+"}";
+			} else if (type.get()==ContainerType.OPTIONAL) {
+				return "?"+name+"?";
+			} else {
+				throw new RuntimeException("Unknown type "+type.get());
+			}
+		} else {
+			if (valueType.isPresent()) {
+				return name+" : "+valueType.get().name();
+			} else {
+				return name;
+			}
+		}
 	}
 }

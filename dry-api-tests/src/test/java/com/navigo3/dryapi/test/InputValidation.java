@@ -6,7 +6,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.navigo3.dryapi.core.validation.ValidationData;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.defs.form.ImmutablePerson;
@@ -38,7 +37,7 @@ public class InputValidation {
 			.putColorsToFavoriteNumbers("green", Arrays.asList(2, 10, 15, 78))
 			.build();
 		
-		ValidationData output = env.getApi().validateBlocking(new FormUpsertEndpoint(), input);
+		/*ValidationData output = */env.getApi().validateBlocking(new FormUpsertEndpoint(), input);
 		
 //		JsonUtils.prettyPrint(output);
 		

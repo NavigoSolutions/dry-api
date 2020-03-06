@@ -7,17 +7,14 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.navigo3.dryapi.core.exec.json.JsonPathsTreeBuilder;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
-import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.core.path.StructurePath;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.security.field.ObjectFieldsSecurity;
 import com.navigo3.dryapi.core.security.logic.False;
 import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
-import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
 
@@ -25,7 +22,7 @@ public class ObjectFieldsSecurityTest {
 	private static TestAppContext appContext;
 	private static TestCallContext callContext;
 	private static Person data;
-	private static TypeSchema schema;
+//	private static TypeSchema schema;
 	private static ObjectPathsTree pathsTree;
 
 	@BeforeClass
@@ -35,7 +32,7 @@ public class ObjectFieldsSecurityTest {
 		
 		data = Person.createSampleData();
 		
-		schema = TypeSchema.build(new TypeReference<TopAddressInput>(){});
+//		schema = TypeSchema.build(new TypeReference<TopAddressInput>(){});
 		
 		pathsTree = JsonPathsTreeBuilder.fromObject(data);
 	}
