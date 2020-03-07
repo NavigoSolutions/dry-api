@@ -44,6 +44,8 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 			MethodDefinition<TInput, TOutput> definition, 
 			Class<? extends MethodImplementation<TInput, TOutput, ? extends MethodDefinition<TInput, TOutput>, TAppContext, TCallContext, TValidator>> implClass
 	) {
+		System.err.println(definition.getQualifiedName());
+		
 		Validate.notNull(definition);
 		Validate.notNull(implClass);
 

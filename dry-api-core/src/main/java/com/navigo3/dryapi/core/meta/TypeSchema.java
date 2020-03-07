@@ -259,11 +259,11 @@ public class TypeSchema {
 		} else if (Optional.class.isAssignableFrom(klass)) {
 			fieldBuilder.containerType(ContainerType.OPTIONAL);
 			
-			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
+			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined, false);
 		} else if (Collection.class.isAssignableFrom(klass)) {
 			fieldBuilder.containerType(ContainerType.LIST);
 			
-			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
+			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined, false);
 		} else if (klass.isArray()) {
 			fieldBuilder.containerType(ContainerType.LIST);
 			
@@ -285,7 +285,7 @@ public class TypeSchema {
 		} else if (Map.class.isAssignableFrom(klass)) {
 			fieldBuilder.containerType(ContainerType.MAP);
 			
-			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
+			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined, true);
 		} else {
 			String returnTypeDescReal = returnTypeDesc.split("<")[0];
 			
@@ -315,7 +315,7 @@ public class TypeSchema {
 					.valueType(ValueType.REF)
 					.typeRef(klassNameReal);
 				
-				fillTemplateParams(fieldBuilder, klassSub, klassNameRealFull, classesToBeDefined);
+				fillTemplateParams(fieldBuilder, klassSub, klassNameRealFull, classesToBeDefined, false);
 			}
 		}
 	}
@@ -357,7 +357,7 @@ public class TypeSchema {
 	}
 
 	private void fillTemplateParams(ImmutableNamedTypeMeta.Builder fieldBuilder,
-			Class<?> klass, String returnTypeDesc, Set<Class<?>> classesToBeDefined) {
+			Class<?> klass, String returnTypeDesc, Set<Class<?>> classesToBeDefined, boolean isMap) {
 		
 		List<NamedTypeMeta> templateParams = CollectionUtils.mapWithIndex(ReflectionUtils.parseTemplateParams(returnTypeDesc), (typeDesc, i)->{
 			ImmutableNamedTypeMeta.Builder templateTypeBuilder = ImmutableNamedTypeMeta
@@ -365,6 +365,10 @@ public class TypeSchema {
 				.name(klass.getTypeParameters()[i].getName());
 			
 			String typeKlass = typeDesc.split("<")[0];
+			
+			if (isMap && i==0 && !typeKlass.equals("java.lang.String")) {
+				System.err.println("\tExpected string as key, got "+typeKlass);
+			}
 			
 			ExceptionUtils.withRuntimeException(()->{
 				setupField(Class.forName(typeKlass), typeDesc, templateTypeBuilder, classesToBeDefined, new HashMap<>());
