@@ -1,0 +1,6 @@
+com.navigo3.dryapi.test.helpers.TypeSchemaTest$Plain
+    abc : ENUMERABLE OF [A,B,C]
+    bigDecimal : NUMBER
+    boolean : BOOL
+    integer : NUMBER
+    string : STRING

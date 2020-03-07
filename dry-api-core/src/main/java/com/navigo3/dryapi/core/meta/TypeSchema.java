@@ -1,5 +1,6 @@
 package com.navigo3.dryapi.core.meta;
 
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -11,6 +12,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -55,33 +57,32 @@ public class TypeSchema {
 		//reference types
 		REF
 	}
-
+	
 	@Value.Immutable
-	public interface FieldDefinition {
+	public interface NamedTypeMeta {
 		String getName();
 		
 		Optional<ContainerType> getContainerType();
+
+		List<NamedTypeMeta> getTemplateParams();
 		
 		Optional<ValueType> getValueType();
 		
 		//complex type
 		Optional<String> getTypeRef();
 	
-		//template params
-		Optional<List<FieldDefinition>> getTemplateParams();
-		
-		Optional<List<String>> getEnumValues();
+		List<String> getEnumValues();
 	}
 
 	@Value.Immutable
-	public interface TypeDefinition {
+	public interface TypeMeta {
 		String getName();
 		
 		Optional<ContainerType> getContainerType();
+
+		List<NamedTypeMeta> getTemplateParams();
 		
-		List<FieldDefinition> getTemplateParams();
-		
-		List<FieldDefinition> getFields();
+		List<NamedTypeMeta> getFields();
 		
 		@Value.Default default boolean getIsDirectRootContainer() {
 			return false;
@@ -90,7 +91,7 @@ public class TypeSchema {
 
 	private static final String ROOT_CONTAINER_ID = "DirectRootContainter";
 	
-	private Map<String, TypeDefinition> definitions = new HashMap<>();
+	private Map<String, TypeMeta> definitions = new HashMap<>();
 	private String rootDefinition;
 	
 	public static TypeSchema build(TypeReference<?> type) {
@@ -104,7 +105,7 @@ public class TypeSchema {
 	private TypeSchema() {
 	}
 	
-	public Map<String, TypeDefinition> getDefinitions() {
+	public Map<String, TypeMeta> getDefinitions() {
 		return definitions;
 	}
 
@@ -153,10 +154,8 @@ public class TypeSchema {
 				continue;
 			}
 			
-			ImmutableTypeDefinition.Builder builder = ImmutableTypeDefinition.builder();
-			
-			boolean isKnownTemplate = true;
-			
+			ImmutableTypeMeta.Builder builder = ImmutableTypeMeta.builder();
+
 			if (Collection.class.isAssignableFrom(klass)) {
 				builder.containerType(ContainerType.LIST);
 			} else if (Map.class.isAssignableFrom(klass)) {
@@ -164,21 +163,20 @@ public class TypeSchema {
 			} else if (Optional.class.isAssignableFrom(klass)) {
 				builder.containerType(ContainerType.OPTIONAL);
 			} else {
-				isKnownTemplate = false;
 				builder.name(klass.getName());
 			}
 			
-			if (first && isKnownTemplate) {
-				List<FieldDefinition> typeFields = new ArrayList<>();
+			if (first) {
+				List<NamedTypeMeta> typeFields = new ArrayList<>();
 				
 				builder
 					.name(ROOT_CONTAINER_ID)
 					.isDirectRootContainer(true);
 				
 				rootDefinition = ROOT_CONTAINER_ID;
-			
+		
 				for (Type type : klass.getTypeParameters()) {
-					ImmutableFieldDefinition.Builder fieldBuilder = ImmutableFieldDefinition.builder();
+					ImmutableNamedTypeMeta.Builder fieldBuilder = ImmutableNamedTypeMeta.builder();
 					fieldBuilder.name(type.getTypeName());
 					
 					String typeKlass = templateParams[typeFields.size()].getTypeName().split("<")[0];
@@ -224,7 +222,7 @@ public class TypeSchema {
 				
 				uniquenessNameCheck.add(finalName.get());
 								
-				ImmutableFieldDefinition.Builder fieldBuilder = ImmutableFieldDefinition
+				ImmutableNamedTypeMeta.Builder fieldBuilder = ImmutableNamedTypeMeta
 					.builder()
 					.name(finalName.get());
 				
@@ -233,23 +231,96 @@ public class TypeSchema {
 				builder.addFields(fieldBuilder.build());
 			}
 			
-			TypeDefinition def = builder.build();
+			TypeMeta def = builder.build();
 			
 			definitions.put(def.getName(), def);
 		}
 	}
 	
-	private void setupField(Method getter, ImmutableFieldDefinition.Builder fieldBuilder, Set<Class<?>> classesToBeDefined, Map<String, String> templateParamTypes) {
+	private void setupField(Method getter, ImmutableNamedTypeMeta.Builder fieldBuilder, Set<Class<?>> classesToBeDefined, Map<String, String> templateParamTypes) {
 		Class<?> klass = getter.getReturnType();
 	
 		setupField(klass, getter.getGenericReturnType().getTypeName(),  fieldBuilder, classesToBeDefined, templateParamTypes);
 	}
 
-	private void setupField(Class<?> klass, String returnTypeDesc, ImmutableFieldDefinition.Builder fieldBuilder, Set<Class<?>> classesToBeDefined, Map<String, String> templateParamTypes) {
+	private void setupField(Class<?> klass, String returnTypeDesc, ImmutableNamedTypeMeta.Builder fieldBuilder, Set<Class<?>> classesToBeDefined, Map<String, String> templateParamTypes) {
+		Optional<ValueType> valueType = classToValueType(klass);
+		
+		if (valueType.isPresent()) {
+			fieldBuilder.valueType(valueType.get());
+			
+			if (valueType.get()==ValueType.ENUMERABLE) {
+				fieldBuilder.enumValues(Stream.of(klass.getEnumConstants()).map(o->((Enum<?>)o).name()).sorted().collect(Collectors.toList()));
+			}
+		} else if (Optional.class.isAssignableFrom(klass)) {
+			fieldBuilder.containerType(ContainerType.OPTIONAL);
+			
+			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
+		} else if (Collection.class.isAssignableFrom(klass)) {
+			fieldBuilder.containerType(ContainerType.LIST);
+			
+			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
+		} else if (klass.isArray()) {
+			fieldBuilder.containerType(ContainerType.LIST);
+			
+			Optional<ValueType> paramValueType = classToValueType(klass.getComponentType());
+
+			fieldBuilder.addTemplateParams(ImmutableNamedTypeMeta
+				.builder()
+				.name("T")
+				.valueType(paramValueType)
+				.typeRef(paramValueType.isPresent() ? Optional.empty() : Optional.of(klass.getComponentType().getName()))
+				.build()
+			);
+			
+			if (!paramValueType.isPresent()) {
+				ExceptionUtils.withRuntimeException(()->{
+					classesToBeDefined.add(Class.forName(klass.getComponentType().getName()));
+				});
+			}
+		} else if (Map.class.isAssignableFrom(klass)) {
+			fieldBuilder.containerType(ContainerType.MAP);
+			
+			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
+		} else {
+			String returnTypeDescReal = returnTypeDesc.split("<")[0];
+			
+//			System.out.println(klass.getName()+" vs "+returnTypeDescReal);
+
+			if (klass.getName().equals(returnTypeDescReal)) {
+				if (!definitions.containsKey(klass.getName())) {
+					classesToBeDefined.add(klass);
+				}
+				
+				fieldBuilder
+					.valueType(ValueType.REF)
+					.typeRef(klass.getName());
+			} else {
+				Validate.keyContained(templateParamTypes, returnTypeDescReal, StringUtils.subst("Missing field {} but there are [{}]", returnTypeDescReal, templateParamTypes.keySet().stream().collect(Collectors.joining(", "))));
+				
+				String klassNameRealFull = templateParamTypes.get(returnTypeDescReal);
+				String klassNameReal = klassNameRealFull.split("<")[0];
+				
+				Class<?> klassSub = ExceptionUtils.withRuntimeException(()->Class.forName(klassNameReal));
+		
+				if (!definitions.containsKey(klassNameReal)) {
+					classesToBeDefined.add(klassSub);
+				}
+				
+				fieldBuilder
+					.valueType(ValueType.REF)
+					.typeRef(klassNameReal);
+				
+				fillTemplateParams(fieldBuilder, klassSub, klassNameRealFull, classesToBeDefined);
+			}
+		}
+	}
+
+	private Optional<ValueType> classToValueType(Class<?> klass) {
 		if (String.class.isAssignableFrom(klass)) {
-			fieldBuilder.valueType(ValueType.STRING);
+			return Optional.of(ValueType.STRING);
 		} else if (UUID.class.isAssignableFrom(klass)) {
-			fieldBuilder.valueType(ValueType.STRING);
+			return Optional.of(ValueType.STRING);
 		} else if (
 			BigDecimal.class.isAssignableFrom(klass)
 			|| Integer.class.isAssignableFrom(klass)
@@ -265,68 +336,27 @@ public class TypeSchema {
 			|| Byte.class.isAssignableFrom(klass)
 			|| byte.class.isAssignableFrom(klass)
 		) {
-			fieldBuilder.valueType(ValueType.NUMBER);
+			return Optional.of(ValueType.NUMBER);
 		} else if (Enum.class.isAssignableFrom(klass)) {
-			fieldBuilder.valueType(ValueType.ENUMERABLE);
-			
-			fieldBuilder.enumValues(Stream.of(klass.getEnumConstants()).map(o->((Enum<?>)o).name()).collect(Collectors.toList()));
+			return Optional.of(ValueType.ENUMERABLE);
 		} else if (Boolean.class.isAssignableFrom(klass) || boolean.class.isAssignableFrom(klass)) {
-			fieldBuilder.valueType(ValueType.BOOL);
+			return Optional.of(ValueType.BOOL);
 		} else if (LocalDate.class.isAssignableFrom(klass)) {
-			fieldBuilder.valueType(ValueType.DATE);
+			return Optional.of(ValueType.DATE);
 		} else if (LocalTime.class.isAssignableFrom(klass)) {
-			fieldBuilder.valueType(ValueType.TIME);
+			return Optional.of(ValueType.TIME);
 		} else if (LocalDateTime.class.isAssignableFrom(klass)) {
-			fieldBuilder.valueType(ValueType.DATETIME);
-		} else if (Optional.class.isAssignableFrom(klass)) {
-			fieldBuilder.containerType(ContainerType.OPTIONAL);
-			
-			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
-		} else if (Collection.class.isAssignableFrom(klass)) {
-			fieldBuilder.containerType(ContainerType.LIST);
-			
-			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
-		} else if (Map.class.isAssignableFrom(klass)) {
-			fieldBuilder.containerType(ContainerType.MAP);
-			
-			fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
+			return Optional.of(ValueType.DATETIME);
 		} else {
-			String returnTypeDescReal = returnTypeDesc.split("<")[0];
-			returnTypeDescReal = returnTypeDesc.split("\\[")[0];
-
-			if (klass.getName().equals(returnTypeDescReal)) {
-				if (!definitions.containsKey(klass.getName())) {
-					classesToBeDefined.add(klass);
-				}
-				
-				fieldBuilder
-					.valueType(ValueType.REF)
-					.typeRef(klass.getName());
-			} else {
-				Validate.keyContained(templateParamTypes, returnTypeDescReal, StringUtils.subst("Missing field {} but there are [{}]", returnTypeDescReal, templateParamTypes.keySet().stream().collect(Collectors.joining(", "))));
-				
-				String klassNameReal = templateParamTypes.get(returnTypeDescReal);
-				
-				if (!definitions.containsKey(klassNameReal)) {
-					ExceptionUtils.withRuntimeException(()->{
-						classesToBeDefined.add(Class.forName(klassNameReal));
-					});
-				}
-				
-				fieldBuilder
-					.valueType(ValueType.REF)
-					.typeRef(klassNameReal);
-				
-				fillTemplateParams(fieldBuilder, klass, returnTypeDesc, classesToBeDefined);
-			}
+			return Optional.empty();
 		}
 	}
 
-	private void fillTemplateParams(ImmutableFieldDefinition.Builder fieldBuilder,
+	private void fillTemplateParams(ImmutableNamedTypeMeta.Builder fieldBuilder,
 			Class<?> klass, String returnTypeDesc, Set<Class<?>> classesToBeDefined) {
 		
-		List<FieldDefinition> templateParams = CollectionUtils.mapWithIndex(ReflectionUtils.parseTemplateParams(returnTypeDesc), (typeDesc, i)->{
-			ImmutableFieldDefinition.Builder templateTypeBuilder = ImmutableFieldDefinition
+		List<NamedTypeMeta> templateParams = CollectionUtils.mapWithIndex(ReflectionUtils.parseTemplateParams(returnTypeDesc), (typeDesc, i)->{
+			ImmutableNamedTypeMeta.Builder templateTypeBuilder = ImmutableNamedTypeMeta
 				.builder()
 				.name(klass.getTypeParameters()[i].getName());
 			
@@ -343,8 +373,8 @@ public class TypeSchema {
 	}
 
 	public void throwIfPathNotExists(TypePath path) {
-		TypeDefinition actType = definitions.get(rootDefinition);
-		FieldDefinition actField = null;
+		TypeMeta actType = definitions.get(rootDefinition);
+		NamedTypeMeta actField = null;
 
 		for (int i=0;i<path.getItems().size();++i) {
 			TypePathItem item = path.getItems().get(i);
@@ -390,7 +420,7 @@ public class TypeSchema {
 					} else {
 						Validate.equals(item.getType(), TypeSelectorType.FIELD);
 						
-						Optional<FieldDefinition> field = actType.getFields().stream().filter(f->f.getName().equals(item.getFieldName().get())).findFirst();
+						Optional<NamedTypeMeta> field = actType.getFields().stream().filter(f->f.getName().equals(item.getFieldName().get())).findFirst();
 						
 						Validate.isPresent(field);
 						
@@ -399,36 +429,32 @@ public class TypeSchema {
 					}			
 				} else {
 					while (actField.getContainerType().isPresent() && actField.getContainerType().get()==ContainerType.OPTIONAL) {
-						Validate.isPresent(actField.getTemplateParams());
-						Validate.size(actField.getTemplateParams().get(), 1);
+						Validate.size(actField.getTemplateParams(), 1);
 						
-						actField = actField.getTemplateParams().get().get(0);
+						actField = actField.getTemplateParams().get(0);
 					}
 					
 					Validate.isPresent(actField.getContainerType());
 					
 					if (actField.getContainerType().isPresent() && actField.getContainerType().get()==ContainerType.LIST) {
 						Validate.equals(item.getType(), TypeSelectorType.INDEX);
-						Validate.isPresent(actField.getTemplateParams());
-						Validate.size(actField.getTemplateParams().get(), 1);
+						Validate.size(actField.getTemplateParams(), 1);
 						
-						actField = actField.getTemplateParams().get().get(0);
+						actField = actField.getTemplateParams().get(0);
 					} else if (actField.getContainerType().isPresent() && actField.getContainerType().get()==ContainerType.MAP) {
 						Validate.equals(item.getType(), TypeSelectorType.KEY);
-						Validate.isPresent(actField.getTemplateParams());
-						Validate.size(actField.getTemplateParams().get(), 2);
+						Validate.size(actField.getTemplateParams(), 2);
 						
-						actField = actField.getTemplateParams().get().get(1);
+						actField = actField.getTemplateParams().get(1);
 					} else {
 						throw new RuntimeException(StringUtils.subst("Unexpected container type {}", actField.getContainerType().get()));
 					}
 				}
 				
 				while (actField!=null && actField.getContainerType().isPresent() && actField.getContainerType().get()==ContainerType.OPTIONAL) {
-					Validate.isPresent(actField.getTemplateParams());
-					Validate.size(actField.getTemplateParams().get(), 1);
+					Validate.size(actField.getTemplateParams(), 1);
 					
-					actField = actField.getTemplateParams().get().get(0);
+					actField = actField.getTemplateParams().get(0);
 				}
 				
 				if (actField.getTypeRef().isPresent()) {
@@ -444,64 +470,93 @@ public class TypeSchema {
 		Validate.isTrue(actField.getValueType().isPresent(), "It seems path is too short and ends in collection, not field");
 	}
 	
-	public void debugPrint() {
+	public void debugPrint(PrintStream out) {
 		Set<String> alreadyPrintedDefs = new HashSet<>();
 		
-		printDefinition(getDefinitions().get(getRootDefinition()), 0, alreadyPrintedDefs);
+		printDefinition(out, getDefinitions().get(getRootDefinition()), 0, alreadyPrintedDefs);
 	}
 
-	private void printDefinition(TypeDefinition def, int depth, Set<String> alreadyPrintedDefs) {
+	private void printDefinition(PrintStream out, TypeMeta def, int depth, Set<String> alreadyPrintedDefs) {
 		if (alreadyPrintedDefs.contains(def.getName())) {
-			System.out.println(StringUtils.repeat(depth, "    ")+" RECURSIVE "+def.getName());
+			out.println(StringUtils.repeat(depth, "    ")+" RECURSIVE "+getTypeLabel(def));
 			
 			return;
 		}
 		
 		alreadyPrintedDefs.add(def.getName());
 		
-		System.out.println(StringUtils.repeat(depth, "    ")+getLabel(def.getContainerType(), def.getName(), Optional.empty()));
+		out.println(StringUtils.repeat(depth, "    ")+getTypeLabel(def));
 		
 		def.getTemplateParams().forEach(par->{
-			System.out.println(StringUtils.repeat(depth+1, "    ")+"<"+getLabel(par.getContainerType(), par.getName(), par.getValueType())+">");
-			
-			if (par.getTypeRef().isPresent()) {
-				printDefinition(getDefinitions().get(par.getTypeRef().get()), depth+2, alreadyPrintedDefs);
-			} else if (par.getValueType().isPresent()) {
-				//
-			} else {
-				throw new RuntimeException("Unknown State");
-			}
+			printField(out, depth+1, par, alreadyPrintedDefs);
 		});
 		
-		def.getFields().forEach(field->{
-			System.out.println(StringUtils.repeat(depth+1, "    ")+getLabel(field.getContainerType(), field.getName(), field.getValueType()));
-			
-			if (field.getTypeRef().isPresent()) {
-				printDefinition(getDefinitions().get(field.getTypeRef().get()), depth+2, alreadyPrintedDefs);
-			}
+		def.getFields().stream().sorted(Comparator.comparing(NamedTypeMeta::getName)).forEach(field->{
+			printField(out, depth+1, field, alreadyPrintedDefs);
 		});
-		
 		
 		alreadyPrintedDefs.remove(def.getName());
 	}
 	
-	private String getLabel(Optional<ContainerType> type, String name, Optional<ValueType> valueType) {
-		if (type.isPresent()) {
-			if (type.get()==ContainerType.LIST) {
-				return "["+name+"]";
-			} else if (type.get()==ContainerType.MAP) {
-				return "{"+name+"}";
-			} else if (type.get()==ContainerType.OPTIONAL) {
-				return "?"+name+"?";
-			} else {
-				throw new RuntimeException("Unknown type "+type.get());
-			}
+	private void printField(PrintStream out, int depth, NamedTypeMeta namedType, Set<String> alreadyPrintedDefs) {
+		out.println(StringUtils.repeat(depth, "    ")+getFieldLabel(namedType));
+		
+		if (namedType.getTypeRef().isPresent()) {
+			String ref = namedType.getTypeRef().get();
+			printDefinition(out, getDefinitions().get(ref), depth+1, alreadyPrintedDefs);
+		} else if (namedType.getValueType().isPresent()) {
+			//
+		} else if (namedType.getContainerType().isPresent()) {
+			namedType.getTemplateParams().forEach(templateParam->printField(out, depth+1, templateParam, alreadyPrintedDefs));
 		} else {
-			if (valueType.isPresent()) {
-				return name+" : "+valueType.get().name();
-			} else {
-				return name;
+			throw new RuntimeException("Unknown State");
+		}
+	}
+
+	private String getFieldLabel(NamedTypeMeta field) {
+		StringBuilder res = new StringBuilder();
+		
+		res.append(field.getName());
+		
+		appendContainerType(res, field.getContainerType(), field.getTemplateParams());
+		
+		field.getValueType().ifPresent(valueType->{
+			res.append(" : "+valueType.name());
+			if (valueType==ValueType.ENUMERABLE) {
+				res.append(" OF ["+field.getEnumValues().stream().sorted().collect(Collectors.joining(","))+"]");
 			}
+		});
+		
+		return res.toString();
+	}
+	
+	private String getTypeLabel(TypeMeta type) {
+		StringBuilder res = new StringBuilder();
+		
+		res.append(type.getName());
+		
+		appendContainerType(res, type.getContainerType(), type.getTemplateParams());
+
+		return res.toString();
+	}
+
+	private void appendContainerType(StringBuilder res, Optional<ContainerType> containerType, List<NamedTypeMeta> teplateParams) {
+		String types = teplateParams.stream().map(p->p.getName()).collect(Collectors.joining(", "));
+		
+		containerType.ifPresent(containterType->{
+			if (containterType==ContainerType.OPTIONAL) {
+				res.append("(?"+types+"?)");
+			} else if (containterType==ContainerType.LIST) {
+				res.append("["+types+"]");
+			} else if (containterType==ContainerType.MAP) {
+				res.append("{"+types+"}");
+			} else {
+				throw new RuntimeException("Unknown type "+containterType);
+			}
+		});
+		
+		if (!containerType.isPresent()) {
+			res.append("<"+types+">");
 		}
 	}
 }

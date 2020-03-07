@@ -1,0 +1,7 @@
+com.navigo3.dryapi.test.helpers.TypeSchemaTest$NestedColls
+    nested(?T?)
+        T{K, V}
+            K(?T?)
+                T : STRING
+            V[E]
+                E : STRING

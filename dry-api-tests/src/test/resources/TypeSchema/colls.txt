@@ -1,0 +1,18 @@
+com.navigo3.dryapi.test.helpers.TypeSchemaTest$Colls
+    plainArray[T]
+        T
+            com.navigo3.dryapi.test.helpers.TypeSchemaTest$Plain
+                abc : ENUMERABLE OF [A,B,C]
+                bigDecimal : NUMBER
+                boolean : BOOL
+                integer : NUMBER
+                string : STRING
+    stringArray[T]
+        T : STRING
+    stringList[E]
+        E : STRING
+    stringMap{K, V}
+        K : STRING
+        V : STRING
+    stringOptional(?T?)
+        T : STRING
