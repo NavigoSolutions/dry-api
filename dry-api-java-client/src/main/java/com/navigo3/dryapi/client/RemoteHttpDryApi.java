@@ -175,15 +175,15 @@ public class RemoteHttpDryApi {
 		ExceptionUtils.withRuntimeException(()->{
 			Validate.notEmpty(requestsBatch.getRequests());
 			
-			ObjectMapper objectMapper = JacksonUtils.createMapper(settings.getDataFormat());
+			ObjectMapper objectMapper = JacksonUtils.createJsonMapper();
 			
 			JsonBatchRequest batch = buildBatch(objectMapper, requestsBatch);
 			
-			String mime = JacksonUtils.getMimeForFormat(settings.getDataFormat());
+			String mime = DryApiConstants.JSON_MIME;
 			
 			String content = objectMapper.writeValueAsString(batch);
 			
-			RequestBody body = RequestBody.create(MediaType.get(mime), content);
+			RequestBody body = RequestBody.create(content, MediaType.get(mime));
 				
 			Builder reqBuilder = new Request.Builder()
 				.url(apiUrl)

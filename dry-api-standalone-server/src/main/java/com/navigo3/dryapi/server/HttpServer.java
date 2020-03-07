@@ -21,7 +21,6 @@ import com.navigo3.dryapi.core.util.DryApiConstants;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.Function3;
 import com.navigo3.dryapi.core.util.JacksonUtils;
-import com.navigo3.dryapi.core.util.JacksonUtils.DataFormat;
 import com.navigo3.dryapi.core.util.LambdaUtils.ConsumerWithException;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.ThreadUtils;
@@ -119,22 +118,17 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 				.trim()
 				.replaceAll("\\s", "")
 				.toLowerCase();
-			
-			DataFormat format;
+
 			String outputContentType;
 			
 			if (DryApiConstants.JSON_MIME.equals(contentType)) {
-				format = DataFormat.JSON;
 				outputContentType = DryApiConstants.JSON_MIME;
-			} else if (DryApiConstants.XML_MIME.equals(contentType)) {
-				format = DataFormat.XML;
-				outputContentType = DryApiConstants.XML_MIME;
 			} else {
 				logger.info("Content type '{}' not supported", rawContentType);
 
 				exchange.setStatusCode(415);
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-				exchange.getResponseSender().send(StringUtils.subst("Please use content type: '{}' or '{}' instead of '{}'", DryApiConstants.JSON_MIME, DryApiConstants.XML_MIME, contentType));
+				exchange.getResponseSender().send(StringUtils.subst("Please use content type: '{}' instead of '{}'", DryApiConstants.JSON_MIME, contentType));
 
 				return;
 			}
@@ -174,7 +168,7 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 					logger.debug("Signature is OK");
 				}
 				
-				ObjectMapper objectMapper = JacksonUtils.createMapper(format);
+				ObjectMapper objectMapper = JacksonUtils.createJsonMapper();
 				
 				logger.debug("Parsing request");
 				
