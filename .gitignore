@@ -2,6 +2,7 @@
 /.metadata/
 /.recommenders/
 /repo/
+/build
 .project
 .settings
 settings.json
