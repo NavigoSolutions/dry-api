@@ -36,6 +36,10 @@ import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 
+/***
+ * This class converts Java type into JSON structure metadata. When Java instance is converted into JSON by 
+ * Jackson library, it should have structure described by this metadata.
+ */
 public class TypeSchema {
 	
 	public enum ContainerType {
