@@ -1,0 +1,14 @@
+OBJECT
+    nested : (?)
+        []
+            {STRING}
+                OBJECT
+                    value : NUMBER
+    threeLevel : OBJECT
+        value1 : RECURSIVE
+        value2 : RECURSIVE
+    twoLevel : OBJECT
+        value1 : OBJECT
+            value : STRING
+        value2 : OBJECT
+            value : NUMBER

@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -48,6 +47,19 @@ import com.navigo3.dryapi.core.util.Validate;
  */
 public class TypeSchema {
 	private static final Logger logger = LoggerFactory.getLogger(TypeSchema.class);
+	
+	private static final Map<String, String> valueTypeToClass = new HashMap<>();
+	
+	static {
+		valueTypeToClass.put("byte", Byte.class.getName());
+		valueTypeToClass.put("short", Short.class.getName());
+		valueTypeToClass.put("int", Integer.class.getName());
+		valueTypeToClass.put("long", Long.class.getName());
+		valueTypeToClass.put("float", Float.class.getName());
+		valueTypeToClass.put("double", Double.class.getName());
+		valueTypeToClass.put("char", Character.class.getName());
+		valueTypeToClass.put("boolean", Boolean.class.getName());
+	}
 
 	private NodeMetadata root;
 	
@@ -171,41 +183,27 @@ public class TypeSchema {
 	}
 
 	private void parse(TypeReference<?> type) {
-		final Class<?> klass;
-
-		HashMap<String, Type> templateParams = new HashMap<>();
-		
-		if (type.getType() instanceof ParameterizedType) {
-			ParameterizedType paramType = (ParameterizedType)type.getType();
-			klass = (Class<?>)paramType.getRawType();
-
-			for (int i=0;i<paramType.getActualTypeArguments().length;++i) {
-				Type paramJavaType = paramType.getActualTypeArguments()[i];
-				
-				templateParams.put(klass.getTypeParameters()[i].getName(), paramJavaType);
-			}
-		} else {
-			klass = (Class<?>)type.getType();
-		}
-
-		System.out.println("2");
-		root = prepareNode(klass, type.getType().getTypeName(), templateParams, new HashSet<>());
+		root = prepareNode(type.getType().getTypeName(), new HashSet<>());
 	}
 
-	private NodeMetadata prepareNode(Class<?> klass, String klassReal, HashMap<String, Type> templateParams, Set<Class<?>> alreadyVisited) {
+	private NodeMetadata prepareNode(String klassReal, Set<Class<?>> alreadyVisited) {
+		Builder builder = ImmutableNodeMetadata.builder();
 		
-		templateParams.clear();
+		if (klassReal.endsWith("[]")) {
+			builder.containerType(ContainerType.LIST);
+
+			builder.itemType(prepareNode(klassReal.split("\\[")[0], alreadyVisited));
+			
+			return builder.build();
+		}
+
+		Class<?> klass = ExceptionUtils.withRuntimeException(()->Class.forName(klassReal.split("<")[0]));
+
+		Map<String, String> templateParams = new HashMap<>();
 		
 		CollectionUtils.eachWithIndex(ReflectionUtils.parseTemplateParams(klassReal), (param, i)->{
-			ExceptionUtils.withRuntimeException(()->{
-				templateParams.put(klass.getTypeParameters()[i].getName(), Class.forName(param.split("<")[0]));
-			});
+			templateParams.put(klass.getTypeParameters()[i].getName(), param);
 		});
-		
-		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-//		System.out.println(klass);
-		System.out.println(klassReal);
-		System.out.println(templateParams);
 		
 		if (alreadyVisited.contains(klass)) {
 			return ImmutableNodeMetadata
@@ -213,11 +211,9 @@ public class TypeSchema {
 				.valueType(ValueType.RECURSIVE)
 				.build();
 		}
-		
-		Builder builder = ImmutableNodeMetadata.builder();
-		
+
 		Optional<ValueType> optValueType = classToValueType(klass);
-		
+
 		optValueType.ifPresent(valueType->{
 			builder.valueType(valueType);
 			
@@ -232,51 +228,32 @@ public class TypeSchema {
 
 				List<String> params = ReflectionUtils.parseTemplateParams(klassReal);
 				Validate.size(params, 1);
-				
-				ExceptionUtils.withRuntimeException(()->{
-					String paramClassName = params.get(0).split("<")[0];
 
-					System.out.println("3");
-					builder.itemType(prepareNode(Class.forName(paramClassName), params.get(0), templateParams, alreadyVisited));
-				});		
+				builder.itemType(prepareNode(params.get(0), alreadyVisited));	
 			} else if (Collection.class.isAssignableFrom(klass)) {
 				builder.containerType(ContainerType.LIST);
 
 				List<String> params = ReflectionUtils.parseTemplateParams(klassReal);
 				Validate.size(params, 1);
 				
-				ExceptionUtils.withRuntimeException(()->{
-					String paramClassName = params.get(0).split("<")[0];
-					
-					System.out.println("4");
-					builder.itemType(prepareNode(Class.forName(paramClassName), params.get(0), templateParams, alreadyVisited));
-				});
-			} else if (klass.isArray()) {
-				builder.containerType(ContainerType.LIST);
-				
-				System.out.println("5");
-				builder.itemType(prepareNode(klass.getComponentType(), klass.getComponentType().getName(), templateParams, alreadyVisited));
+				builder.itemType(prepareNode(params.get(0), alreadyVisited));
 			} else if (Map.class.isAssignableFrom(klass)) {
 				builder.containerType(ContainerType.MAP);
 				
 				List<String> params = ReflectionUtils.parseTemplateParams(klassReal);
 				Validate.size(params, 2);
 				
-				ExceptionUtils.withRuntimeException(()->{
-					String paramClassNameK = params.get(0).split("<")[0];
-					String paramClassNameV = params.get(1).split("<")[0];
-					
-					Optional<ValueType> keyType = classToValueType(Class.forName(paramClassNameK));
-					
-					if (!keyType.isPresent()) {
-						logger.warn("Implausible map key type '{}'. Are you sure it has correct toString() method?", paramClassNameK);
-					}
-					
-					builder.keyType(keyType.orElse(ValueType.OBJECT));
-					
-					System.out.println("6");
-					builder.itemType(prepareNode(Class.forName(paramClassNameV), params.get(1), templateParams, alreadyVisited));
-				});
+				String paramClassNameK = params.get(0).split("<")[0];
+				
+				Optional<ValueType> keyType = ExceptionUtils.withRuntimeException(()->classToValueType(Class.forName(paramClassNameK)));
+				
+				if (!keyType.isPresent()) {
+					logger.warn("Implausible map key type '{}'. Are you sure it has correct toString() method?", paramClassNameK);
+				}
+				
+				builder.keyType(keyType.orElse(ValueType.OBJECT));
+	
+				builder.itemType(prepareNode(params.get(1), alreadyVisited));
 			} else {
 				builder.valueType(ValueType.OBJECT);
 				
@@ -291,7 +268,7 @@ public class TypeSchema {
 		return builder.build();
 	}
 	
-	private void fillFields(Builder builder, Class<?> klass, HashMap<String, Type> templateParams, Set<Class<?>> alreadyVisited) {
+	private void fillFields(Builder builder, Class<?> klass, Map<String, String> templateParams, Set<Class<?>> alreadyVisited) {
 		Set<String> uniquenessNameCheck = new HashSet<>();
 		
 		for (Method method : klass.getMethods()) {
@@ -325,16 +302,9 @@ public class TypeSchema {
 		}
 	}
 
-	private void fillField(Builder builder, String name, Method method, HashMap<String, Type> templateParams, Set<Class<?>> alreadyVisited) {
-		System.out.println("%%%%%%%%%%%%%%%%%%");
-		System.out.println(templateParams);
-		System.out.println(method.getGenericReturnType().getTypeName());
-		System.out.println(method);
-		
+	private void fillField(Builder builder, String name, Method method, Map<String, String> templateParams, Set<Class<?>> alreadyVisited) {
 		String klassReal = substituteTemplateParams(method.getGenericReturnType().getTypeName(), templateParams);
-		
-		System.out.println(klassReal);
-		
+
 		Class<?> klass = loadClassOrDefault(klassReal.split("<")[0], method.getReturnType());
 	
 		HashMap<String, Type> subTemplateParams = new HashMap<>();
@@ -348,12 +318,10 @@ public class TypeSchema {
 				subTemplateParams.put(paramName, Class.forName(paramType.split("<")[0]));
 			});
 		});
-		
-//		System.out.println(klass);
-//		System.out.println(subTemplateParams);
 
-		System.out.println("1");
-		builder.putFields(name, prepareNode(klass, klassReal, subTemplateParams, alreadyVisited));
+		klassReal = valueTypeToClass.getOrDefault(klassReal, klassReal);
+
+		builder.putFields(name, prepareNode(klassReal, alreadyVisited));
 	}
 
 	private Class<?> loadClassOrDefault(String className, Class<?> defaultVal) {
@@ -364,24 +332,14 @@ public class TypeSchema {
 		}
 	}
 
-	private String substituteTemplateParams(String typeName, HashMap<String, Type> templateParams) {
+	private String substituteTemplateParams(String typeName, Map<String, String> templateParams) {
 		String res = typeName;
 		
-		for (Entry<String, Type> entry : templateParams.entrySet()) {
-//			System.out.println("XXXXXXXXXXXXXXXXXXXx");
-//			System.out.println(res);
-			
+		for (Entry<String, String> entry : templateParams.entrySet()) {
 			String regex = StringUtils.subst("(?<![a-zA-Z_]){}(?![a-zA-Z0-9_])", Pattern.quote(entry.getKey()));
-			
-//			System.out.println(regex);
-//			System.out.println(Matcher.quoteReplacement(entry.getValue().getTypeName()));
-			
-			res = res.replaceAll(regex, Matcher.quoteReplacement(entry.getValue().getTypeName()));
-			
-//			System.out.println(res);
+
+			res = res.replaceAll(regex, Matcher.quoteReplacement(entry.getValue()));
 		}
-		
-//		System.out.println(typeName+" VS "+res);
 		
 		return res;
 	}

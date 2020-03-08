@@ -141,8 +141,8 @@ public class TypeSchemaTest {
 		String correct = IOUtils.toString(getClass().getResourceAsStream(resourcePath), StandardCharsets.UTF_8).trim();
 		String current = os.toString(StandardCharsets.UTF_8.name()).trim();
 		
-		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		System.out.println(current);
+//		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+//		System.out.println(current);
 		
 		assertEquals(correct, current);
 	}

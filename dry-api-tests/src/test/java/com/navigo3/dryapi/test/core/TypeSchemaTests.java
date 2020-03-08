@@ -16,7 +16,7 @@ public class TypeSchemaTests {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		schema = TypeSchema.build(new TypeReference<TopAddressInput>(){});
-		schema.debugPrint();
+//		schema.debugPrint();
 	}
 
 	@AfterClass
