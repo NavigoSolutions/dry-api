@@ -1,0 +1,7 @@
+[]
+    OBJECT
+        abc : ENUMERABLE[A, B, C]
+        bigDecimal : NUMBER
+        boolean : BOOL
+        integer : NUMBER
+        string : STRING

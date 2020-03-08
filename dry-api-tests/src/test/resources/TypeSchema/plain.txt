@@ -1,5 +1,5 @@
-com.navigo3.dryapi.test.helpers.TypeSchemaTest$Plain
-    abc : ENUMERABLE OF [A,B,C]
+OBJECT
+    abc : ENUMERABLE[A, B, C]
     bigDecimal : NUMBER
     boolean : BOOL
     integer : NUMBER

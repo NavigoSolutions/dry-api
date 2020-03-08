@@ -7,6 +7,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.immutables.value.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
@@ -21,6 +23,7 @@ import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.Validator;
 
 public class DryApi<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
+	private static final Logger logger = LoggerFactory.getLogger(DryApi.class);
 	
 	public static final String IDENTIFIER_PATTERN = "[a-z](([A-Za-z0-9]-)*[A-Za-z0-9])*";
 	public static final String PATH_PATTERN = StringUtils.subst("({}/)*({})", IDENTIFIER_PATTERN, IDENTIFIER_PATTERN);
@@ -44,8 +47,8 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 			MethodDefinition<TInput, TOutput> definition, 
 			Class<? extends MethodImplementation<TInput, TOutput, ? extends MethodDefinition<TInput, TOutput>, TAppContext, TCallContext, TValidator>> implClass
 	) {
-		System.err.println(definition.getQualifiedName());
-		
+		logger.debug("Registering {}", definition.getQualifiedName());
+
 		Validate.notNull(definition);
 		Validate.notNull(implClass);
 

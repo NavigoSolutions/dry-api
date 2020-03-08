@@ -1,5 +1,6 @@
 package com.navigo3.dryapi.core.util;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -20,9 +21,9 @@ public class Validate {
 		keyContained(map, key, StringUtils.subst("Key {} should be contained in this map", key));
 	}
 	
-	public static <T> void keyContained(Map<T, ?> map, T key, String message) {
+	public static <T> void keyContained(Map<T, ?> map, T key, String message, Object... args) {
 		if (!map.containsKey(key)) {
-			throw new RuntimeException(message);
+			throw new RuntimeException(StringUtils.subst(message, args));
 		}
 	}
 
@@ -132,9 +133,9 @@ public class Validate {
 		}
 	}
 
-	public static <T> void equals(T a, T b, String message) {
+	public static <T> void equals(T a, T b, String message, Object... args) {
 		if (!Objects.equals(a, b)) {
-			throw new RuntimeException(message);
+			throw new RuntimeException(StringUtils.subst(message, args));
 		}
 	}
 
@@ -234,6 +235,25 @@ public class Validate {
 	public static <T extends Comparable<T>> void lessThanOrEqual(T value, T threshold) {
 		if (value.compareTo(threshold)>0) {
 			throw new RuntimeException(StringUtils.subst("Expected value less than or equal to {}, got {}", threshold, value));
+		}
+	}
+
+	@SafeVarargs
+	public static void allOrNone(Optional<?> ...opts) {
+		boolean allPresent = Arrays.asList(opts).stream().allMatch(o->o.isPresent());
+		boolean nonePresent = Arrays.asList(opts).stream().allMatch(o->!o.isPresent());
+		
+		if (!allPresent && !nonePresent) {
+			throw new RuntimeException("All optionals must be present or all optionals must not be present.");
+		}
+	}
+
+	@SafeVarargs
+	public static void onePresent(Optional<?> ...opts) {
+		long presentCount = Arrays.asList(opts).stream().filter(o->o.isPresent()).count();
+		
+		if (presentCount!=1) {
+			throw new RuntimeException(StringUtils.subst("Expected 1 present optional but delivered {}", presentCount));
 		}
 	}
 }

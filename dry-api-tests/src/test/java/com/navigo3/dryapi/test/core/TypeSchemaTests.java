@@ -16,6 +16,7 @@ public class TypeSchemaTests {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		schema = TypeSchema.build(new TypeReference<TopAddressInput>(){});
+		schema.debugPrint();
 	}
 
 	@AfterClass
@@ -46,6 +47,11 @@ public class TypeSchemaTests {
 	@Test(expected=Throwable.class)
 	public void incompletePath() {
 		schema.throwIfPathNotExists(TypePath.field("middleAddress"));
+	}
+	
+	@Test(expected=Throwable.class)
+	public void incompletePathDeeper() {
+		schema.throwIfPathNotExists(TypePath.field("middleAddress").addField("mainAddress"));
 	}
 	
 	@Test

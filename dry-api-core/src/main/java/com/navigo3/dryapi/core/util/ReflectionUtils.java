@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 public class ReflectionUtils {
 	private static final Pattern genericDeclaration = Pattern.compile("^([^<]+)<(.*)>$");
@@ -30,7 +29,7 @@ public class ReflectionUtils {
 		}
 	}
 	
-	public static Stream<String> parseTemplateParams(String returnTypeDesc) {
+	public static List<String> parseTemplateParams(String returnTypeDesc) {
 		Matcher match = genericDeclaration.matcher(returnTypeDesc.trim());
 		
 		List<String> items = new ArrayList<>();
@@ -59,9 +58,9 @@ public class ReflectionUtils {
 				items.add(match.group(2).substring(lastStart, match.group(2).length()).trim());
 			}
 	
-			return items.stream();
-		} else {
-			return Stream.empty();
+			
 		}
+		
+		return items;
 	}
 }

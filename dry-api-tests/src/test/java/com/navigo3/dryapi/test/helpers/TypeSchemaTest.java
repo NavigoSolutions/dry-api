@@ -19,6 +19,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.navigo3.dryapi.core.meta.TypeSchema;
+import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 
 public class TypeSchemaTest {
 	private enum Abc {
@@ -39,12 +40,16 @@ public class TypeSchemaTest {
 		Plain[] getPlainArray();
 		String[] getStringArray();
 		List<String> getStringList();
-		Map<String, String> getStringMap();
+		Map<String, BigDecimal> getStringMap();
 		Optional<String> getStringOptional();
 	}
 	
+	private interface Recursive {
+		List<Recursive> getChildren();
+	}
+	
 	private interface NestedColls {
-		Optional<Map<Optional<String>, List<String>>> getNested();
+		Optional<Map<Integer, List<Boolean>>> getNested();
 	}
 	
 	private interface Typed1<T> {
@@ -93,11 +98,27 @@ public class TypeSchemaTest {
 	}
 	
 	@Test
+	public void testRecursive() throws IOException {
+		TypeSchema type = TypeSchema.build(new TypeReference<Recursive>() {});
+		type.debugPrint(ps);
+		
+		compareWithStored("/TypeSchema/recursive.txt");
+	}
+	
+	@Test
 	public void testNestedColls() throws IOException {
 		TypeSchema type = TypeSchema.build(new TypeReference<NestedColls>() {});
 		type.debugPrint(ps);
 		
 		compareWithStored("/TypeSchema/nestedColls.txt");
+	}
+	
+	@Test
+	public void testComplexData() throws IOException {
+		TypeSchema type = TypeSchema.build(new TypeReference<TopAddressInput>() {});
+		type.debugPrint(ps);
+		
+		compareWithStored("/TypeSchema/complexData.txt");
 	}
 	
 	@Test

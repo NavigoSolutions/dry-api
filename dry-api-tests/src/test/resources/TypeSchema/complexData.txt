@@ -1,0 +1,30 @@
+OBJECT
+    corner : STRING
+    galaxy : STRING
+    middleAddress : OBJECT
+        continent : STRING
+        country : STRING
+        cronicles : {DATETIME}
+            STRING
+        currentGalacticDateTime : DATETIME
+        lowAddresses : []
+            OBJECT
+                city : STRING
+                door : (?)
+                    STRING
+                number : NUMBER
+                state : (?)
+                    STRING
+                street : STRING
+        mainAddress : (?)
+            OBJECT
+                city : STRING
+                door : (?)
+                    STRING
+                number : NUMBER
+                state : (?)
+                    STRING
+                street : STRING
+        stringCodes : {STRING}
+            NUMBER
+    planet : STRING
