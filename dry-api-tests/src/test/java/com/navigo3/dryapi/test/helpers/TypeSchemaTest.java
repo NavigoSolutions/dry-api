@@ -14,7 +14,6 @@ import java.util.Optional;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -56,8 +55,9 @@ public class TypeSchemaTest {
 		T getValue();
 	}
 	
-	private interface Typed2<T, U> {
-		T getValue();
+	private interface Typed2<U, W> {
+		U getValue1();
+		W getValue2();
 	}
 	
 	private interface ComplexTyped<T, U, V> {
@@ -130,7 +130,6 @@ public class TypeSchemaTest {
 	}
 	
 	@Test
-	@Ignore
 	public void testComplextTyped() throws IOException {
 		TypeSchema type = TypeSchema.build(new TypeReference<ComplexTyped<String, Typed1<Integer>, Boolean>>() {});
 		type.debugPrint(ps);
@@ -142,7 +141,7 @@ public class TypeSchemaTest {
 		String correct = IOUtils.toString(getClass().getResourceAsStream(resourcePath), StandardCharsets.UTF_8).trim();
 		String current = os.toString(StandardCharsets.UTF_8.name()).trim();
 		
-		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		System.out.println(current);
 		
 		assertEquals(correct, current);

@@ -1,5 +1,7 @@
 package com.navigo3.dryapi.core.util;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -13,11 +15,13 @@ public class CollectionUtils {
 		return stream.map(item->block.apply(item, i.getAndIncrement()));
 	}
 	
-	public static <T> void eachWithIndex(Stream<T> stream, BiConsumer<T, Integer> block) {
+	public static <T> void eachWithIndex(Collection<T> coll, BiConsumer<T, Integer> block) {
 		int i = 0;
 		
-		while (stream.iterator().hasNext()) {
-			block.accept(stream.iterator().next(), i++);
+		Iterator<T> iter = coll.iterator();
+		
+		while (iter.hasNext()) {
+			block.accept(iter.next(), i++);
 		}
 	}
 }

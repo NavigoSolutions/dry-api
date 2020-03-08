@@ -1,0 +1,5 @@
+OBJECT
+    value1 : OBJECT
+        value : STRING
+    value2 : OBJECT
+        value : NUMBER
