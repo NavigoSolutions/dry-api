@@ -149,9 +149,7 @@ public class TypeSchema {
 	
 	private void debugPrint(PrintStream out, NodeMetadata node, Optional<String> name, int indentLevel, String indentStr) {
 		out.print(StringUtils.repeat(indentLevel, indentStr));
-		
-		name.ifPresent(s->out.print(s+" : "));
-		
+
 		node.getContainerType().ifPresent(type->{
 			if (type==ContainerType.LIST) {
 				out.print("[]");
@@ -170,7 +168,13 @@ public class TypeSchema {
 			if (t==ValueType.ENUMERABLE) {
 				out.print("["+node.getEnumItems().stream().collect(Collectors.joining(", "))+"]");
 			}
+			
+			if (t==ValueType.OBJECT) {
+				out.print(" "+node.getJavaType());
+			}
 		});
+		
+		name.ifPresent(s->out.print(" "+s));
 		
 		out.println();
 		
