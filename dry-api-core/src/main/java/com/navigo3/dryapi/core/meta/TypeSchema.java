@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.navigo3.dryapi.core.meta.ImmutableNodeMetadata.Builder;
 import com.navigo3.dryapi.core.meta.NodeMetadata.ContainerType;
 import com.navigo3.dryapi.core.meta.NodeMetadata.ValueType;
@@ -187,7 +188,16 @@ public class TypeSchema {
 	}
 
 	private NodeMetadata prepareNode(String klassReal, Set<Class<?>> alreadyVisited) {
+		if (klassReal.equals(JsonNode.class.getName())) {
+			return ImmutableNodeMetadata
+				.builder()
+				.valueType(ValueType.JSON)
+				.javaType(klassReal)
+				.build();
+		}
+		
 		Builder builder = ImmutableNodeMetadata.builder();
+		builder.javaType(klassReal);
 		
 		if (klassReal.endsWith("[]")) {
 			builder.containerType(ContainerType.LIST);
@@ -209,6 +219,7 @@ public class TypeSchema {
 			return ImmutableNodeMetadata
 				.builder()
 				.valueType(ValueType.RECURSIVE)
+				.javaType(klassReal)
 				.build();
 		}
 

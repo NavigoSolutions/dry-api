@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 
@@ -64,6 +65,11 @@ public class TypeSchemaTest {
 		Optional<List<Map<T, U>>> getNested();
 		Typed2<Typed1<T>, U> getTwoLevel();
 		Typed2<Typed2<Typed1<T>, U>, Typed2<Typed1<V>, U>> getThreeLevel();
+	}
+	
+	private interface DataWithJson {
+		JsonNode getJson();
+		String getName();
 	}
 
 	private ByteArrayOutputStream os;
@@ -135,6 +141,14 @@ public class TypeSchemaTest {
 		type.debugPrint(ps);
 		
 		compareWithStored("/TypeSchema/complexTyped.txt");
+	}
+	
+	@Test
+	public void testDataWithJson() throws IOException {
+		TypeSchema type = TypeSchema.build(new TypeReference<DataWithJson>() {});
+		type.debugPrint(ps);
+		
+		compareWithStored("/TypeSchema/dataWithJson.txt");
 	}
 
 	private void compareWithStored(String resourcePath) throws IOException {

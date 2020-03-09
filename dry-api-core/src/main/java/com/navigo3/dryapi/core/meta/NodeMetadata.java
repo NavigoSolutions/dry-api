@@ -30,7 +30,10 @@ public interface NodeMetadata {
 		OBJECT,
 		
 		//this node is recursive
-		RECURSIVE
+		RECURSIVE,
+		
+		//this node may contain arbitrary JSON data 
+		JSON
 	}
 	
 	//value data
@@ -41,6 +44,9 @@ public interface NodeMetadata {
 	Optional<ContainerType> getContainerType();
 	Optional<ValueType> getKeyType();
 	Optional<NodeMetadata> getItemType();
+	
+	//extra data
+	String getJavaType();
 	
 	//fields
 	Map<String, NodeMetadata> getFields();
