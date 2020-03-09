@@ -92,6 +92,16 @@ public class Validate {
 	public static void isEmpty(Collection<?> coll) {
 		isEmpty(coll, "This collection should not be empty");
 	}
+	
+	public static void isEmpty(Map<?, ?> map) {
+		isEmpty(map, "This map should not be empty");
+	}
+	
+	public static void isEmpty(Map<?, ?> map, String message) {
+		if (!map.isEmpty()) {
+			throw new RuntimeException(message);
+		}
+	}
 
 	public static void isEmpty(Collection<?> coll, String message) {
 		if (!coll.isEmpty()) {

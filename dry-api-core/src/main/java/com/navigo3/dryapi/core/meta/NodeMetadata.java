@@ -60,6 +60,10 @@ public interface NodeMetadata {
 			if (type!=ValueType.ENUMERABLE) {
 				Validate.isEmpty(getEnumItems());
 			}
+			
+			if (type!=ValueType.OBJECT) {
+				Validate.isEmpty(getFields());
+			}
 		});
 	}
 }
