@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "clearance-validator"
+		},
+		{
+			"path": "dry-api-js-client"
+		},
+		{
+			"path": "dry-api-js-client-test"
+		}
+	]
+}
