@@ -1,6 +1,6 @@
 import request from "request"
 import syncRequest from "sync-request"
-import generateUuid from "uuid/v1"
+import generateUuid from "uuid"
 
 export class ApiConnector {
   constructor(baseAddress, extraHeaders = {}, printCalls = false, criticalErrorHandler = () => {}) {
