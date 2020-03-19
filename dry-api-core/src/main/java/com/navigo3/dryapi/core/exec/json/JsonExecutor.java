@@ -185,7 +185,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		});
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void parseInputJson(TAppContext appContext, JsonRequest request, Builder outputBuilder, MethodDefinition def, ObjectMapper objectMapper,
 			BiFunction<String, StructurePath, JsonNode> getPreviousOutput, BiConsumer<Object, ExecutionContext<TAppContext, TCallContext>> onSuccess) {
 		try {
@@ -267,7 +267,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		}
 	}
 	
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void clearProhibitedInputFields(TAppContext appContext, Builder outputBuilder, Object rawInput, MethodImplementation instance, 
 			TCallContext callContext, MethodSecurity<TAppContext, TCallContext> security, MethodDefinition def, 
 			JsonRequest request, boolean securityPassed, ObjectMapper objectMapper, MethodMetadata<TAppContext, TCallContext> meta,
@@ -389,7 +389,7 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		}
 	}
 	
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private void clearProhibitedOutputFields(JsonRequest request, TAppContext appContext, Builder outputBuilder, Object rawOutput,
 			MethodImplementation instance, TCallContext callContext, ExecutionContext executionContext,
 			MethodDefinition def, ObjectMapper objectMapper, MethodSecurity<TAppContext, TCallContext> security, 
