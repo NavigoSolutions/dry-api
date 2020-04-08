@@ -1,13 +1,13 @@
 {
-    "name": "dry-api-js-client",
-    "author": "Jaroslav Kuboš",
-    "version": "0.0.1",
-    "private": true,
-    "main": "src/ApiConnector.mjs",
-    "dependencies": {
-        "request": "2.88.0",
-        "sync-request": "6.0.0",
-        "uuid": "3.3.2"
-    },
-    "devDependencies": {}
+  "name": "dry-api-js-client",
+  "author": "Jaroslav Kuboš",
+  "version": "0.0.1",
+  "private": true,
+  "main": "src/ApiConnector.mjs",
+  "dependencies": {
+    "request": "2.88.0",
+    "sync-request": "6.0.0",
+    "uuid": "3.3.2"
+  },
+  "devDependencies": {}
 }

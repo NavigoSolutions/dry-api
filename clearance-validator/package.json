@@ -1,9 +1,9 @@
 {
-    "name": "clearance-validator",
-    "author": "Jaroslav Kuboš",
-    "version": "0.0.1",
-    "private": true,
-    "main": "src/ClearanceValidator.mjs",
-    "dependencies": {},
-    "devDependencies": {}
+  "name": "clearance-validator",
+  "author": "Jaroslav Kuboš",
+  "version": "0.0.1",
+  "private": true,
+  "main": "src/ClearanceValidator.mjs",
+  "dependencies": {},
+  "devDependencies": {}
 }
