@@ -1,6 +1,7 @@
 package com.navigo3.dryapi.client;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,7 +12,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.navigo3.dryapi.core.def.MethodDefinition;
@@ -40,6 +48,8 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class RemoteHttpDryApi {
+	private static final Logger logger = LoggerFactory.getLogger(RemoteHttpDryApi.class);
+	
 	private HttpUrl apiUrl;
 	private RemoteHttpDryApiSettings settings;
 	private List<RequestsBatchData> newTasks = new ArrayList<>();
@@ -50,6 +60,10 @@ public class RemoteHttpDryApi {
 	private volatile boolean shouldStop;
 	
 	private final OkHttpClient httpClient;
+	
+	private final AtomicInteger lastId = new AtomicInteger(0);
+
+	private ExtraHeaderParams extraHeaderParams;
 	
 	public RemoteHttpDryApi(String apiUrlStr, RemoteHttpDryApiSettings settings) {
 		apiUrl =  HttpUrl.parse(apiUrlStr);
@@ -63,11 +77,15 @@ public class RemoteHttpDryApi {
 			.build();
 	}
 	
-	public void start() {
+	public void start(Function<OkHttpClient, ExtraHeaderParams> loginFunc) {
+		extraHeaderParams = loginFunc.apply(httpClient);
+		
 		thread.start();
 	}
 	
-	public void stop() {
+	public void stop(BiConsumer<OkHttpClient, ExtraHeaderParams> logoutFunc) {
+		logoutFunc.accept(httpClient, extraHeaderParams);
+		
 		shouldStop = true;
 		
 		while (thread.isAlive()) {
@@ -97,17 +115,42 @@ public class RemoteHttpDryApi {
 	public <TInput, TOutput> CompletableFuture<TOutput> executeAsync(MethodDefinition<TInput, TOutput> method, TInput input, Consumer<TOutput> onSuccess) {
 		CompletableFuture<TOutput> resFuture = new CompletableFuture<>();
 		
-		callSimple(method, input, RequestType.EXECUTE).thenAccept(r->{
-			resFuture.complete(r.getOutput().get());
+		logger.debug("Executing {} async", method.getQualifiedName());
+		
+		callSimple(method, input, RequestType.EXECUTE).whenComplete((res, exception)->{
+			if (exception!=null) {
+				logger.debug("Async - completed exceptionally");
+				resFuture.completeExceptionally(exception);
+			} else {
+				logger.debug("Async - completed normally");
+				resFuture.complete(res.getOutput().get());
+			}
 		});
+		
+		
+//		.thenAccept(r->{
+//			logger.debug("Async - completed normally");
+//			resFuture.complete(r.getOutput().get());
+//		}).exceptionally(e->{
+//			logger.debug("Async - completed exceptionally");
+//			resFuture.completeExceptionally(e);
+//			return null;
+//		});
 		
 		return resFuture;
 	}
 	
 	public <TInput, TOutput> TOutput executeBlocking(MethodDefinition<TInput, TOutput> method, TInput input) {
-		return ExceptionUtils.withRuntimeException(()->executeAsync(method, input, (res)->{}).get());
+		logger.debug("Executing {} blocking", method.getQualifiedName());
+		
+		TOutput resVal = ExceptionUtils.withRuntimeException(()->executeAsync(method, input, (res)->{}).get());
+		
+		logger.debug("Execution {} done", method.getQualifiedName());
+		
+		return resVal;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public <TInput, TOutput> CompletableFuture<RequestData<TInput,TOutput>> callSimple(MethodDefinition<TInput, TOutput> method, TInput input, RequestType type) {
 		CompletableFuture<RequestData<TInput,TOutput>> resFuture = new CompletableFuture<>();
 		
@@ -121,10 +164,19 @@ public class RemoteHttpDryApi {
 		RequestsBatchData batch = ImmutableRequestsBatchData
 			.builder()
 			.addRequests(req)
+			.id(lastId.getAndIncrement())
 			.build();
 		
-		callRaw(batch).thenRun(()->resFuture.complete(req));
-		
+		callRaw(batch).whenComplete((res, exception)->{
+			if (exception!=null) {
+				logger.debug("Call simple - completed exceptionally");
+				resFuture.completeExceptionally(exception);
+			} else {
+				logger.debug("Call simple - completed normally");
+				resFuture.complete(res.getRequests().get(0));
+			}
+		});
+
 		return resFuture;
 	}
 	
@@ -134,6 +186,8 @@ public class RemoteHttpDryApi {
 		Validate.notEmpty(batch.getRequests());
 		
 		synchronized (newTasks) {
+			logger.debug("Adding batch");
+			
 			newTasks.add(batch);
 			this.thread.interrupt();
 		}
@@ -157,7 +211,13 @@ public class RemoteHttpDryApi {
 				newTasks.clear();
 			}
 			
-			while (!tasks.isEmpty() && currentTasks.size()<settings.getMaxExecutedInParallel()) {
+			while (!tasks.isEmpty()) {
+				if (currentTasks.size()>=settings.getMaxExecutedInParallel()) {
+					break;
+				}
+				
+				logger.debug("Currently available {} tasks and {} running tasks", tasks.size(), currentTasks.size());
+	
 				RequestsBatchData task = tasks.poll();
 				
 				processTask(task);
@@ -172,6 +232,8 @@ public class RemoteHttpDryApi {
 	}
 
 	private void processTask(RequestsBatchData requestsBatch) {
+		logger.debug("Processing batch {}", requestsBatch.getId());
+		
 		ExceptionUtils.withRuntimeException(()->{
 			Validate.notEmpty(requestsBatch.getRequests());
 			
@@ -189,17 +251,32 @@ public class RemoteHttpDryApi {
 				.url(apiUrl)
 				.post(body);
 			
-			settings.getContentSigner().ifPresent(signer->{
-				String signature = signer.apply(content);
-				reqBuilder.addHeader(DryApiConstants.REQUEST_SIGNATURE_HEADER, signature);
+			extraHeaderParams.getHeaders().forEach((k, v)->{
+				reqBuilder.addHeader(k, v);
 			});
 			
+			reqBuilder.addHeader(
+				"Cookie",
+				extraHeaderParams
+					.getCookies()
+					.entrySet()
+					.stream()
+					.map(e->ExceptionUtils.withRuntimeException(()->{
+						return StringUtils.subst("{}={}", URLEncoder.encode(e.getKey(), "UTF-8"), URLEncoder.encode(e.getValue(), "UTF-8"));
+					}))
+					.collect(Collectors.joining("; "))
+			);
+			
 			Request request = reqBuilder.build();
+			
+			logger.debug("Request prepared");
 			
 			httpClient.newCall(request).enqueue(new Callback() {
 				@SuppressWarnings("unchecked")
 				@Override
 				public void onResponse(Call call, Response httpResponse) throws IOException {
+					logger.debug("Response for batch {}", requestsBatch.getId());
+					
 					try {
 						if (httpResponse.code()!=200 && httpResponse.code()!=400) {
 							throw new RuntimeException(StringUtils.subst("Unexpected error code {}. Content:\n{}", httpResponse.code(), httpResponse.body().string()));
@@ -232,15 +309,23 @@ public class RemoteHttpDryApi {
 						
 						requestsBatch.getFuture().complete(requestsBatch);
 					} catch (Throwable t) {
+						logger.debug("Exception for batch {} detected", requestsBatch.getId());
+						
 						requestsBatch.getOnFail().orElse(settings.getGlobalErrorHandler().orElse(Throwable::printStackTrace));
 						requestsBatch.getFuture().completeExceptionally(t);
+						
+						logger.debug("Exception for batch {} processed", requestsBatch.getId());
 					}
 				}
 				
 				@Override
 				public void onFailure(Call call, IOException e) {
+					logger.debug("Failure for batch {} detected", requestsBatch.getId());
+					
 					requestsBatch.getOnFail().orElse(settings.getGlobalErrorHandler().orElse(Throwable::printStackTrace));
 					requestsBatch.getFuture().completeExceptionally(e);
+					
+					logger.debug("Failure for batch {} processed", requestsBatch.getId());
 				}
 			});
 		});

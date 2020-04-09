@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -50,15 +49,12 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 	private DryApi<TAppContext, TCallContext, TValidator> api;
 	private final JsonExecutor<TAppContext, TCallContext, TValidator> executor;
 	private Function<HttpServletRequest, TAppContext> contextProvider;
-	private Optional<BiPredicate<String, String>> contentSignatureChecker;
 	
 	public DryApiServlet(DryApi<TAppContext, TCallContext, TValidator> api, Function<HttpServletRequest, TAppContext> contextProvider, 
-			Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider, Consumer3<String, Duration, TAppContext> statsConsumer,
-			Optional<BiPredicate<String, String>> contentSignatureChecker) {
+			Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider, Consumer3<String, Duration, TAppContext> statsConsumer) {
 		this.api = api;
 		this.executor = new JsonExecutor<>(api, validatorProvider, statsConsumer);
 		this.contextProvider = contextProvider;
-		this.contentSignatureChecker = contentSignatureChecker;
 	}
 
 	@Override
@@ -84,24 +80,6 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			logger.debug("Reading request");
 			
 			String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
-			
-			if (!StringUtils.isBlank(req.getHeader(DryApiConstants.REQUEST_SIGNATURE_HEADER))) {
-				Validate.isPresent(contentSignatureChecker);
-				
-				logger.debug("Checking request signature");
-				
-				String signature = req.getHeader(DryApiConstants.REQUEST_SIGNATURE_HEADER).trim();
-				
-				if (!contentSignatureChecker.get().test(body, signature)) {
-					logger.debug("Signature test failed!");
-					
-					throw new RuntimeException("Signature test failed!");
-				}
-				
-				appContext.markSigned();
-				
-				logger.debug("Signature is OK");
-			}
 			
 			ObjectMapper objectMapper = JacksonUtils.createJsonMapper();
 			

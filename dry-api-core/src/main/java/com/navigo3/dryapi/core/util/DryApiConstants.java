@@ -14,6 +14,4 @@ public class DryApiConstants {
 	public static final DateTimeFormatter DATETIME_FORMATER = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
 	
 	public static final String JSON_MIME = "application/json;charset=utf-8";
-	
-	public static final String REQUEST_SIGNATURE_HEADER = "X-Dry-Api-Req-Signature";
 }

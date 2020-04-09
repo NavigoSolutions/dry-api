@@ -12,6 +12,7 @@ public interface RequestsBatchData {
 	@SuppressWarnings("rawtypes")
 	List<ModifiableRequestData> getRequests();
 	Optional<Consumer<Throwable>> getOnFail();
+	int getId();
 	
 	@Value.Default default CompletableFuture<RequestsBatchData> getFuture() {
 		return new CompletableFuture<RequestsBatchData>();

@@ -1,5 +1,6 @@
 package com.navigo3.dryapi.test.helpers;
 
+import com.navigo3.dryapi.client.ImmutableExtraHeaderParams;
 import com.navigo3.dryapi.client.ImmutableRemoteHttpDryApiSettings;
 import com.navigo3.dryapi.client.RemoteHttpDryApi;
 import com.navigo3.dryapi.sample.impls.TestApi;
@@ -31,17 +32,16 @@ public class RemoteCallsEnvironment {
 		
 		api = new RemoteHttpDryApi("http://localhost:"+PORT+"/test/xxx", ImmutableRemoteHttpDryApiSettings
 			.builder()
-//			.dataFormat(DataFormat.XML)
 			.build()
 		);
 		
-		api.start();
+		api.start(httpClient->ImmutableExtraHeaderParams.builder().build());
 	}
 
 	public void stop() {
 		server.stop();
 		
-		api.stop();
+		api.stop((httpClient, extraParams)->{});
 	}
 
 	public RemoteHttpDryApi getApi() {

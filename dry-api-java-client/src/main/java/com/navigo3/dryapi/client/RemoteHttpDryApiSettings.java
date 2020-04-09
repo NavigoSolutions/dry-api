@@ -3,7 +3,6 @@ package com.navigo3.dryapi.client;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.immutables.value.Value;
 
@@ -26,11 +25,9 @@ public interface RemoteHttpDryApiSettings {
 	
 	Optional<Consumer<Throwable>> getGlobalErrorHandler();
 	
-	public static RemoteHttpDryApiSettings buildDefault() {
+	public static ImmutableRemoteHttpDryApiSettings buildDefault() {
 		return ImmutableRemoteHttpDryApiSettings
 			.builder()
 			.build();
 	}
-	
-	Optional<Function<String, String>> getContentSigner();
 }

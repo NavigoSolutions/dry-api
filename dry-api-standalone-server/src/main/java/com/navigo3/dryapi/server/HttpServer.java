@@ -24,7 +24,6 @@ import com.navigo3.dryapi.core.util.JacksonUtils;
 import com.navigo3.dryapi.core.util.LambdaUtils.ConsumerWithException;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.ThreadUtils;
-import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.Validator;
 import com.navigo3.dryapi.server.HttpServerSettings.ApiMount;
 
@@ -149,24 +148,6 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 			exchange.getRequestReceiver().receiveFullBytes((ex, data) -> {
 				
 				String content = ExceptionUtils.withRuntimeException(()->new String(data, "utf-8"));
-				
-				if (exchange.getRequestHeaders().contains(DryApiConstants.REQUEST_SIGNATURE_HEADER)) {
-					Validate.isPresent(settings.getContentSignatureChecker());
-					
-					logger.debug("Checking request signature");
-					
-					String signature = exchange.getRequestHeaders().get(DryApiConstants.REQUEST_SIGNATURE_HEADER).getFirst().trim();
-					
-					if (!settings.getContentSignatureChecker().get().test(content, signature)) {
-						logger.debug("Signature test failed!");
-						
-						throw new RuntimeException("Signature test failed!");
-					}
-					
-					appContext.markSigned();
-					
-					logger.debug("Signature is OK");
-				}
 				
 				ObjectMapper objectMapper = JacksonUtils.createJsonMapper();
 				
