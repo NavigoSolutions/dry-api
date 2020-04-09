@@ -1,5 +1,5 @@
-OBJECT
-    nested : (?)
+OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$NestedColls
+    (?) nested
         {NUMBER}
             []
                 BOOL

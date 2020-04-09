@@ -1,14 +1,14 @@
-OBJECT
-    nested : (?)
+OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$ComplexTyped<java.lang.String, com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.Integer>, java.lang.Boolean>
+    (?) nested
         []
             {STRING}
-                OBJECT
-                    value : NUMBER
-    threeLevel : OBJECT
-        value1 : RECURSIVE
-        value2 : RECURSIVE
-    twoLevel : OBJECT
-        value1 : OBJECT
-            value : STRING
-        value2 : OBJECT
-            value : NUMBER
+                OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.Integer>
+                    NUMBER value
+    OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed2<com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed2<com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.String>, com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.Integer>>, com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed2<com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.Boolean>, com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.Integer>>> threeLevel
+        RECURSIVE value1
+        RECURSIVE value2
+    OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed2<com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.String>, com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.Integer>> twoLevel
+        OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.String> value1
+            STRING value
+        OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.Integer> value2
+            NUMBER value

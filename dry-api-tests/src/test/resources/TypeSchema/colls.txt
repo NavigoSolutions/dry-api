@@ -1,16 +1,16 @@
-OBJECT
-    plainArray : []
-        OBJECT
-            abc : ENUMERABLE[A, B, C]
-            bigDecimal : NUMBER
-            boolean : BOOL
-            integer : NUMBER
-            string : STRING
-    stringArray : []
+OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Colls
+    [] plainArray
+        OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Plain
+            ENUMERABLE[A, B, C] abc
+            NUMBER bigDecimal
+            BOOL boolean
+            NUMBER integer
+            STRING string
+    [] stringArray
         STRING
-    stringList : []
+    [] stringList
         STRING
-    stringMap : {STRING}
+    {STRING} stringMap
         NUMBER
-    stringOptional : (?)
+    (?) stringOptional
         STRING

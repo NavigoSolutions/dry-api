@@ -100,16 +100,30 @@ public class RemoteHttpDryApi {
 	public <TInput, TOutput> CompletableFuture<ValidationData> validateAsync(MethodDefinition<TInput, TOutput> method, TInput input, Consumer<ValidationData> onSuccess) {
 		CompletableFuture<ValidationData> resFuture = new CompletableFuture<>();
 		
-		callSimple(method, input, RequestType.VALIDATE).thenAccept(r->{
-			ValidationData val = r.getResponse().get().getValidation().orElseGet(()->ImmutableValidationData.builder().build());
-			resFuture.complete(val);
+		logger.debug("Validating {} async", method.getQualifiedName());
+		
+		callSimple(method, input, RequestType.VALIDATE).whenComplete((res, exception)->{
+			if (exception!=null) {
+				logger.debug("Validate - completed exceptionally");
+				resFuture.completeExceptionally(exception);
+			} else {
+				logger.debug("Validate - completed normally");
+				ValidationData val = res.getResponse().get().getValidation().orElseGet(()->ImmutableValidationData.builder().build());
+				resFuture.complete(val);
+			}
 		});
 		
 		return resFuture;
 	}
 	
 	public <TInput, TOutput> ValidationData validateBlocking(MethodDefinition<TInput, TOutput> method, TInput input) {
-		return ExceptionUtils.withRuntimeException(()->validateAsync(method, input, (res)->{}).get());
+		logger.debug("Validate {} blocking", method.getQualifiedName());
+		
+		ValidationData resVal = ExceptionUtils.withRuntimeException(()->validateAsync(method, input, (res)->{}).get());
+		
+		logger.debug("Validate {} done", method.getQualifiedName());
+		
+		return resVal;
 	}
 
 	public <TInput, TOutput> CompletableFuture<TOutput> executeAsync(MethodDefinition<TInput, TOutput> method, TInput input, Consumer<TOutput> onSuccess) {
@@ -126,16 +140,6 @@ public class RemoteHttpDryApi {
 				resFuture.complete(res.getOutput().get());
 			}
 		});
-		
-		
-//		.thenAccept(r->{
-//			logger.debug("Async - completed normally");
-//			resFuture.complete(r.getOutput().get());
-//		}).exceptionally(e->{
-//			logger.debug("Async - completed exceptionally");
-//			resFuture.completeExceptionally(e);
-//			return null;
-//		});
 		
 		return resFuture;
 	}
@@ -298,10 +302,10 @@ public class RemoteHttpDryApi {
 							
 							requestData.get().setResponse(response);
 							
-							if (response.getOutput().isPresent()) {
+							if (response.getOutput().isPresent() && !response.getOutput().get().isNull()) {
 								Object output = ExceptionUtils
 										.withRuntimeException(()->objectMapper.convertValue(response.getOutput().get(), requestData.get().getMethod().getOutputType()));
-								
+
 								requestData.get().setOutput(Optional.of(output));
 							}
 								

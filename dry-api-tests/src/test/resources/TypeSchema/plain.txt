@@ -1,6 +1,6 @@
-OBJECT
-    abc : ENUMERABLE[A, B, C]
-    bigDecimal : NUMBER
-    boolean : BOOL
-    integer : NUMBER
-    string : STRING
+OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Plain
+    ENUMERABLE[A, B, C] abc
+    NUMBER bigDecimal
+    BOOL boolean
+    NUMBER integer
+    STRING string

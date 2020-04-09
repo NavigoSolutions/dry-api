@@ -1,5 +1,5 @@
-OBJECT
-    value1 : OBJECT
-        value : STRING
-    value2 : OBJECT
-        value : NUMBER
+OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed2<com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.String>, com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.Integer>>
+    OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.String> value1
+        STRING value
+    OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Typed1<java.lang.Integer> value2
+        NUMBER value

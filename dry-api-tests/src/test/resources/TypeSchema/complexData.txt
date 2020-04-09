@@ -1,30 +1,30 @@
-OBJECT
-    corner : STRING
-    galaxy : STRING
-    middleAddress : OBJECT
-        continent : STRING
-        country : STRING
-        cronicles : {DATETIME}
+OBJECT com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint$TopAddressInput
+    STRING corner
+    STRING galaxy
+    OBJECT com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint$MiddleAddressInput middleAddress
+        STRING continent
+        STRING country
+        {DATETIME} cronicles
             STRING
-        currentGalacticDateTime : DATETIME
-        lowAddresses : []
-            OBJECT
-                city : STRING
-                door : (?)
+        DATETIME currentGalacticDateTime
+        [] lowAddresses
+            OBJECT com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint$LowAddressInput
+                STRING city
+                (?) door
                     STRING
-                number : NUMBER
-                state : (?)
+                NUMBER number
+                (?) state
                     STRING
-                street : STRING
-        mainAddress : (?)
-            OBJECT
-                city : STRING
-                door : (?)
+                STRING street
+        (?) mainAddress
+            OBJECT com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint$LowAddressInput
+                STRING city
+                (?) door
                     STRING
-                number : NUMBER
-                state : (?)
+                NUMBER number
+                (?) state
                     STRING
-                street : STRING
-        stringCodes : {STRING}
+                STRING street
+        {STRING} stringCodes
             NUMBER
-    planet : STRING
+    STRING planet
