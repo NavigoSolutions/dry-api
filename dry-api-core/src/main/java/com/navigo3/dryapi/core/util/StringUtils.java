@@ -1,5 +1,6 @@
 package com.navigo3.dryapi.core.util;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 
 public class StringUtils {
@@ -85,5 +86,9 @@ public class StringUtils {
 
 	public static boolean isBlank(String str) {
 		return str==null || str.trim().isEmpty();
+	}
+
+	public static boolean isBlank(Optional<String> str) {
+		return str.map(StringUtils::isBlank).orElse(true);
 	}
 }
