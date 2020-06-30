@@ -34,7 +34,7 @@ public class GetMethodMetadataEndpoint extends MethodDefinition<QualifiedNamePar
 		
 		TypeSchema getOutputTypeSchema();
 		
-		SecurityNode getAuthorization();
+		Optional<SecurityNode> getAuthorization();
 	}
 
 	@Override

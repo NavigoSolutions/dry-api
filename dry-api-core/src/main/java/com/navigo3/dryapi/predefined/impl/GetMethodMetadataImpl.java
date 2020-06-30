@@ -26,6 +26,8 @@ public abstract class GetMethodMetadataImpl<TAppContext extends AppContext, TCal
 
 	public abstract DryApi<TAppContext, TCallContext, TValidator> getApi();
 	
+	public abstract boolean getCanSeeSecurity();
+	
 	@Override
 	public void validate(QualifiedNameParam input, TValidator validator) {
 		if (!getApi().lookupDefinition(input.getQualifiedName()).isPresent()) {
@@ -60,7 +62,9 @@ public abstract class GetMethodMetadataImpl<TAppContext extends AppContext, TCal
 	}
 
 	private void fillSecurity(ImmutableMethodFullDescription.Builder builder, MethodSecurity<TAppContext,TCallContext> security) {
-		builder.authorization(createSecurityNode(security.getAuthorization()));
+		if (getCanSeeSecurity()) {
+			builder.authorization(createSecurityNode(security.getAuthorization()));
+		}
 	}
 
 	@SuppressWarnings({ "unchecked" })
