@@ -156,7 +156,8 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 				resp.setStatus(500);
 				resp.setContentType("text/plain");
 				
-				logger.error(res.getResponses().get(0).getErrorMessage().orElse("?"));
+				logger.error("Error message: {}", res.getResponses().get(0).getErrorMessage().orElse("?"));
+				logger.error("Response: {}", res);
 				
 				appContext.reportException(new RuntimeException(res.getResponses().get(0).getErrorMessage().orElse("?")));
 
