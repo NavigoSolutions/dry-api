@@ -3,7 +3,8 @@
   "author": "Jaroslav Kuboš",
   "version": "0.0.1",
   "private": true,
-  "main": "src/ClearanceValidator.mjs",
+  "type": "module",
+  "main": "src/ClearanceValidator.js",
   "dependencies": {},
   "devDependencies": {}
 }

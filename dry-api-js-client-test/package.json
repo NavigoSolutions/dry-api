@@ -3,9 +3,10 @@
     "author": "Jaroslav Kuboš",
     "version": "0.0.1",
     "private": true,
+    "type": "module",
     "main": "src/DryAPI.js",
     "scripts": {
-        "start": "node --experimental-modules src/test.mjs"
+        "start": "node --experimental-modules src/test.js"
     },
     "dependencies": {
         "dry-api-js-client": "file:../dry-api-js-client"
