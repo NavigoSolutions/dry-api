@@ -55,7 +55,7 @@ export class ApiConnector {
             } else if (onValidationError && resp && resp.status === "INVALID_INPUT") {
               onValidationError(resp)
             } else {
-              reject(res)
+              reject(json)
             }
           }
         })
@@ -110,7 +110,7 @@ export class ApiConnector {
             if (json.overallSuccess) {
               resolve([resp.validation, resp])
             } else {
-              reject(res)
+              reject(json)
             }
           }
         })
