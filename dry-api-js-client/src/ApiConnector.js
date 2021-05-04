@@ -43,7 +43,7 @@ export class ApiConnector {
       })
         .catch(err => this._criticalErrorHandler("fetch", err))
         .then(async response => {
-          if (response.status != 200 && !(response.status == 400 && onValidationError)) {
+          if (response?.status != 200 && !(response?.status == 400 && onValidationError)) {
             this._criticalErrorHandler("status", response)
           } else {
             const json = await response.json()
@@ -100,7 +100,7 @@ export class ApiConnector {
       })
         .catch(err => this._criticalErrorHandler("fetch", err))
         .then(async response => {
-          if (response.status != 200 && response.status != 400) {
+          if (response?.status != 200 && response?.status != 400) {
             this._criticalErrorHandler("status", response)
           } else {
             const json = await response.json()
@@ -137,7 +137,7 @@ export class ApiConnector {
         .then(async response => {
           const json = await response.json()
 
-          if (response.status != 200 && response.status != 400) {
+          if (response?.status != 200 && response?.status != 400) {
             this._criticalErrorHandler("status", response)
           } else {
             if (json.overallSuccess) {
