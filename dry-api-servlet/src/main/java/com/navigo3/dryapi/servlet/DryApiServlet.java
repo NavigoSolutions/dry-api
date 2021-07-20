@@ -1,6 +1,8 @@
 package com.navigo3.dryapi.servlet;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Optional;
@@ -146,9 +148,11 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 				
 				byte[] data = Base64.getDecoder().decode(downloadData.getContentBase64());
 				
+				String encodedName = URLEncoder.encode(downloadData.getName(), StandardCharsets.UTF_8.toString());
+				
 				resp.setStatus(200);
 				resp.setContentType(downloadData.getMimeType());
-				resp.setHeader("Content-Disposition", StringUtils.subst("{}; filename=\"{}\"", forceDownload==false ? "inline" : "attachment", downloadData.getName()));
+				resp.setHeader("Content-Disposition", StringUtils.subst("{}; filename=\"{}\"", forceDownload==false ? "inline" : "attachment", encodedName));
 				resp.setContentLength(data.length);
 				
 				resp.getOutputStream().write(data);	

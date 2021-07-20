@@ -4,7 +4,7 @@ plugins {
 }
 
 ext {
-  libVersion = '0.0.41'
+  libVersion = '0.0.42'
 }
 
 println("Building version ${libVersion}")
