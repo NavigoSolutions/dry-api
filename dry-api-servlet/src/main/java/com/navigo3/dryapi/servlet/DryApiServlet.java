@@ -152,7 +152,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 				
 				resp.setStatus(200);
 				resp.setContentType(downloadData.getMimeType());
-				resp.setHeader("Content-Disposition", StringUtils.subst("{}; filename=\"{}\"", forceDownload==false ? "inline" : "attachment", encodedName));
+				resp.setHeader("Content-Disposition", StringUtils.subst("{}; filename=\"{}\"; filename*=utf-8''{}", forceDownload==false ? "inline" : "attachment", downloadData.getName(), encodedName));
 				resp.setContentLength(data.length);
 				
 				resp.getOutputStream().write(data);	
