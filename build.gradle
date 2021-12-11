@@ -1,10 +1,10 @@
 plugins {
-  id 'org.inferred.processors' version '3.3.0'
-  id 'com.github.ben-manes.versions' version '0.28.0'  //gradle dependencyUpdates
+  id 'org.inferred.processors' version '3.6.0'
+  id 'com.github.ben-manes.versions' version '0.39.0'  //gradle dependencyUpdates
 }
 
 ext {
-  libVersion = '0.0.43'
+  libVersion = '0.0.44'
 }
 
 println("Building version ${libVersion}")
@@ -28,9 +28,9 @@ subprojects {
   }
 
   dependencies {
-    processor group: 'org.immutables', name: 'value', version: '2.8.3'
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
-    compile group: 'commons-io', name: 'commons-io', version: '2.6'
+    processor group: 'org.immutables', name: 'value', version: '2.8.8'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.32'
+    compile group: 'commons-io', name: 'commons-io', version: '2.11.0'
   }
 
   jar {
