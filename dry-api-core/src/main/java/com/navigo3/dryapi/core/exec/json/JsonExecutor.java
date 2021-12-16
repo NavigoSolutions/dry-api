@@ -265,6 +265,14 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			logger.error("Error during parseInputJson method={} uuid={}", request.getQualifiedName(),
 				request.getRequestUuid(), t);
 
+			try {
+				logger.debug("Failing request ^^^^{}^^^^",
+					request.getInput() != null ? request.getInput().toPrettyString() : "NULL");
+			} catch (Throwable t2) {
+				logger.error("Cannot print details", t2);
+
+			}
+
 			appContext.reportException(t);
 
 			outputBuilder
