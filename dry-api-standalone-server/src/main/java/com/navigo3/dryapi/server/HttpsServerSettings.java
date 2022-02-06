@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import javax.net.ssl.SSLContext;
+
 import org.immutables.value.Value;
 import org.immutables.value.Value.Check;
 
@@ -18,44 +20,48 @@ import com.navigo3.dryapi.core.validation.Validator;
 import io.undertow.server.HttpServerExchange;
 
 @Value.Immutable
-public interface HttpServerSettings<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
+public interface HttpsServerSettings<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
 	@Value.Immutable
-	public interface HttpInterface {
+	public interface HttpsInterface {
 		String getHost();
+
 		int getPort();
-		
+
+		SSLContext getSslContext();
+
 		@Check
 		default void check() {
 			Validate.greaterThanZero(getPort());
 		}
 	}
-	
+
 	@Value.Immutable
 	public interface ApiMount<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
 		String getBasePath();
+
 		DryApi<TAppContext, TCallContext, TValidator> getDryApi();
-		
+
 		@Check
 		default void check() {
-			Validate.passRegex(getBasePath(), "/"+DryApi.PATH_PATTERN);
+			Validate.passRegex(getBasePath(), "/" + DryApi.PATH_PATTERN);
 		}
 	}
-	
-	List<HttpInterface> getHttpInterfaces();
-	
+
+	List<HttpsInterface> getHttpsInterfaces();
+
 	List<ApiMount<TAppContext, TCallContext, TValidator>> getApiMounts();
-	
+
 	Function<HttpServerExchange, TAppContext> getAppContextProvider();
-	
+
 	Set<String> getAllowedOrigins();
-	
+
 	Map<String, Consumer<HttpServerExchange>> getExtraUriHandlers();
-	
+
 	@Check
 	default void check() {
-		Validate.notEmpty(getHttpInterfaces());
+		Validate.notEmpty(getHttpsInterfaces());
 		Validate.notEmpty(getApiMounts());
-		Validate.hasUniqueProperty(getHttpInterfaces(), HttpInterface::getPort);
+		Validate.hasUniqueProperty(getHttpsInterfaces(), HttpsInterface::getPort);
 		Validate.hasUniqueProperty(getApiMounts(), ApiMount::getBasePath);
 	}
 }
