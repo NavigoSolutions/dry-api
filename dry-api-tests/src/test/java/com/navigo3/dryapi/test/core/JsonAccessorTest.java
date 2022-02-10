@@ -12,8 +12,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.path.StructurePath;
-import com.navigo3.dryapi.core.util.JsonAccessor;
 import com.navigo3.dryapi.core.util.JacksonUtils;
+import com.navigo3.dryapi.core.util.JsonAccessor;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 
 public class JsonAccessorTest {

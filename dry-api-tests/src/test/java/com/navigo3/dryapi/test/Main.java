@@ -6,16 +6,16 @@ import com.navigo3.dryapi.sample.impls.TestCallContext;
 import com.navigo3.dryapi.sample.impls.TestValidator;
 import com.navigo3.dryapi.server.HttpServer;
 import com.navigo3.dryapi.server.ImmutableApiMount;
-import com.navigo3.dryapi.server.ImmutableHttpInterface;
-import com.navigo3.dryapi.server.ImmutableHttpServerSettings;
+import com.navigo3.dryapi.server.ImmutableHttpsInterface;
+import com.navigo3.dryapi.server.ImmutableHttpsServerSettings;
 
 public class Main {
-	private static final int PORT = 8080;
+	private static final int PORT = 8443;
 
 	public static void main(String[] args) {
-		HttpServer<TestAppContext, TestCallContext, TestValidator> server = new HttpServer<>(ImmutableHttpServerSettings
+		HttpServer<TestAppContext, TestCallContext, TestValidator> server = new HttpServer<>(ImmutableHttpsServerSettings
 			.<TestAppContext, TestCallContext, TestValidator>builder()
-			.addHttpInterfaces(ImmutableHttpInterface.builder().host("localhost").port(PORT).build())
+			.addHttpsInterfaces(ImmutableHttpsInterface.builder().host("localhost").port(PORT).build())
 			.addApiMounts(ImmutableApiMount
 				.<TestAppContext, TestCallContext, TestValidator>builder()
 				.basePath("/api")

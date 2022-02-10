@@ -30,6 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.navigo3.dryapi.core.doc.ApiDocComment;
+import com.navigo3.dryapi.core.doc.ApiDocDefault;
 import com.navigo3.dryapi.core.meta.ImmutableNodeMetadata.Builder;
 import com.navigo3.dryapi.core.meta.NodeMetadata.ContainerType;
 import com.navigo3.dryapi.core.meta.NodeMetadata.ValueType;
@@ -188,10 +190,10 @@ public class TypeSchema {
 	}
 
 	private void parse(TypeReference<?> type) {
-		root = prepareNode(type.getType().getTypeName(), new HashSet<>());
+		root = prepareNode(type.getType().getTypeName(), new HashSet<>(), Optional.empty());
 	}
 
-	private NodeMetadata prepareNode(String klassReal, Set<Class<?>> alreadyVisited) {
+	private NodeMetadata prepareNode(String klassReal, Set<Class<?>> alreadyVisited, Optional<Method> optMethod) {
 		if (klassReal.equals(JsonNode.class.getName())) {
 			return ImmutableNodeMetadata
 				.builder()
@@ -206,7 +208,7 @@ public class TypeSchema {
 		if (klassReal.endsWith("[]")) {
 			builder.containerType(ContainerType.LIST);
 
-			builder.itemType(prepareNode(klassReal.split("\\[")[0], alreadyVisited));
+			builder.itemType(prepareNode(klassReal.split("\\[")[0], alreadyVisited, Optional.empty()));
 			
 			return builder.build();
 		}
@@ -228,13 +230,23 @@ public class TypeSchema {
 		}
 
 		Optional<ValueType> optValueType = classToValueType(klass);
-
+		
 		optValueType.ifPresent(valueType->{
 			builder.valueType(valueType);
-			
+					
 			if (valueType==ValueType.ENUMERABLE) {
 				builder.enumItems(Stream.of(klass.getEnumConstants()).map(o->((Enum<?>)o).name()).sorted().collect(Collectors.toList()));
 			}
+		});
+		
+		optMethod.ifPresent(method->{
+			Optional.ofNullable(method.getAnnotation(ApiDocDefault.class)).ifPresent(a->{
+				builder.defaultValue(a.value());
+			});
+			
+			Optional.ofNullable(method.getAnnotation(ApiDocComment.class)).ifPresent(a->{
+				builder.comment(a.value());
+			});
 		});
 		
 		if (!optValueType.isPresent()) {
@@ -244,14 +256,14 @@ public class TypeSchema {
 				List<String> params = ReflectionUtils.parseTemplateParams(klassReal);
 				Validate.size(params, 1);
 
-				builder.itemType(prepareNode(params.get(0), alreadyVisited));	
+				builder.itemType(prepareNode(params.get(0), alreadyVisited, Optional.empty()));	
 			} else if (Collection.class.isAssignableFrom(klass)) {
 				builder.containerType(ContainerType.LIST);
 
 				List<String> params = ReflectionUtils.parseTemplateParams(klassReal);
 				Validate.size(params, 1);
 				
-				builder.itemType(prepareNode(params.get(0), alreadyVisited));
+				builder.itemType(prepareNode(params.get(0), alreadyVisited, Optional.empty()));
 			} else if (Map.class.isAssignableFrom(klass)) {
 				builder.containerType(ContainerType.MAP);
 				
@@ -268,7 +280,7 @@ public class TypeSchema {
 				
 				builder.keyType(keyType.orElse(ValueType.OBJECT));
 	
-				builder.itemType(prepareNode(params.get(1), alreadyVisited));
+				builder.itemType(prepareNode(params.get(1), alreadyVisited, Optional.empty()));
 			} else {
 				builder.valueType(ValueType.OBJECT);
 				
@@ -294,6 +306,11 @@ public class TypeSchema {
 			
 			//is not public
 			if ((method.getModifiers()&Modifier.PUBLIC)==0) {
+				continue;
+			}
+			
+			//is static
+			if ((method.getModifiers()&Modifier.STATIC)!=0) {
 				continue;
 			}
 			
@@ -335,8 +352,12 @@ public class TypeSchema {
 		});
 
 		klassReal = valueTypeToClass.getOrDefault(klassReal, klassReal);
-
-		builder.putFields(name, prepareNode(klassReal, alreadyVisited));
+		
+		NodeMetadata res = prepareNode(klassReal, alreadyVisited, Optional.of(method));
+		
+		builder.putFields(name, res);
+		
+		
 	}
 
 	private Class<?> loadClassOrDefault(String className, Class<?> defaultVal) {

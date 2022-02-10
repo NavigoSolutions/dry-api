@@ -9,8 +9,8 @@ import com.navigo3.dryapi.sample.impls.TestCallContext;
 import com.navigo3.dryapi.sample.impls.TestValidator;
 import com.navigo3.dryapi.server.HttpServer;
 import com.navigo3.dryapi.server.ImmutableApiMount;
-import com.navigo3.dryapi.server.ImmutableHttpInterface;
-import com.navigo3.dryapi.server.ImmutableHttpServerSettings;
+import com.navigo3.dryapi.server.ImmutableHttpsInterface;
+import com.navigo3.dryapi.server.ImmutableHttpsServerSettings;
 
 public class RemoteCallsEnvironment {
 	private static final int PORT = 8777;
@@ -19,9 +19,9 @@ public class RemoteCallsEnvironment {
 	private RemoteHttpDryApi api;
 	
 	public void start() {
-		server = new HttpServer<>(ImmutableHttpServerSettings
+		server = new HttpServer<>(ImmutableHttpsServerSettings
 			.<TestAppContext, TestCallContext, TestValidator>builder()
-			.addHttpInterfaces(ImmutableHttpInterface.builder().host("localhost").port(PORT).build())
+			.addHttpsInterfaces(ImmutableHttpsInterface.builder().host("localhost").port(PORT).build())
 			.addApiMounts(ImmutableApiMount.<TestAppContext, TestCallContext, TestValidator>builder().basePath("/test/xxx").dryApi(TestApi.build()).build())
 			.appContextProvider(exch->new TestAppContext(true))
 			.build(),
