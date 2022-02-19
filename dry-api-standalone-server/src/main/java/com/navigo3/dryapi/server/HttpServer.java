@@ -109,6 +109,17 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 			return;
 		}
 
+		DryApi<TAppContext, TCallContext, TValidator> api = mounts.get(exchange.getRelativePath());
+
+		if (api == null) {
+			if (settings.getNotFoundUriHandler().isPresent()) {
+				logger.debug("Using not found handler");
+
+				settings.getNotFoundUriHandler().get().accept(exchange);
+				return;
+			}
+		}
+
 		exchange.getResponseHeaders().put(new HttpString("Access-Control-Allow-Origin"), origin);
 
 		safelyHandleRequest(exchange, appContext -> {
@@ -141,17 +152,10 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 			DryApi<TAppContext, TCallContext, TValidator> api = mounts.get(exchange.getRelativePath());
 
 			if (api == null) {
-				if (settings.getNotFoundUriHandler().isPresent()) {
-					logger.debug("Using not found handler");
-
-					settings.getNotFoundUriHandler().get().accept(exchange);
-					return;
-				} else {
-					exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-					exchange.setStatusCode(StatusCodes.NOT_FOUND);
-					exchange.getResponseSender().send("API not found");
-					return;
-				}
+				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+				exchange.setStatusCode(StatusCodes.NOT_FOUND);
+				exchange.getResponseSender().send("API not found");
+				return;
 			}
 
 			logger.debug("Reading request");
