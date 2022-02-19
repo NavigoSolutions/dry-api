@@ -149,8 +149,6 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 
 			logger.debug("Looking for API for relative path '{}'", exchange.getRelativePath());
 
-			DryApi<TAppContext, TCallContext, TValidator> api = mounts.get(exchange.getRelativePath());
-
 			if (api == null) {
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
 				exchange.setStatusCode(StatusCodes.NOT_FOUND);
