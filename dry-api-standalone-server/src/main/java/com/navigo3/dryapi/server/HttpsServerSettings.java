@@ -2,6 +2,7 @@ package com.navigo3.dryapi.server;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -56,6 +57,8 @@ public interface HttpsServerSettings<TAppContext extends AppContext, TCallContex
 	Set<String> getAllowedOrigins();
 
 	Map<String, Consumer<HttpServerExchange>> getExtraUriHandlers();
+
+	Optional<Consumer<HttpServerExchange>> getNotFoundUriHandler();
 
 	@Check
 	default void check() {

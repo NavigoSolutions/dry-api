@@ -141,10 +141,17 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 			DryApi<TAppContext, TCallContext, TValidator> api = mounts.get(exchange.getRelativePath());
 
 			if (api == null) {
-				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-				exchange.setStatusCode(StatusCodes.NOT_FOUND);
-				exchange.getResponseSender().send("API not found");
-				return;
+				if (settings.getNotFoundUriHandler().isPresent()) {
+					logger.debug("Using not found handler");
+
+					settings.getNotFoundUriHandler().get().accept(exchange);
+					return;
+				} else {
+					exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+					exchange.setStatusCode(StatusCodes.NOT_FOUND);
+					exchange.getResponseSender().send("API not found");
+					return;
+				}
 			}
 
 			logger.debug("Reading request");
