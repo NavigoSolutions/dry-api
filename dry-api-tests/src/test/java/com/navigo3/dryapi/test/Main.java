@@ -8,6 +8,7 @@ import com.navigo3.dryapi.server.HttpServer;
 import com.navigo3.dryapi.server.ImmutableApiMount;
 import com.navigo3.dryapi.server.ImmutableHttpsInterface;
 import com.navigo3.dryapi.server.ImmutableHttpsServerSettings;
+import com.navigo3.dryapi.test.helpers.RemoteCallsEnvironment;
 
 public class Main {
 	private static final int PORT = 8443;
@@ -15,7 +16,7 @@ public class Main {
 	public static void main(String[] args) {
 		HttpServer<TestAppContext, TestCallContext, TestValidator> server = new HttpServer<>(ImmutableHttpsServerSettings
 			.<TestAppContext, TestCallContext, TestValidator>builder()
-			.addHttpsInterfaces(ImmutableHttpsInterface.builder().host("localhost").port(PORT).build())
+			.addHttpsInterfaces(ImmutableHttpsInterface.builder().host("localhost").port(PORT).sslContext(RemoteCallsEnvironment.buildSslContext()).build())
 			.addApiMounts(ImmutableApiMount
 				.<TestAppContext, TestCallContext, TestValidator>builder()
 				.basePath("/api")

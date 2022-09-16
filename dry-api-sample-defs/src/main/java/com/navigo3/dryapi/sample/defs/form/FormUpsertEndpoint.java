@@ -6,14 +6,14 @@ import java.util.Map;
 
 import org.immutables.value.Value;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.navigo3.dryapi.core.def.MethodDefinition;
+import com.navigo3.dryapi.core.def.IOTypeReference;
+import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.IdResult;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 
-public class FormUpsertEndpoint extends MethodDefinition<Person, IdResult> {
+public class FormUpsertEndpoint implements MethodInterface<Person, IdResult> {
 	@Value.Immutable
 	@JsonSerialize(as = ImmutablePerson.class)
 	@JsonDeserialize(as = ImmutablePerson.class)
@@ -47,13 +47,13 @@ public class FormUpsertEndpoint extends MethodDefinition<Person, IdResult> {
 	}
 
 	@Override
-	public TypeReference<Person> getInputType() {
-		return new TypeReference<Person>() {};
+	public IOTypeReference<Person> getInputType() {
+		return new IOTypeReference<Person>() {};
 	}
 
 	@Override
-	public TypeReference<IdResult> getOutputType() {
-		return new TypeReference<IdResult>() {};
+	public IOTypeReference<IdResult> getOutputType() {
+		return new IOTypeReference<IdResult>() {};
 	}
 
 	@Override

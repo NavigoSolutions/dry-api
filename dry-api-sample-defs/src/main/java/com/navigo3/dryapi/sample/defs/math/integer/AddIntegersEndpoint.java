@@ -4,14 +4,14 @@ import java.util.Optional;
 
 import org.immutables.value.Value;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.navigo3.dryapi.core.def.MethodDefinition;
+import com.navigo3.dryapi.core.def.IOTypeReference;
+import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOperands;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
 
-public class AddIntegersEndpoint extends MethodDefinition<IntegerOperands, IntegerResult> {
+public class AddIntegersEndpoint implements MethodInterface<IntegerOperands, IntegerResult> {
 	
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableIntegerOperands.class)
@@ -29,13 +29,13 @@ public class AddIntegersEndpoint extends MethodDefinition<IntegerOperands, Integ
 	}
 
 	@Override
-	public TypeReference<IntegerOperands> getInputType() {
-		return new TypeReference<IntegerOperands>() {};
+	public IOTypeReference<IntegerOperands> getInputType() {
+		return new IOTypeReference<IntegerOperands>() {};
 	}
 
 	@Override
-	public TypeReference<IntegerResult> getOutputType() {
-		return new TypeReference<IntegerResult>() {};
+	public IOTypeReference<IntegerResult> getOutputType() {
+		return new IOTypeReference<IntegerResult>() {};
 	}
 
 	@Override

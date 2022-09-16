@@ -5,14 +5,14 @@ import java.util.Set;
 
 import org.immutables.value.Value;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.navigo3.dryapi.core.def.MethodDefinition;
+import com.navigo3.dryapi.core.def.IOTypeReference;
+import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.predefined.def.ListMethodsEndpoint.MethodBasicDescription;
 import com.navigo3.dryapi.predefined.params.VoidParam;
 
-public class ListMethodsEndpoint extends MethodDefinition<VoidParam, List<MethodBasicDescription>> {
+public class ListMethodsEndpoint implements MethodInterface<VoidParam, List<MethodBasicDescription>> {
 	
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableMethodBasicDescription.class)
@@ -34,13 +34,13 @@ public class ListMethodsEndpoint extends MethodDefinition<VoidParam, List<Method
 	}
 
 	@Override
-	public TypeReference<VoidParam> getInputType() {
-		return new TypeReference<VoidParam>(){};
+	public IOTypeReference<VoidParam> getInputType() {
+		return new IOTypeReference<VoidParam>(){};
 	}
 
 	@Override
-	public TypeReference<List<MethodBasicDescription>> getOutputType() {
-		return new TypeReference<List<MethodBasicDescription>>(){};
+	public IOTypeReference<List<MethodBasicDescription>> getOutputType() {
+		return new IOTypeReference<List<MethodBasicDescription>>(){};
 	}
 }
 	

@@ -1,7 +1,7 @@
 dependencies {
-	compile project(':dry-api-core')
+	implementation project(':dry-api-core')
 
-	compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
+	implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
 }
 
 

@@ -1,4 +1,4 @@
 dependencies {
-	compile project(':dry-api-core')
-	compile project(':dry-api-sample-defs')
+	implementation project(':dry-api-core')
+	implementation project(':dry-api-sample-defs')
 }

@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.navigo3.dryapi.core.def.MethodDefinition;
+import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.core.exec.json.ImmutableJsonBatchRequest;
 import com.navigo3.dryapi.core.exec.json.ImmutableJsonRequest;
 import com.navigo3.dryapi.core.exec.json.JsonBatchRequest;
@@ -97,7 +98,7 @@ public class RemoteHttpDryApi {
 		}
 	}
 	
-	public <TInput, TOutput> CompletableFuture<ValidationData> validateAsync(MethodDefinition<TInput, TOutput> method, TInput input, Consumer<ValidationData> onSuccess) {
+	public <TInput, TOutput> CompletableFuture<ValidationData> validateAsync(MethodInterface<TInput, TOutput> method, TInput input, Consumer<ValidationData> onSuccess) {
 		CompletableFuture<ValidationData> resFuture = new CompletableFuture<>();
 		
 		logger.debug("Validating {} async", method.getQualifiedName());
@@ -116,7 +117,7 @@ public class RemoteHttpDryApi {
 		return resFuture;
 	}
 	
-	public <TInput, TOutput> ValidationData validateBlocking(MethodDefinition<TInput, TOutput> method, TInput input) {
+	public <TInput, TOutput> ValidationData validateBlocking(MethodInterface<TInput, TOutput> method, TInput input) {
 		logger.debug("Validate {} blocking", method.getQualifiedName());
 		
 		ValidationData resVal = ExceptionUtils.withRuntimeException(()->validateAsync(method, input, (res)->{}).get());
@@ -126,7 +127,7 @@ public class RemoteHttpDryApi {
 		return resVal;
 	}
 
-	public <TInput, TOutput> CompletableFuture<TOutput> executeAsync(MethodDefinition<TInput, TOutput> method, TInput input, Consumer<TOutput> onSuccess) {
+	public <TInput, TOutput> CompletableFuture<TOutput> executeAsync(MethodInterface<TInput, TOutput> method, TInput input, Consumer<TOutput> onSuccess) {
 		CompletableFuture<TOutput> resFuture = new CompletableFuture<>();
 		
 		logger.debug("Executing {} async", method.getQualifiedName());
@@ -144,7 +145,7 @@ public class RemoteHttpDryApi {
 		return resFuture;
 	}
 	
-	public <TInput, TOutput> TOutput executeBlocking(MethodDefinition<TInput, TOutput> method, TInput input) {
+	public <TInput, TOutput> TOutput executeBlocking(MethodInterface<TInput, TOutput> method, TInput input) {
 		logger.debug("Executing {} blocking", method.getQualifiedName());
 		
 		TOutput resVal = ExceptionUtils.withRuntimeException(()->executeAsync(method, input, (res)->{}).get());
@@ -155,14 +156,14 @@ public class RemoteHttpDryApi {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public <TInput, TOutput> CompletableFuture<RequestData<TInput,TOutput>> callSimple(MethodDefinition<TInput, TOutput> method, TInput input, RequestType type) {
+	public <TInput, TOutput> CompletableFuture<RequestData<TInput,TOutput>> callSimple(MethodInterface<TInput, TOutput> method, TInput input, RequestType type) {
 		CompletableFuture<RequestData<TInput,TOutput>> resFuture = new CompletableFuture<>();
 		
 		ModifiableRequestData<TInput, TOutput> req = ModifiableRequestData
 			.<TInput, TOutput>create()
 			.setUuid(UUID.randomUUID().toString())
 			.setInput(input)
-			.setMethod(method)
+			.setMethod(new MethodDefinition<>(method))
 			.setRequestType(type);
 		
 		RequestsBatchData batch = ImmutableRequestsBatchData

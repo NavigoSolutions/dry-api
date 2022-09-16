@@ -2,15 +2,15 @@ package com.navigo3.dryapi.predefined.def;
 
 import org.immutables.value.Value;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.navigo3.dryapi.core.def.MethodDefinition;
+import com.navigo3.dryapi.core.def.IOTypeReference;
+import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.predefined.def.GetSystemMetadataEndpoint.SystemTypesDescription;
 import com.navigo3.dryapi.predefined.params.VoidParam;
 
-public class GetSystemMetadataEndpoint extends MethodDefinition<VoidParam, SystemTypesDescription> {
+public class GetSystemMetadataEndpoint implements MethodInterface<VoidParam, SystemTypesDescription> {
 
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableSystemTypesDescription.class)
@@ -31,12 +31,12 @@ public class GetSystemMetadataEndpoint extends MethodDefinition<VoidParam, Syste
 	}
 
 	@Override
-	public TypeReference<VoidParam> getInputType() {
-		return new TypeReference<VoidParam>(){};
+	public IOTypeReference<VoidParam> getInputType() {
+		return new IOTypeReference<VoidParam>(){};
 	}
 
 	@Override
-	public TypeReference<SystemTypesDescription> getOutputType() {
-		return new TypeReference<SystemTypesDescription>(){};
+	public IOTypeReference<SystemTypesDescription> getOutputType() {
+		return new IOTypeReference<SystemTypesDescription>(){};
 	}
 }

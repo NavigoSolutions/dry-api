@@ -44,12 +44,13 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 	private Map<String, Entry<TAppContext, TCallContext>> entries = new HashMap<>();
 
 	public <TInput, TOutput> void register(
-			MethodDefinition<TInput, TOutput> definition, 
-			Class<? extends MethodImplementation<TInput, TOutput, ? extends MethodDefinition<TInput, TOutput>, TAppContext, TCallContext, TValidator>> implClass
+			MethodInterface<TInput, TOutput> interf, 
+			Class<? extends MethodImplementation<TInput, TOutput, ? extends MethodInterface<TInput, TOutput>, TAppContext, TCallContext, TValidator>> implClass
 	) {
-		logger.debug("Registering {}", definition.getQualifiedName());
+		logger.debug("Registering {}", interf.getQualifiedName());
+	
+		MethodDefinition<TInput, TOutput> definition = new MethodDefinition<>(interf);
 
-		Validate.notNull(definition);
 		Validate.notNull(implClass);
 
 		definition.initialize();
@@ -59,7 +60,7 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 		Validate.passRegex(qualifiedName, PATH_PATTERN);
 		Validate.keyNotContained(entries, qualifiedName);
 		
-		MethodImplementation<TInput, TOutput, ? extends MethodDefinition<TInput, TOutput>, TAppContext, TCallContext, TValidator> implementation = 
+		MethodImplementation<TInput, TOutput, ? extends MethodInterface<TInput, TOutput>, TAppContext, TCallContext, TValidator> implementation = 
 				ReflectionUtils.createInstance(implClass);
 		
 		Validate.notNull(implementation);

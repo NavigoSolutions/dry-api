@@ -1,11 +1,11 @@
 package com.navigo3.dryapi.sample.defs.download;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.navigo3.dryapi.core.def.MethodDefinition;
+import com.navigo3.dryapi.core.def.IOTypeReference;
+import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.predefined.params.DownloadParam;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 
-public class DownloadPersonEndpoint extends MethodDefinition<Person, DownloadParam> {
+public class DownloadPersonEndpoint implements MethodInterface<Person, DownloadParam> {
 
 	@Override
 	public String getQualifiedName() {
@@ -18,12 +18,12 @@ public class DownloadPersonEndpoint extends MethodDefinition<Person, DownloadPar
 	}
 
 	@Override
-	public TypeReference<Person> getInputType() {
-		return new TypeReference<Person>(){};
+	public IOTypeReference<Person> getInputType() {
+		return new IOTypeReference<Person>(){};
 	}
 
 	@Override
-	public TypeReference<DownloadParam> getOutputType() {
-		return new TypeReference<DownloadParam>(){};
+	public IOTypeReference<DownloadParam> getOutputType() {
+		return new IOTypeReference<DownloadParam>(){};
 	}
 }

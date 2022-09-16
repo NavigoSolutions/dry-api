@@ -7,14 +7,14 @@ import java.util.Optional;
 
 import org.immutables.value.Value;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.navigo3.dryapi.core.def.MethodDefinition;
+import com.navigo3.dryapi.core.def.IOTypeReference;
+import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 
-public class SolveEverythingEndpoint extends MethodDefinition<TopAddressInput, IntegerResult> {
+public class SolveEverythingEndpoint implements MethodInterface<TopAddressInput, IntegerResult> {
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableLowAddressInput.class)
 	@JsonDeserialize(as = ImmutableLowAddressInput.class)
@@ -86,13 +86,13 @@ public class SolveEverythingEndpoint extends MethodDefinition<TopAddressInput, I
 	}
 
 	@Override
-	public TypeReference<TopAddressInput> getInputType() {
-		return new TypeReference<TopAddressInput>() {};
+	public IOTypeReference<TopAddressInput> getInputType() {
+		return new IOTypeReference<TopAddressInput>() {};
 	}
 
 	@Override
-	public TypeReference<IntegerResult> getOutputType() {
-		return new TypeReference<IntegerResult>() {};
+	public IOTypeReference<IntegerResult> getOutputType() {
+		return new IOTypeReference<IntegerResult>() {};
 	}
 
 	@Override

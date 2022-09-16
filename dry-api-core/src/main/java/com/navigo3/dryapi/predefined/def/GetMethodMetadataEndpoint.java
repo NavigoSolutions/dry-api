@@ -6,15 +6,15 @@ import java.util.Set;
 
 import org.immutables.value.Value;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.navigo3.dryapi.core.def.MethodDefinition;
+import com.navigo3.dryapi.core.def.IOTypeReference;
+import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.predefined.def.GetMethodMetadataEndpoint.MethodFullDescription;
 import com.navigo3.dryapi.predefined.params.QualifiedNameParam;
 
-public class GetMethodMetadataEndpoint extends MethodDefinition<QualifiedNameParam, MethodFullDescription> {
+public class GetMethodMetadataEndpoint implements MethodInterface<QualifiedNameParam, MethodFullDescription> {
 	
 	@Value.Immutable
 	public interface SecurityNode {
@@ -48,12 +48,12 @@ public class GetMethodMetadataEndpoint extends MethodDefinition<QualifiedNamePar
 	}
 
 	@Override
-	public TypeReference<QualifiedNameParam> getInputType() {
-		return new TypeReference<QualifiedNameParam>(){};
+	public IOTypeReference<QualifiedNameParam> getInputType() {
+		return new IOTypeReference<QualifiedNameParam>(){};
 	}
 
 	@Override
-	public TypeReference<MethodFullDescription> getOutputType() {
-		return new TypeReference<MethodFullDescription>(){};
+	public IOTypeReference<MethodFullDescription> getOutputType() {
+		return new IOTypeReference<MethodFullDescription>(){};
 	}
 }

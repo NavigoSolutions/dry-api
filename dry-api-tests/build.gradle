@@ -1,12 +1,14 @@
 dependencies {
-	testCompile project(':dry-api-sample-impls')
-	testCompile project(':dry-api-java-client')
-	testCompile project(':dry-api-standalone-server')
-	testCompile project(':dry-api-servlet')
+	testImplementation project(':dry-api-sample-impls')
+	testImplementation project(':dry-api-java-client')
+	testImplementation project(':dry-api-standalone-server')
+	testImplementation project(':dry-api-servlet')
 
-	testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.0'
-	testCompile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.0'
-	testCompile group: 'junit', name: 'junit', version: '4.13.2'
-	testCompile group: 'org.skyscreamer', name: 'jsonassert', version: '1.5.0'
+	testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.0'
+	testImplementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.0'
+	testImplementation group: 'junit', name: 'junit', version: '4.13.2'
+	testImplementation group: 'org.skyscreamer', name: 'jsonassert', version: '1.5.0'
+
+    testImplementation group: 'io.github.hakky54', name: 'sslcontext-kickstart-for-pem', version: '7.2.1'
 }
 

@@ -3,11 +3,12 @@ package com.navigo3.dryapi.core.impl;
 import com.navigo3.dryapi.core.context.AppContext;
 import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.def.MethodDefinition;
+import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.core.validation.Validator;
 
 public abstract class MethodImplementation<TInput, TOutput, TDef 
-	extends MethodDefinition<TInput, TOutput>, TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
+	extends MethodInterface<TInput, TOutput>, TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
 
 	private boolean initialized = false;
 	

@@ -1,15 +1,41 @@
 package com.navigo3.dryapi.core.def;
 
+import java.lang.reflect.Type;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.core.util.Validate;
 
-public abstract class MethodDefinition<TInput, TOutput> {
+public class MethodDefinition<TInput, TOutput>{
 	
 	private TypeSchema inputSchema;
 	private TypeSchema outputSchema;
 	
 	private boolean initialized = false;
+	
+	private MethodInterface<TInput, TOutput> interf;
+	
+	private TypeReference<TInput> inputType;
+	
+	private TypeReference<TOutput> outputType;
+	
+	public MethodDefinition(MethodInterface<TInput, TOutput> interf) {
+		this.interf = interf;
+		
+		this.inputType = new TypeReference<TInput>() {
+			@Override
+			public Type getType() {
+				return interf.getInputType().getType();
+			}
+		};
+		
+		this.outputType = new TypeReference<TOutput>() {
+			@Override
+			public Type getType() {
+				return interf.getOutputType().getType();
+			}
+		};;
+	}
 	
 	void initialize() {
 		Validate.isFalse(initialized);
@@ -38,12 +64,20 @@ public abstract class MethodDefinition<TInput, TOutput> {
 	public boolean isInitialized() {
 		return initialized;
 	}
-
-	public abstract String getQualifiedName();
 	
-	public abstract String getDescription();
+	public String getQualifiedName() {
+		return interf.getQualifiedName();
+	}
 	
-	public abstract TypeReference<TInput> getInputType();
+	public String getDescription() {
+		return interf.getDescription();
+	}
 	
-	public abstract TypeReference<TOutput> getOutputType();
+	public TypeReference<TInput> getInputType() {
+		return inputType;
+	}
+	
+	public TypeReference<TOutput> getOutputType() {
+		return outputType;
+	}
 }

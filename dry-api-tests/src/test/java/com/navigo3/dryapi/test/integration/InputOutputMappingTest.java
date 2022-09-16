@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import com.navigo3.dryapi.client.ImmutableRequestsBatchData;
 import com.navigo3.dryapi.client.ModifiableRequestData;
+import com.navigo3.dryapi.core.def.MethodDefinition;
 import com.navigo3.dryapi.core.exec.json.ImmutableInputOutputMapping;
 import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
 import com.navigo3.dryapi.core.path.StructurePath;
@@ -41,14 +42,14 @@ public class InputOutputMappingTest {
 			.<IntegerOperands, IntegerResult>create()
 			.setUuid(UUID.randomUUID().toString())
 			.setInput(ImmutableIntegerOperands.builder().a(1).b(1).build())
-			.setMethod(new AddIntegersEndpoint())
+			.setMethod(new MethodDefinition<>(new AddIntegersEndpoint()))
 			.setRequestType(RequestType.EXECUTE);
 		
 		//calculate 40 + ?
 		ModifiableRequestData<IntegerOperands, IntegerResult> second = ModifiableRequestData
 			.<IntegerOperands, IntegerResult>create()
 			.setInput(ImmutableIntegerOperands.builder().a(40).build())
-			.setMethod(new AddIntegersEndpoint())
+			.setMethod(new MethodDefinition<>(new AddIntegersEndpoint()))
 			.setRequestType(RequestType.EXECUTE);
 		
 		//set result of first to ? in second
@@ -72,14 +73,14 @@ public class InputOutputMappingTest {
 			.<IntegerOperands, IntegerResult>create()
 			.setUuid(UUID.randomUUID().toString())
 			.setInput(ImmutableIntegerOperands.builder().a(1).b(1).build())
-			.setMethod(new AddIntegersEndpoint())
+			.setMethod(new MethodDefinition<>(new AddIntegersEndpoint()))
 			.setRequestType(RequestType.EXECUTE);
 		
 		//calculate - ?
 		ModifiableRequestData<IntegerResult, IntegerResult> second = ModifiableRequestData
 			.<IntegerResult, IntegerResult>create()
 			.setInput(ImmutableIntegerResult.builder().build())
-			.setMethod(new NegateIntegersEndpoint())
+			.setMethod(new MethodDefinition<>(new NegateIntegersEndpoint()))
 			.setRequestType(RequestType.EXECUTE);
 		
 		//set result of first to ? in second
