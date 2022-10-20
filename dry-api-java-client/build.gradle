@@ -1,7 +1,7 @@
 dependencies {
 	implementation project(':dry-api-core')
 
-	implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
+	api group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
 }
 
 

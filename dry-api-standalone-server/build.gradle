@@ -1,7 +1,7 @@
 dependencies {
 	implementation project(':dry-api-core')
 	
-	implementation group: 'io.undertow', name: 'undertow-core', version: '2.2.14.Final'
+	api group: 'io.undertow', name: 'undertow-core', version: '2.2.14.Final'
 }
 
 group = 'com.navigo3'
