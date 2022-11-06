@@ -9,15 +9,20 @@ import java.util.function.Supplier;
 import com.navigo3.dryapi.core.context.AppContext;
 
 public class TestAppContext implements AppContext {
-	
+
 	private boolean isDevelopmentInstance;
-	
+
 	private List<Runnable> runAfterCommit = new ArrayList<>();
 
 	public TestAppContext(boolean isDevelopmentInstance) {
 		this.isDevelopmentInstance = isDevelopmentInstance;
 	}
-	
+
+	@Override
+	public void start(List<String> endpoints) {
+		//
+	}
+
 	@Override
 	public boolean getIsDevelopmentInstance() {
 		return isDevelopmentInstance;
@@ -30,9 +35,9 @@ public class TestAppContext implements AppContext {
 	@Override
 	public void transaction(Supplier<Boolean> block) {
 		boolean commit = block.get();
-		
-		System.out.println("Transaction: "+(commit ? "COMMIT" : "ROLLBACK"));
-		
+
+		System.out.println("Transaction: " + (commit ? "COMMIT" : "ROLLBACK"));
+
 		runAfterCommit.forEach(Runnable::run);
 	}
 

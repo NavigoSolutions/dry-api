@@ -170,6 +170,9 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 					.withRuntimeException(() -> objectMapper.readValue(content, new TypeReference<JsonBatchRequest>() {
 					}));
 
+				appContext.start(
+					batch.getRequests().stream().map(r -> r.getQualifiedName()).collect(Collectors.toList()));
+
 				logger.info("Executing:\n{}", batch
 					.getRequests()
 					.stream()
