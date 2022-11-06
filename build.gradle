@@ -4,7 +4,7 @@ plugins {
 }
 
 ext {
-  libVersion = '0.0.52'
+  libVersion = '0.0.53'
 }
 
 println("Building version ${libVersion}")
@@ -27,11 +27,7 @@ subprojects {
     deployerJars
   }
 
-  dependencies {
-    processor group: 'org.immutables', name: 'value', version: '2.8.8'
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.32'
-    implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
-  }
+  
 
   jar {
     version libVersion
@@ -70,3 +66,10 @@ subprojects {
   }
 }
 
+configure(subprojects.findAll {it.name != 'dry-api-interface'}) {
+  dependencies {
+    processor group: 'org.immutables', name: 'value', version: '2.8.8'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.32'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
+  }
+}
