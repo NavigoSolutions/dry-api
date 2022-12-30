@@ -1,6 +1,5 @@
 import requests
 import uuid
-import json
 
 
 class ApiConnector:
@@ -79,16 +78,3 @@ class ApiConnector:
             print(res.text)
             raise Exception(
                 f"Execution failed ! Status code={res.status_code}")
-
-
-apiConnector = ApiConnector("https://testapi.navigo3.com/API")
-
-apiConnector.login("api-test", "TODO")
-
-print(json.dumps(apiConnector.validate("employee/get", {"id": 1}), indent=4))
-
-print(json.dumps(apiConnector.execute("employee/get", {"id": 1}), indent=4))
-
-apiConnector.logout()
-
-print("ok")
