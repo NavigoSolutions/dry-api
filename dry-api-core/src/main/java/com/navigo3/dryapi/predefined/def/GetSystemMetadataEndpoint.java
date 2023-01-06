@@ -8,9 +8,9 @@ import com.navigo3.dryapi.core.def.IOTypeReference;
 import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.core.meta.TypeSchema;
 import com.navigo3.dryapi.predefined.def.GetSystemMetadataEndpoint.SystemTypesDescription;
-import com.navigo3.dryapi.predefined.params.VoidParam;
+import com.navigo3.dryapi.predefined.params.EmptyResponseParam;
 
-public class GetSystemMetadataEndpoint implements MethodInterface<VoidParam, SystemTypesDescription> {
+public class GetSystemMetadataEndpoint implements MethodInterface<EmptyResponseParam, SystemTypesDescription> {
 
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableSystemTypesDescription.class)
@@ -31,8 +31,8 @@ public class GetSystemMetadataEndpoint implements MethodInterface<VoidParam, Sys
 	}
 
 	@Override
-	public IOTypeReference<VoidParam> getInputType() {
-		return new IOTypeReference<VoidParam>(){};
+	public IOTypeReference<EmptyResponseParam> getInputType() {
+		return new IOTypeReference<EmptyResponseParam>(){};
 	}
 
 	@Override

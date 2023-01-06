@@ -15,20 +15,20 @@ import com.navigo3.dryapi.core.validation.Validator;
 import com.navigo3.dryapi.predefined.def.ImmutableMethodBasicDescription;
 import com.navigo3.dryapi.predefined.def.ListMethodsEndpoint;
 import com.navigo3.dryapi.predefined.def.ListMethodsEndpoint.MethodBasicDescription;
-import com.navigo3.dryapi.predefined.params.VoidParam;
+import com.navigo3.dryapi.predefined.params.EmptyResponseParam;
 
 public abstract class ListMethodsImpl<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> 
-	extends MethodImplementation<VoidParam, List<MethodBasicDescription>, ListMethodsEndpoint, TAppContext, TCallContext, TValidator> {
+	extends MethodImplementation<EmptyResponseParam, List<MethodBasicDescription>, ListMethodsEndpoint, TAppContext, TCallContext, TValidator> {
 	
 	public abstract DryApi<TAppContext, TCallContext, TValidator> getApi();
 	
 	@Override
-	public void validate(VoidParam input, TValidator validator) {
+	public void validate(EmptyResponseParam input, TValidator validator) {
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public List<MethodBasicDescription> execute(VoidParam input) {
+	public List<MethodBasicDescription> execute(EmptyResponseParam input) {
 		List<MethodBasicDescription> res = new ArrayList<>();
 		
 		getApi().getAllQualifiedNames().forEach(qualifiedName->{

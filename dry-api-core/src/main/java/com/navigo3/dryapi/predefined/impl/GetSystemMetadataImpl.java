@@ -12,19 +12,19 @@ import com.navigo3.dryapi.core.validation.Validator;
 import com.navigo3.dryapi.predefined.def.GetSystemMetadataEndpoint;
 import com.navigo3.dryapi.predefined.def.GetSystemMetadataEndpoint.SystemTypesDescription;
 import com.navigo3.dryapi.predefined.def.ImmutableSystemTypesDescription;
-import com.navigo3.dryapi.predefined.params.VoidParam;
+import com.navigo3.dryapi.predefined.params.EmptyResponseParam;
 
 public abstract class GetSystemMetadataImpl<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> 
-	extends MethodImplementation<VoidParam, SystemTypesDescription, GetSystemMetadataEndpoint, TAppContext, TCallContext, TValidator> {
+	extends MethodImplementation<EmptyResponseParam, SystemTypesDescription, GetSystemMetadataEndpoint, TAppContext, TCallContext, TValidator> {
 
 	public abstract DryApi<TAppContext, TCallContext, TValidator> getApi();
 	
 	@Override
-	public void validate(VoidParam input, TValidator validator) {
+	public void validate(EmptyResponseParam input, TValidator validator) {
 	}
 
 	@Override
-	public SystemTypesDescription execute(VoidParam input) {
+	public SystemTypesDescription execute(EmptyResponseParam input) {
 		return ImmutableSystemTypesDescription
 			.builder()
 			.requestTypeSchema(TypeSchema.build(new TypeReference<JsonBatchRequest>(){}))

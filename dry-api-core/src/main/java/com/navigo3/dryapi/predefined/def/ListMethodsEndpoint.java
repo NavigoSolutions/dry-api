@@ -10,9 +10,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.navigo3.dryapi.core.def.IOTypeReference;
 import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.predefined.def.ListMethodsEndpoint.MethodBasicDescription;
-import com.navigo3.dryapi.predefined.params.VoidParam;
+import com.navigo3.dryapi.predefined.params.EmptyResponseParam;
 
-public class ListMethodsEndpoint implements MethodInterface<VoidParam, List<MethodBasicDescription>> {
+public class ListMethodsEndpoint implements MethodInterface<EmptyResponseParam, List<MethodBasicDescription>> {
 	
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableMethodBasicDescription.class)
@@ -34,8 +34,8 @@ public class ListMethodsEndpoint implements MethodInterface<VoidParam, List<Meth
 	}
 
 	@Override
-	public IOTypeReference<VoidParam> getInputType() {
-		return new IOTypeReference<VoidParam>(){};
+	public IOTypeReference<EmptyResponseParam> getInputType() {
+		return new IOTypeReference<EmptyResponseParam>(){};
 	}
 
 	@Override
