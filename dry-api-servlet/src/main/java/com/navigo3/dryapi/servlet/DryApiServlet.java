@@ -158,7 +158,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 
 				byte[] data = Base64.getDecoder().decode(downloadData.getContentBase64());
 
-				String encodedName = URLEncoder.encode(downloadData.getName(), StandardCharsets.UTF_8.toString());
+				String encodedName = URLEncoder.encode(downloadData.getName(), StandardCharsets.UTF_8.toString()).replace("+", "%20");
 
 				resp.setStatus(200);
 				resp.setContentType(downloadData.getMimeType());
