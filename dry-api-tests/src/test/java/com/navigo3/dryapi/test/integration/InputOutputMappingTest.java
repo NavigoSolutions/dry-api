@@ -61,7 +61,7 @@ public class InputOutputMappingTest {
 			.build()
 		);
 		
-		env.getApi().callBlockingRaw(ImmutableRequestsBatchData.builder().addRequests(first, second).id(42).build());
+		env.getApi().callBlockingRaw(ImmutableRequestsBatchData.builder().addRequests(first, second).id("42").build());
 
 		assertEquals(42, second.getOutput().get().getRes().get().intValue());
 	}
@@ -92,7 +92,7 @@ public class InputOutputMappingTest {
 			.build()
 		);
 		
-		env.getApi().callBlockingRaw(ImmutableRequestsBatchData.builder().addRequests(first, second).id(42).build());
+		env.getApi().callBlockingRaw(ImmutableRequestsBatchData.builder().addRequests(first, second).id("42").build());
 
 		assertEquals(-2, second.getOutput().get().getRes().get().intValue());
 	}
