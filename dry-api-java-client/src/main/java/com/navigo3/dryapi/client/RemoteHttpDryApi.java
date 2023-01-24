@@ -188,7 +188,7 @@ public class RemoteHttpDryApi {
 		Validate.notEmpty(batch.getRequests());
 		
 		synchronized (newTasks) {
-			logger.debug("Adding batch");
+			logger.debug("Adding batch {}", batch.getId());
 			
 			newTasks.add(batch);
 			this.thread.interrupt();
