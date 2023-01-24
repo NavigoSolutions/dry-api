@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -61,8 +60,6 @@ public class RemoteHttpDryApi {
 	private volatile boolean shouldStop;
 	
 	private final OkHttpClient httpClient;
-	
-	private final AtomicInteger lastId = new AtomicInteger(0);
 
 	private ExtraHeaderParams extraHeaderParams;
 	
@@ -169,7 +166,7 @@ public class RemoteHttpDryApi {
 		RequestsBatchData batch = ImmutableRequestsBatchData
 			.builder()
 			.addRequests(req)
-			.id(lastId.getAndIncrement())
+			.id(UUID.randomUUID().toString())
 			.build();
 		
 		callRaw(batch).whenComplete((res, exception)->{
@@ -274,7 +271,7 @@ public class RemoteHttpDryApi {
 			
 			Request request = reqBuilder.build();
 			
-			logger.debug("Request prepared");
+			logger.debug("Request prepared for batch {}", requestsBatch.getId());
 			
 			httpClient.newCall(request).enqueue(new Callback() {
 				@SuppressWarnings("unchecked")
