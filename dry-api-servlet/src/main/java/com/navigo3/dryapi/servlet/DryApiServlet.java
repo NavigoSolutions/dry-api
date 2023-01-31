@@ -44,8 +44,7 @@ import com.navigo3.dryapi.core.utils.DownloadParamInterface;
 import com.navigo3.dryapi.core.validation.Validator;
 import com.navigo3.dryapi.predefined.params.DownloadParam;
 
-public class DryApiServlet<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator>
-		extends HttpServlet {
+public class DryApiServlet<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> extends HttpServlet {
 	private static final Logger logger = LoggerFactory.getLogger(DryApiServlet.class);
 
 	private static final long serialVersionUID = 1L;
@@ -55,9 +54,9 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 	private Function<HttpServletRequest, TAppContext> contextProvider;
 
 	public DryApiServlet(DryApi<TAppContext, TCallContext, TValidator> api,
-			Function<HttpServletRequest, TAppContext> contextProvider,
-			Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider,
-			Consumer3<String, Duration, TAppContext> statsConsumer) {
+		Function<HttpServletRequest, TAppContext> contextProvider,
+		Function3<TAppContext, TCallContext, ObjectPathsTree, TValidator> validatorProvider,
+		Consumer3<String, Duration, TAppContext> statsConsumer) {
 		this.api = api;
 		this.executor = new JsonExecutor<>(api, validatorProvider, statsConsumer);
 		this.contextProvider = contextProvider;
@@ -69,7 +68,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 
 		safelyHandleRequest(req, resp, appContext -> {
 			String contentType = StringUtils.defaultString(req.getContentType()).trim().replaceAll("\\s", "")
-					.toLowerCase();
+				.toLowerCase();
 
 			if (DryApiConstants.JSON_MIME.equals(contentType)) {
 				//
@@ -80,7 +79,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 				resp.setStatus(415);
 				resp.setContentType("text/plain");
 				resp.getOutputStream()
-						.println(StringUtils.subst("Please use content type: '{}'", DryApiConstants.JSON_MIME));
+					.println(StringUtils.subst("Please use content type: '{}'", DryApiConstants.JSON_MIME));
 
 				return;
 			}
@@ -94,11 +93,11 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 			logger.debug("Parsing request");
 
 			JsonBatchRequest batchRequest = ExceptionUtils
-					.withRuntimeException(() -> objectMapper.readValue(body, new TypeReference<JsonBatchRequest>() {
-					}));
+				.withRuntimeException(() -> objectMapper.readValue(body, new TypeReference<JsonBatchRequest>() {
+				}));
 
 			appContext.start(
-					batchRequest.getRequests().stream().map(r -> r.getQualifiedName()).collect(Collectors.toList()));
+				batchRequest.getRequests().stream().map(r -> r.getQualifiedName()).collect(Collectors.toList()));
 
 			JsonBatchResponse res = executeBatch(batchRequest, req, appContext, objectMapper);
 
@@ -134,18 +133,19 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 
 			Validate.isPresent(def);
 
-			Validate.isTrue(DownloadParamInterface.class.isAssignableFrom(((Class<?>)def.get().getOutputType().getType())),
-					"Only method returning dry-api type DownloadParam is allowed for GET access!");
+			Validate.isTrue(
+				DownloadParamInterface.class.isAssignableFrom(((Class<?>) def.get().getOutputType().getType())),
+				"Only method returning dry-api type DownloadParam is allowed for GET access!");
 
 			logger.debug("Building request");
 
 			JsonBatchRequest batchRequest = ImmutableJsonBatchRequest.builder()
-					.addRequests(ImmutableJsonRequest.builder().qualifiedName(qualifiedName).input(input)
-							.requestType(RequestType.EXECUTE).requestUuid(UUID.randomUUID().toString()).build())
-					.build();
+				.addRequests(ImmutableJsonRequest.builder().qualifiedName(qualifiedName).input(input)
+					.requestType(RequestType.EXECUTE).requestUuid(UUID.randomUUID().toString()).build())
+				.build();
 
 			appContext.start(
-					batchRequest.getRequests().stream().map(r -> r.getQualifiedName()).collect(Collectors.toList()));
+				batchRequest.getRequests().stream().map(r -> r.getQualifiedName()).collect(Collectors.toList()));
 
 			logger.debug("Sending answer");
 
@@ -153,17 +153,19 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 
 			if (res.getOverallSuccess()) {
 				DownloadParamInterface downloadData = objectMapper.convertValue(
-						res.getResponses().get(0).getOutput().get(), new TypeReference<DownloadParam>() {
-						});
+					res.getResponses().get(0).getOutput().get(), new TypeReference<DownloadParam>() {
+					});
 
 				byte[] data = Base64.getDecoder().decode(downloadData.getContentBase64());
 
-				String encodedName = URLEncoder.encode(downloadData.getName(), StandardCharsets.UTF_8.toString()).replace("+", "%20");
+				String encodedName = URLEncoder.encode(downloadData.getName(), StandardCharsets.UTF_8.toString())
+					.replace("+", "%20");
 
 				resp.setStatus(200);
 				resp.setContentType(downloadData.getMimeType());
 				resp.setHeader("Content-Disposition", StringUtils.subst("{}; filename=\"{}\"; filename*=utf-8''{}",
-						forceDownload == false ? "inline" : "attachment", downloadData.getName(), encodedName));
+					forceDownload == false ? "inline" : "attachment", StringUtils.stripAccents(downloadData.getName()),
+					encodedName));
 				resp.setContentLength(data.length);
 
 				resp.getOutputStream().write(data);
@@ -175,7 +177,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 				logger.error("Response: {}", res);
 
 				appContext
-						.reportException(new RuntimeException(res.getResponses().get(0).getErrorMessage().orElse("?")));
+					.reportException(new RuntimeException(res.getResponses().get(0).getErrorMessage().orElse("?")));
 
 				resp.getOutputStream().write("Cannot download file. We are sorry.".getBytes());
 			}
@@ -183,7 +185,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 	}
 
 	private void safelyHandleRequest(HttpServletRequest req, HttpServletResponse resp,
-			ConsumerWithException<TAppContext> block) throws IOException {
+		ConsumerWithException<TAppContext> block) throws IOException {
 		TAppContext appContext = null;
 
 		try {
@@ -222,12 +224,12 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 	}
 
 	private JsonBatchResponse executeBatch(JsonBatchRequest batchRequest, HttpServletRequest req,
-			TAppContext appContext, ObjectMapper objectMapper) {
+		TAppContext appContext, ObjectMapper objectMapper) {
 		logger.info("Executing:\n{}",
-				batchRequest
-						.getRequests().stream().map(r -> StringUtils.subst("\tuuid={} qualifiedName={} type={}",
-								r.getRequestUuid(), r.getQualifiedName(), r.getRequestType()))
-						.collect(Collectors.joining("\n")));
+			batchRequest
+				.getRequests().stream().map(r -> StringUtils.subst("\tuuid={} qualifiedName={} type={}",
+					r.getRequestUuid(), r.getQualifiedName(), r.getRequestType()))
+				.collect(Collectors.joining("\n")));
 
 		JsonBatchResponse res = null;
 
@@ -238,9 +240,9 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 		}
 
 		logger.debug("Execution done:\n{}",
-				res.getResponses().stream()
-						.map(r -> StringUtils.subst("\tuuid={} status={}", r.getRequestUuid(), r.getStatus()))
-						.collect(Collectors.joining("\n")));
+			res.getResponses().stream()
+				.map(r -> StringUtils.subst("\tuuid={} status={}", r.getRequestUuid(), r.getStatus()))
+				.collect(Collectors.joining("\n")));
 
 		return res;
 	}
