@@ -105,4 +105,8 @@ public class StringUtils {
 
 		return s;
 	}
+
+	public static String toAscii(String s) {
+		return stripAccents(s).replaceAll("[^\\p{ASCII}]", "");
+	}
 }

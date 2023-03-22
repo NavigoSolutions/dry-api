@@ -37,4 +37,23 @@ public class StringUtilsTest {
 		assertEquals("Stroz pchnal kosc w quiz gedzb vel fax myjn.",
 			StringUtils.stripAccents("Stróż pchnął kość w quiz gędźb vel fax myjń."));
 	}
+	
+	@Test
+	public void toAscii() {
+		assertEquals("Necht jiz hrisne saxofony dablu rozezvuci sin udesnymi tony waltzu, tanga a quickstepu.",
+			StringUtils.toAscii(
+				"Nechť již hříšné saxofony ďáblů rozezvučí síň úděsnými tóny waltzu, tanga a quickstepu."));
+		assertEquals("Prilis zlutoucky kun upel dabelske ody.",
+			StringUtils.toAscii("Příliš žluťoučký kůň úpěl ďábelské ódy."));
+		assertEquals("Vypata dcera grofa Maxwella s IQ nizsim ako kon nuti celad hryzt hrbu jablk.",
+			StringUtils.toAscii("Vypätá dcéra grófa Maxwella s IQ nižším ako kôň núti čeľaď hrýzť hŕbu jabĺk."));
+		assertEquals("Krdel stastnych datlov uci pri usti Vahu mlkveho kona obhryzat koru a zrat cerstve maso.",
+			StringUtils.toAscii(
+				"Kŕdeľ šťastných ďatľov učí pri ústí Váhu mĺkveho koňa obhrýzať kôru a žrať čerstvé mäso."));
+		assertEquals("Stroz pchnal kosc w quiz gedzb vel fax myjn.",
+				StringUtils.toAscii("Stróż pchnął kość w quiz gędźb vel fax myjń."));
+		assertEquals("Stroz pchnal kosc w quiz gedzb vel fax myjn.",
+				StringUtils.toAscii("Stróż pchnął kość w quiz gędźb vel fax myjń."));
+		assertEquals("ABCD", StringUtils.toAscii("A–B⟶C↔D"));		
+	}
 }
