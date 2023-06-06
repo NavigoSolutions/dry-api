@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.navigo3.dryapi.core.doc.ApiDocComment;
 import com.navigo3.dryapi.core.doc.ApiDocDefault;
+import com.navigo3.dryapi.core.doc.ApiDocSecured;
 import com.navigo3.dryapi.core.meta.ImmutableNodeMetadata.Builder;
 import com.navigo3.dryapi.core.meta.NodeMetadata.ContainerType;
 import com.navigo3.dryapi.core.meta.NodeMetadata.ValueType;
@@ -245,6 +246,10 @@ public class TypeSchema {
 			});
 			
 			Optional.ofNullable(method.getAnnotation(ApiDocComment.class)).ifPresent(a->{
+				builder.comment(a.value());
+			});
+			
+			Optional.ofNullable(method.getAnnotation(ApiDocSecured.class)).ifPresent(a->{
 				builder.comment(a.value());
 			});
 		});

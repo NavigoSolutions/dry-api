@@ -41,6 +41,7 @@ public interface NodeMetadata {
 	List<String> getEnumItems();
 	Optional<String> getDefaultValue();
 	Optional<String> getComment();
+	Optional<String> getSecurityMessage();
 	
 	//container data
 	Optional<ContainerType> getContainerType();
