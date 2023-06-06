@@ -23,10 +23,10 @@ import nl.altindag.ssl.util.PemUtils;
 
 public class RemoteCallsEnvironment {
 	private static final int PORT = 8777;
-	
+
 	private HttpServer<TestAppContext, TestCallContext, TestValidator> server;
 	private RemoteHttpDryApi api;
-	
+
 	public static SSLContext buildSslContext() {
 		String httpsKey = "/home/jarek/Navigo3/git-production/wildcard-certs/navigo3.com.key";
 		String httpsCert = "/home/jarek/Navigo3/git-production/wildcard-certs/navigo3.com.cer";
@@ -42,31 +42,39 @@ public class RemoteCallsEnvironment {
 
 		return sslFactory.getSslContext();
 	}
-	
+
 	public void start() {
-		server = new HttpServer<>(ImmutableHttpsServerSettings
-			.<TestAppContext, TestCallContext, TestValidator>builder()
-			.addHttpsInterfaces(ImmutableHttpsInterface.builder().host("localhost").port(PORT).sslContext(buildSslContext()).build())
-			.addApiMounts(ImmutableApiMount.<TestAppContext, TestCallContext, TestValidator>builder().basePath("/test/xxx").dryApi(TestApi.build()).build())
-			.appContextProvider(exch->new TestAppContext(true))
-			.build(),
-			(appContext, callContext, allowedPaths)->new TestValidator(allowedPaths)
+		server = new HttpServer<>(
+			ImmutableHttpsServerSettings.<TestAppContext, TestCallContext, TestValidator>builder()
+				.addHttpsInterfaces(
+					ImmutableHttpsInterface.builder().host("localhost").port(PORT).sslContext(buildSslContext()).build()
+				)
+				.addApiMounts(
+					ImmutableApiMount.<TestAppContext, TestCallContext, TestValidator>builder()
+						.basePath("/test/xxx")
+						.dryApi(TestApi.build())
+						.build()
+				)
+				.appContextProvider(exch -> new TestAppContext(true))
+				.build(),
+			(appContext, callContext, allowedPaths) -> new TestValidator(allowedPaths)
 		);
-		
+
 		server.start();
-		
-		api = new RemoteHttpDryApi("https://localhost:"+PORT+"/test/xxx", ImmutableRemoteHttpDryApiSettings
-			.builder()
-			.build()
+
+		api = new RemoteHttpDryApi(
+			"https://localhost:" + PORT + "/test/xxx",
+			ImmutableRemoteHttpDryApiSettings.builder().build()
 		);
-		
-		api.start(httpClient->ImmutableExtraHeaderParams.builder().build());
+
+		api.start(httpClient -> ImmutableExtraHeaderParams.builder().build());
 	}
 
 	public void stop() {
 		server.stop();
-		
-		api.stop((httpClient, extraParams)->{});
+
+		api.stop((httpClient, extraParams) -> {
+		});
 	}
 
 	public RemoteHttpDryApi getApi() {

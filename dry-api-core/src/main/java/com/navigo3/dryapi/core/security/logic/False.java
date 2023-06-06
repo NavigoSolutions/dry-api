@@ -5,7 +5,7 @@ import com.navigo3.dryapi.core.context.CallContext;
 import com.navigo3.dryapi.core.security.core.SecurityCheck;
 
 public class False<TAppContext extends AppContext, TCallContext extends CallContext> implements SecurityCheck<TAppContext, TCallContext> {
-	
+
 	@Override
 	public boolean pass(TAppContext appContext, TCallContext callContext) {
 		return false;
@@ -15,5 +15,5 @@ public class False<TAppContext extends AppContext, TCallContext extends CallCont
 	public String getDescription() {
 		return "false";
 	}
-	
+
 }

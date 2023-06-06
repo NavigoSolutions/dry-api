@@ -12,22 +12,20 @@ public interface RemoteHttpDryApiSettings {
 	default int getMaxExecutedInParallel() {
 		return 10;
 	}
-	
+
 	@Value.Default
 	default Duration getConnectionsPoolTimeout() {
 		return Duration.ofSeconds(10);
 	}
-	
+
 	@Value.Default
 	default int getMaxPendingCalls() {
 		return 1000;
 	}
-	
+
 	Optional<Consumer<Throwable>> getGlobalErrorHandler();
-	
+
 	public static ImmutableRemoteHttpDryApiSettings buildDefault() {
-		return ImmutableRemoteHttpDryApiSettings
-			.builder()
-			.build();
+		return ImmutableRemoteHttpDryApiSettings.builder().build();
 	}
 }

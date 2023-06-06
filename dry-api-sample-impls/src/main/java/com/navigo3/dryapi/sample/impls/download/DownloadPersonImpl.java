@@ -22,7 +22,7 @@ public class DownloadPersonImpl extends MethodImplementation<Person, DownloadPar
 	@Override
 	public void fillClassMetadata(MethodMetadataBuilder<TestAppContext, TestCallContext> metadata) {
 	}
-	
+
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> securityBuilder) {
 		securityBuilder.authorization(new True<>());
@@ -39,12 +39,12 @@ public class DownloadPersonImpl extends MethodImplementation<Person, DownloadPar
 
 	@Override
 	public DownloadParam execute(Person input) {
-		return ExceptionUtils.withRuntimeException(()->{
-			byte[] data = StringUtils.subst("{}, {}\n",  input.getSurname(),  input.getName()).getBytes(StandardCharsets.UTF_8);
+		return ExceptionUtils.withRuntimeException(() -> {
+			byte[] data = StringUtils.subst("{}, {}\n", input.getSurname(), input.getName())
+				.getBytes(StandardCharsets.UTF_8);
 			String dataBase64 = Base64.getEncoder().encodeToString(data);
-	
-			return ImmutableDownloadParam
-				.builder()
+
+			return ImmutableDownloadParam.builder()
 				.mimeType("text/plain")
 				.name("person.txt")
 				.contentBase64(dataBase64)

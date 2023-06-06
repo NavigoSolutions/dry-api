@@ -19,16 +19,17 @@ public class FormUpsertEndpoint implements MethodInterface<Person, IdResult> {
 	@JsonDeserialize(as = ImmutablePerson.class)
 	public interface Person {
 		String getName();
+
 		String getSurname();
+
 		int getAge();
-		
+
 		int getSecretNumber();
 
 		Map<String, List<Integer>> getColorsToFavoriteNumbers();
-		
+
 		public static Person createSampleData() {
-			return ImmutablePerson
-				.builder()
+			return ImmutablePerson.builder()
 				.name("Jarek")
 				.surname("Kuboš")
 				.age(42)
@@ -38,7 +39,7 @@ public class FormUpsertEndpoint implements MethodInterface<Person, IdResult> {
 				.build();
 		}
 	}
-	
+
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableIdResult.class)
 	@JsonDeserialize(as = ImmutableIdResult.class)
@@ -48,12 +49,14 @@ public class FormUpsertEndpoint implements MethodInterface<Person, IdResult> {
 
 	@Override
 	public IOTypeReference<Person> getInputType() {
-		return new IOTypeReference<Person>() {};
+		return new IOTypeReference<Person>() {
+		};
 	}
 
 	@Override
 	public IOTypeReference<IdResult> getOutputType() {
-		return new IOTypeReference<IdResult>() {};
+		return new IOTypeReference<IdResult>() {
+		};
 	}
 
 	@Override

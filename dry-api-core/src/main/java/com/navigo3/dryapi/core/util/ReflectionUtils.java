@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 public class ReflectionUtils {
 	private static final Pattern genericDeclaration = Pattern.compile("^([^<]+)<(.*)>$");
-	
+
 	public static <T> T createInstance(Class<T> klass) {
 		try {
 			return klass.getConstructor().newInstance();
@@ -16,7 +16,7 @@ public class ReflectionUtils {
 			throw new RuntimeException(t);
 		}
 	}
-	
+
 	public static Optional<String> convertGetterToCamelcaseField(String name) {
 		if (name.matches("^get[\\p{Lu}0-9].*$")) {
 			return Optional.of(StringUtils.withFirstLowercase(name.replaceFirst("get", "")));
@@ -28,39 +28,38 @@ public class ReflectionUtils {
 			return Optional.empty();
 		}
 	}
-	
+
 	public static List<String> parseTemplateParams(String returnTypeDesc) {
 		Matcher match = genericDeclaration.matcher(returnTypeDesc.trim());
-		
+
 		List<String> items = new ArrayList<>();
-		
+
 		if (match.matches()) {
 			int openBrackets = 0;
 			int lastStart = 0;
-			
-			for (int i=1;i<match.group(2).length();++i) {
+
+			for (int i = 1; i < match.group(2).length(); ++i) {
 				char c = match.group(2).charAt(i);
-				
-				if (c=='<') {
+
+				if (c == '<') {
 					++openBrackets;
-				} else if (c=='>') {
+				} else if (c == '>') {
 					Validate.greaterThanZero(openBrackets);
 					--openBrackets;
-				} else if (c==',' && openBrackets==0) {
+				} else if (c == ',' && openBrackets == 0) {
 					items.add(match.group(2).substring(lastStart, i).trim());
-					lastStart = i+1;
+					lastStart = i + 1;
 				}
 			}
-			
+
 			Validate.equals(0, openBrackets, "Unbalanced sharp brackets!");
-			
-			if (match.group(2).length()-lastStart>0) {
+
+			if (match.group(2).length() - lastStart > 0) {
 				items.add(match.group(2).substring(lastStart, match.group(2).length()).trim());
 			}
-	
-			
+
 		}
-		
+
 		return items;
 	}
 }

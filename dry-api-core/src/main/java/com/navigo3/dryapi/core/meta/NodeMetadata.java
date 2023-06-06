@@ -15,9 +15,9 @@ public interface NodeMetadata {
 		MAP,
 		OPTIONAL
 	}
-	
+
 	public enum ValueType {
-		//scalar types
+		// scalar types
 		NUMBER,
 		STRING,
 		BOOL,
@@ -25,52 +25,58 @@ public interface NodeMetadata {
 		DATE,
 		TIME,
 		DATETIME,
-		
-		//composed types
+
+		// composed types
 		OBJECT,
-		
-		//this node is recursive
+
+		// this node is recursive
 		RECURSIVE,
-		
-		//this node may contain arbitrary JSON data 
+
+		// this node may contain arbitrary JSON data
 		JSON
 	}
-	
-	//value data
+
+	// value data
 	Optional<ValueType> getValueType();
+
 	List<String> getEnumItems();
+
 	Optional<String> getDefaultValue();
+
 	Optional<String> getComment();
+
 	Optional<String> getSecurityMessage();
-	
-	//container data
+
+	// container data
 	Optional<ContainerType> getContainerType();
+
 	Optional<ValueType> getKeyType();
+
 	Optional<NodeMetadata> getItemType();
-	
-	//extra data
+
+	// extra data
 	String getJavaType();
-	
-	//fields
+
+	// fields
 	Map<String, NodeMetadata> getFields();
-	
+
 	@Value.Check
 	default void check() {
 		Validate.allOrNone(getContainerType(), getItemType());
 		Validate.onePresent(getContainerType(), getValueType());
-		
-		if (getContainerType().isPresent() && getContainerType().get()==ContainerType.MAP) {
+
+		if (getContainerType().isPresent() && getContainerType().get() == ContainerType.MAP) {
 			Validate.isPresent(getKeyType());
 		} else {
 			Validate.notPresent(getKeyType());
 		}
-		
-		getValueType().ifPresent(type->{
-			if (type!=ValueType.ENUMERABLE) {
+
+		getValueType().ifPresent(type -> {
+			if (type != ValueType.ENUMERABLE) {
 				Validate.isEmpty(getEnumItems());
 			}
-			
-			if (type!=ValueType.OBJECT) {
+
+			if (type != ValueType.OBJECT) {
 				Validate.isEmpty(getFields());
 			}
 		});

@@ -13,11 +13,17 @@ import com.navigo3.dryapi.core.exec.json.JsonRequest.RequestType;
 @Value.Immutable
 @JsonSerialize(as = ImmutableJsonBatchResponse.class)
 @JsonDeserialize(as = ImmutableJsonBatchResponse.class)
-@JsonIgnoreProperties(value={ "overallSuccess" }, allowGetters=true)
+@JsonIgnoreProperties(value = {
+	"overallSuccess"
+}, allowGetters = true)
 public interface JsonBatchResponse {
 	List<JsonResponse> getResponses();
-	
+
 	default boolean getOverallSuccess() {
-		return getResponses().stream().allMatch(r->r.getStatus()==ResponseStatus.SUCCESS || (r.getRequestType()==RequestType.VALIDATE && r.getStatus()==ResponseStatus.INVALID_INPUT));
+		return getResponses().stream()
+			.allMatch(
+				r -> r.getStatus() == ResponseStatus.SUCCESS
+					|| (r.getRequestType() == RequestType.VALIDATE && r.getStatus() == ResponseStatus.INVALID_INPUT)
+			);
 	}
 }

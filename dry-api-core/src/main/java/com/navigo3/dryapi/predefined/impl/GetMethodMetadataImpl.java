@@ -21,13 +21,12 @@ import com.navigo3.dryapi.predefined.def.ImmutableMethodFullDescription;
 import com.navigo3.dryapi.predefined.def.ImmutableSecurityNode;
 import com.navigo3.dryapi.predefined.params.QualifiedNameParam;
 
-public abstract class GetMethodMetadataImpl<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> 
-	extends MethodImplementation<QualifiedNameParam, MethodFullDescription, GetMethodMetadataEndpoint, TAppContext, TCallContext, TValidator> {
+public abstract class GetMethodMetadataImpl<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> extends MethodImplementation<QualifiedNameParam, MethodFullDescription, GetMethodMetadataEndpoint, TAppContext, TCallContext, TValidator> {
 
 	public abstract DryApi<TAppContext, TCallContext, TValidator> getApi();
-	
+
 	public abstract boolean getCanSeeSecurity();
-	
+
 	@Override
 	public void validate(QualifiedNameParam input, TValidator validator) {
 		if (!getApi().lookupDefinition(input.getQualifiedName()).isPresent()) {
@@ -39,50 +38,51 @@ public abstract class GetMethodMetadataImpl<TAppContext extends AppContext, TCal
 	@Override
 	public MethodFullDescription execute(QualifiedNameParam input) {
 		MethodDefinition definition = getApi().lookupDefinition(input.getQualifiedName()).get();
-		MethodSecurity<TAppContext,TCallContext> security = getApi().lookupSecurity(input.getQualifiedName()).get();
-		
+		MethodSecurity<TAppContext, TCallContext> security = getApi().lookupSecurity(input.getQualifiedName()).get();
+
 		ImmutableMethodFullDescription.Builder builder = ImmutableMethodFullDescription.builder();
-		
+
 		fillDefinition(builder, definition);
-		
+
 		fillSecurity(builder, security);
-		
+
 		builder.flags(getApi().lookupFlags(input.getQualifiedName()).get().getFlags());
-		
+
 		return builder.build();
 	}
 
 	@SuppressWarnings("rawtypes")
 	private void fillDefinition(ImmutableMethodFullDescription.Builder builder, MethodDefinition definition) {
-		builder
-			.qualifiedName(definition.getQualifiedName())
+		builder.qualifiedName(definition.getQualifiedName())
 			.description(definition.getDescription())
 			.inputTypeSchema(definition.getInputSchema())
 			.outputTypeSchema(definition.getOutputSchema());
 	}
 
-	private void fillSecurity(ImmutableMethodFullDescription.Builder builder, MethodSecurity<TAppContext,TCallContext> security) {
+	private void fillSecurity(ImmutableMethodFullDescription.Builder builder,
+		MethodSecurity<TAppContext, TCallContext> security) {
 		if (getCanSeeSecurity()) {
 			builder.authorization(createSecurityNode(security.getAuthorization()));
 		}
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	private SecurityNode createSecurityNode(SecurityCheck<TAppContext,TCallContext> securityCheck) {
+	@SuppressWarnings({
+		"unchecked"
+	})
+	private SecurityNode createSecurityNode(SecurityCheck<TAppContext, TCallContext> securityCheck) {
 		ImmutableSecurityNode.Builder builder = ImmutableSecurityNode.builder();
-		
+
 		builder.description(securityCheck.getDescription());
-		
+
 		if (securityCheck instanceof ParentSecurityCheck) {
-			List<SecurityNode> subs = ((ParentSecurityCheck<TAppContext,TCallContext>)securityCheck)
-				.getChildren()
+			List<SecurityNode> subs = ((ParentSecurityCheck<TAppContext, TCallContext>) securityCheck).getChildren()
 				.stream()
 				.map(this::createSecurityNode)
 				.collect(Collectors.toList());
-			
+
 			builder.children(subs);
 		}
-		
+
 		return builder.build();
 	}
 }

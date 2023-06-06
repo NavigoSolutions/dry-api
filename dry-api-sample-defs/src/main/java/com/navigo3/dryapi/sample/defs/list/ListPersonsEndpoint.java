@@ -21,12 +21,14 @@ public class ListPersonsEndpoint implements MethodInterface<Map<String, List<Per
 
 	@Override
 	public IOTypeReference<Map<String, List<Person>>> getInputType() {
-		return new IOTypeReference<Map<String, List<Person>>>(){};
+		return new IOTypeReference<Map<String, List<Person>>>() {
+		};
 	}
 
 	@Override
 	public IOTypeReference<List<Person>> getOutputType() {
-		return new IOTypeReference<List<Person>>(){};
+		return new IOTypeReference<List<Person>>() {
+		};
 	}
 
 }

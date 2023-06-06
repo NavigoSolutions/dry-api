@@ -17,18 +17,20 @@ import com.navigo3.dryapi.core.validation.ValidationData;
 @JsonDeserialize(as = ImmutableJsonResponse.class)
 public interface JsonResponse {
 	String getRequestUuid();
+
 	RequestType getRequestType();
+
 	String getQualifiedName();
-	
+
 	ResponseStatus getStatus();
-	
+
 	Optional<JsonNode> getOutput();
-	
+
 	Optional<ValidationData> getValidation();
-	
+
 	Optional<String> getErrorMessage();
-	
+
 	Optional<ObjectPathsTree> getAllowedInputFields();
-	
+
 	Optional<ObjectPathsTree> getAllowedOutputFields();
 }

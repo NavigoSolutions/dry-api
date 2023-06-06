@@ -17,39 +17,43 @@ public class ObjectFieldsSecurity<TAppContext extends AppContext, TCallContext e
 
 	private final Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block;
 
-	public ObjectFieldsSecurity(Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+	public ObjectFieldsSecurity(
+		Consumer3<TAppContext, TCallContext, ObjectFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
 		this.block = block;
 	}
 
-	public ObjectPathsTree getAllowedPaths(TAppContext appContext, TCallContext callContext, ObjectPathsTree validPaths) {
-		Map<StructurePath, SecurityCheck<TAppContext, TCallContext>> paths = ObjectFieldsSecurityBuilder.build(validPaths, builder->{
-			block.accept(appContext, callContext, builder);
-		});
-		
+	public ObjectPathsTree getAllowedPaths(TAppContext appContext, TCallContext callContext,
+		ObjectPathsTree validPaths) {
+		Map<StructurePath, SecurityCheck<TAppContext, TCallContext>> paths = ObjectFieldsSecurityBuilder.build(
+			validPaths,
+			builder -> {
+				block.accept(appContext, callContext, builder);
+			}
+		);
+
 		List<CacheEntry<TAppContext, TCallContext>> cache = new ArrayList<>();
-		
-		List<StructurePath> allowedPaths = paths
-			.entrySet()
-			.stream()
-			.filter(e->{
-				Optional<CacheEntry<TAppContext, TCallContext>> cacheEntry = cache
-					.stream()
-					.filter(c->c.getSecurityCheck()==e.getValue()) //really, compare objects by identity!
-					.findFirst();
-				
-				if (cacheEntry.isPresent()) {
-					return cacheEntry.get().getPassed();
-				}
-				
-				boolean passed = e.getValue().pass(appContext, callContext);
-				
-				cache.add(ImmutableCacheEntry.<TAppContext, TCallContext>builder().securityCheck(e.getValue()).passed(passed).build());
-				
-				return passed;
-			})
-			.map(e->e.getKey())
-			.collect(Collectors.toList());
-		
+
+		List<StructurePath> allowedPaths = paths.entrySet().stream().filter(e -> {
+			Optional<CacheEntry<TAppContext, TCallContext>> cacheEntry = cache.stream()
+				.filter(c -> c.getSecurityCheck() == e.getValue()) // really, compare objects by identity!
+				.findFirst();
+
+			if (cacheEntry.isPresent()) {
+				return cacheEntry.get().getPassed();
+			}
+
+			boolean passed = e.getValue().pass(appContext, callContext);
+
+			cache.add(
+				ImmutableCacheEntry.<TAppContext, TCallContext>builder()
+					.securityCheck(e.getValue())
+					.passed(passed)
+					.build()
+			);
+
+			return passed;
+		}).map(e -> e.getKey()).collect(Collectors.toList());
+
 		return ObjectPathsTree.from(allowedPaths);
 	}
 }

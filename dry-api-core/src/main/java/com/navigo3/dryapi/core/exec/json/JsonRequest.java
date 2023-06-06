@@ -17,12 +17,14 @@ public interface JsonRequest {
 		EXECUTE,
 		INPUT_FIELDS_SECURITY
 	}
-	
+
 	String getRequestUuid();
+
 	String getQualifiedName();
+
 	RequestType getRequestType();
-	
+
 	JsonNode getInput();
-	
+
 	List<InputOutputMapping> getInputMappings();
 }

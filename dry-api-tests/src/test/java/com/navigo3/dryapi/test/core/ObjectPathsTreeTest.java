@@ -21,19 +21,21 @@ public class ObjectPathsTreeTest {
 	public static void tearDownAfterClass() throws Exception {
 		objectPathsTree = null;
 	}
-	
+
 	@Test
-	public void testValidPaths() {		
+	public void testValidPaths() {
 		objectPathsTree.throwIfPathDoesNotExists(StructurePath.key("galaxy"));
-		objectPathsTree.throwIfPathDoesNotExists(StructurePath.key("middleAddress").addKey("lowAddresses").addIndex(0).addKey("door"));
+		objectPathsTree.throwIfPathDoesNotExists(
+			StructurePath.key("middleAddress").addKey("lowAddresses").addIndex(0).addKey("door")
+		);
 	}
-	
-	@Test(expected=Exception.class)
+
+	@Test(expected = Exception.class)
 	public void testNotEndedKey() {
 		objectPathsTree.throwIfPathDoesNotExists(StructurePath.key("middleAddress"));
 	}
-	
-	@Test(expected=Exception.class)
+
+	@Test(expected = Exception.class)
 	public void testNotEndedIndex() {
 		objectPathsTree.throwIfPathDoesNotExists(StructurePath.key("middleAddress").addKey("lowAddresses"));
 	}

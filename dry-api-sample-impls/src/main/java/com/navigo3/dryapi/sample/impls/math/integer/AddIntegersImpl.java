@@ -18,12 +18,12 @@ public class AddIntegersImpl extends MethodImplementation<IntegerOperands, Integ
 	@Override
 	public void fillClassMetadata(MethodMetadataBuilder<TestAppContext, TestCallContext> metadata) {
 	}
-	
+
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
 		security.authorization(new True<>());
 	}
-	
+
 	@Override
 	public TestCallContext prepareCallContext(IntegerOperands input) {
 		return new TestCallContext();
@@ -34,12 +34,9 @@ public class AddIntegersImpl extends MethodImplementation<IntegerOperands, Integ
 		validator.checkPresent(StructurePath.key("a"), input.getA());
 		validator.checkPresent(StructurePath.key("b"), input.getB());
 	}
-	
+
 	@Override
 	public IntegerResult execute(IntegerOperands input) {
-		return ImmutableIntegerResult
-			.builder()
-			.res(input.getA().orElse(0)+input.getB().orElse(0))
-			.build();
+		return ImmutableIntegerResult.builder().res(input.getA().orElse(0) + input.getB().orElse(0)).build();
 	}
 }

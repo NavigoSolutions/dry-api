@@ -91,9 +91,13 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 							return JsonAccessor.getNodeAt(previousResults.get(uuid), path);
 						} catch (Throwable t) {
 							throw new RuntimeException(
-								StringUtils.subst("Error during try to mapping value on path '{}' from request '{}'",
-									path.toDebug(), uuid),
-								t);
+								StringUtils.subst(
+									"Error during try to mapping value on path '{}' from request '{}'",
+									path.toDebug(),
+									uuid
+								),
+								t
+							);
 						}
 					});
 
@@ -110,11 +114,13 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 						}
 					}
 				} else {
-					logger.debug("Skipping due to previous errors method={} uuid={}", request.getQualifiedName(),
-						request.getRequestUuid());
+					logger.debug(
+						"Skipping due to previous errors method={} uuid={}",
+						request.getQualifiedName(),
+						request.getRequestUuid()
+					);
 
-					resp = ImmutableJsonResponse
-						.builder()
+					resp = ImmutableJsonResponse.builder()
 						.qualifiedName(request.getQualifiedName())
 						.requestType(request.getRequestType())
 						.requestUuid(request.getRequestUuid())
@@ -125,8 +131,11 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				builder.addResponses(resp);
 
 				if (api.lookupDefinition(request.getQualifiedName()).isPresent()) {
-					statsConsumer.accept(request.getQualifiedName(),
-						Duration.ofMillis(System.currentTimeMillis() - startedAt), appContext);
+					statsConsumer.accept(
+						request.getQualifiedName(),
+						Duration.ofMillis(System.currentTimeMillis() - startedAt),
+						appContext
+					);
 				}
 			});
 
@@ -135,26 +144,32 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 
 			List<String> problems = new ArrayList<>();
 
-			res
-				.getResponses()
+			res.getResponses()
 				.stream()
 				.filter(
-					resp -> resp.getRequestType() != RequestType.VALIDATE && resp.getStatus() != ResponseStatus.SUCCESS)
+					resp -> resp.getRequestType() != RequestType.VALIDATE && resp.getStatus() != ResponseStatus.SUCCESS
+				)
 				.forEach(resp -> {
-					problems.add(StringUtils.subst(
-						"Problems in method '{}' called in mode='{}' with uuid='{}' with result status='{}'",
-						resp.getQualifiedName(),
-						resp.getRequestType().name(),
-						resp.getRequestUuid(),
-						resp.getStatus().name()));
+					problems.add(
+						StringUtils.subst(
+							"Problems in method '{}' called in mode='{}' with uuid='{}' with result status='{}'",
+							resp.getQualifiedName(),
+							resp.getRequestType().name(),
+							resp.getRequestUuid(),
+							resp.getStatus().name()
+						)
+					);
 
 					resp.getValidation().ifPresent(vals -> {
 						vals.getItems().forEach(val -> {
-							problems.add(StringUtils.subst(
-								"\tValidation issue on '{}' with severity='{}': {}",
-								val.getPath().toDebug(),
-								val.getSeverity().name(),
-								val.getMessage()));
+							problems.add(
+								StringUtils.subst(
+									"\tValidation issue on '{}' with severity='{}': {}",
+									val.getPath().toDebug(),
+									val.getSeverity().name(),
+									val.getMessage()
+								)
+							);
 						});
 					});
 				});
@@ -173,48 +188,95 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 	private JsonResponse executeRequest(TAppContext appContext, JsonRequest request, ObjectMapper objectMapper,
 		BiFunction<String, StructurePath, JsonNode> getPreviousOutput) {
 
-		ImmutableJsonResponse.Builder outputBuilder = ImmutableJsonResponse
-			.builder()
+		ImmutableJsonResponse.Builder outputBuilder = ImmutableJsonResponse.builder()
 			.requestUuid(request.getRequestUuid())
 			.requestType(request.getRequestType())
 			.qualifiedName(request.getQualifiedName());
 
 		if (appContext.getAllowedQualifiedNames().isPresent()) {
 			if (!appContext.getAllowedQualifiedNames().get().contains(request.getQualifiedName())) {
-				outputBuilder
-					.status(ResponseStatus.METHOD_NOT_ALLOWED)
-					.errorMessage(Optional.ofNullable(appContext.getIsDevelopmentInstance()
-						? StringUtils.subst("Calling method '{}' not allowed by settings", request.getQualifiedName())
-						: null));
+				outputBuilder.status(ResponseStatus.METHOD_NOT_ALLOWED)
+					.errorMessage(
+						Optional.ofNullable(
+							appContext.getIsDevelopmentInstance() ? StringUtils.subst(
+								"Calling method '{}' not allowed by settings",
+								request.getQualifiedName()
+							) : null
+						)
+					);
 
 				return outputBuilder.build();
 			}
 		}
 
 		findMethod(appContext, request, outputBuilder, def -> {
-			parseInputJson(appContext, request, outputBuilder, def, objectMapper, getPreviousOutput,
+			parseInputJson(
+				appContext,
+				request,
+				outputBuilder,
+				def,
+				objectMapper,
+				getPreviousOutput,
 				(rawInput, executionContext) -> {
-					checkSecurity(appContext, request, outputBuilder, rawInput, executionContext, def,
+					checkSecurity(
+						appContext,
+						request,
+						outputBuilder,
+						rawInput,
+						executionContext,
+						def,
 						(instance, callContext, security, securityPassed) -> {
 
 							MethodMetadataBuilder<TAppContext, TCallContext> metadataBuilder = new MethodMetadataBuilder<>();
 							instance.fillClassMetadata(metadataBuilder);
 							MethodMetadata<TAppContext, TCallContext> meta = metadataBuilder.build();
 
-							clearProhibitedInputFields(appContext, outputBuilder, rawInput, instance, callContext,
-								security, def, request, securityPassed, objectMapper, meta, (input, inputPathsTree) -> {
-									validate(appContext, request, outputBuilder, input, instance, inputPathsTree,
-										callContext, () -> {
+							clearProhibitedInputFields(
+								appContext,
+								outputBuilder,
+								rawInput,
+								instance,
+								callContext,
+								security,
+								def,
+								request,
+								securityPassed,
+								objectMapper,
+								meta,
+								(input, inputPathsTree) -> {
+									validate(
+										appContext,
+										request,
+										outputBuilder,
+										input,
+										instance,
+										inputPathsTree,
+										callContext,
+										() -> {
 											execute(appContext, request, outputBuilder, input, instance, rawOutput -> {
-												clearProhibitedOutputFields(request, appContext, outputBuilder,
-													rawOutput, instance, callContext, executionContext, def,
-													objectMapper, security, meta);
+												clearProhibitedOutputFields(
+													request,
+													appContext,
+													outputBuilder,
+													rawOutput,
+													instance,
+													callContext,
+													executionContext,
+													def,
+													objectMapper,
+													security,
+													meta
+												);
 											});
-										});
-								});
+										}
+									);
+								}
+							);
 
-						});
-				});
+						}
+					);
+				}
+			);
 		});
 
 		return outputBuilder.build();
@@ -226,33 +288,46 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		Optional<MethodDefinition> optDef = api.lookupDefinition(request.getQualifiedName());
 
 		OptionalUtils.ifPresentOrElse(optDef, onSuccess, () -> {
-			outputBuilder
-				.status(ResponseStatus.NOT_FOUND)
-				.errorMessage(Optional.ofNullable(appContext.getIsDevelopmentInstance()
-					? StringUtils.subst("Method '{}' not found", request.getQualifiedName())
-					: null));
+			outputBuilder.status(ResponseStatus.NOT_FOUND)
+				.errorMessage(
+					Optional.ofNullable(
+						appContext.getIsDevelopmentInstance() ? StringUtils.subst(
+							"Method '{}' not found",
+							request.getQualifiedName()
+						) : null
+					)
+				);
 		});
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({
+		"rawtypes", "unchecked"
+	})
 	private void parseInputJson(TAppContext appContext, JsonRequest request, Builder outputBuilder,
-		MethodDefinition def, ObjectMapper objectMapper,
-		BiFunction<String, StructurePath, JsonNode> getPreviousOutput,
+		MethodDefinition def, ObjectMapper objectMapper, BiFunction<String, StructurePath, JsonNode> getPreviousOutput,
 		BiConsumer<Object, ExecutionContext<TAppContext, TCallContext>> onSuccess) {
 		try {
 			request.getInputMappings().forEach(m -> {
 				try {
-					logger.debug("Copying output of {} on path {} to current input on path {}", m.getFromUuid(),
-						m.getFromPath().toDebug(), m.getToPath().toDebug());
+					logger.debug(
+						"Copying output of {} on path {} to current input on path {}",
+						m.getFromUuid(),
+						m.getFromPath().toDebug(),
+						m.getToPath().toDebug()
+					);
 					JsonNode repl = getPreviousOutput.apply(m.getFromUuid(), m.getFromPath());
 
 					JsonAccessor.setNodeAt(request.getInput(), m.getToPath(), repl);
 				} catch (Throwable t) {
-					throw new RuntimeException(StringUtils.subst(
-						"Error during try to mapping value on path '{}' from request '{}' to path '{}'",
-						m.getFromPath().toDebug(),
-						m.getFromUuid(),
-						m.getToPath().toDebug()), t);
+					throw new RuntimeException(
+						StringUtils.subst(
+							"Error during try to mapping value on path '{}' from request '{}' to path '{}'",
+							m.getFromPath().toDebug(),
+							m.getFromUuid(),
+							m.getToPath().toDebug()
+						),
+						t
+					);
 				}
 			});
 
@@ -262,12 +337,18 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 
 			onSuccess.accept(rawInput, executionContext);
 		} catch (Throwable t) {
-			logger.error("Error during parseInputJson method={} uuid={}", request.getQualifiedName(),
-				request.getRequestUuid(), t);
+			logger.error(
+				"Error during parseInputJson method={} uuid={}",
+				request.getQualifiedName(),
+				request.getRequestUuid(),
+				t
+			);
 
 			try {
-				logger.debug("Failing request ^^^^{}^^^^",
-					request.getInput() != null ? request.getInput().toPrettyString() : "NULL");
+				logger.debug(
+					"Failing request ^^^^{}^^^^",
+					request.getInput() != null ? request.getInput().toPrettyString() : "NULL"
+				);
 			} catch (Throwable t2) {
 				logger.error("Cannot print details", t2);
 
@@ -275,22 +356,28 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 
 			appContext.reportException(t);
 
-			outputBuilder
-				.status(ResponseStatus.MALFORMED_INPUT)
-				.errorMessage(Optional.ofNullable(appContext.getIsDevelopmentInstance()
-					? ExceptionUtils.extractStacktrace("Internal error during parsing input", t)
-					: null));
+			outputBuilder.status(ResponseStatus.MALFORMED_INPUT)
+				.errorMessage(
+					Optional.ofNullable(
+						appContext.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace(
+							"Internal error during parsing input",
+							t
+						) : null
+					)
+				);
 		}
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({
+		"unchecked", "rawtypes"
+	})
 	private void checkSecurity(TAppContext appContext, JsonRequest request, Builder outputBuilder, Object rawInput,
-		ExecutionContext<TAppContext, TCallContext> executionContext,
-		MethodDefinition def,
+		ExecutionContext<TAppContext, TCallContext> executionContext, MethodDefinition def,
 		Consumer4<MethodImplementation, TCallContext, MethodSecurity<TAppContext, TCallContext>, Boolean> onSuccess) {
 		try {
-			Optional<Class<? extends MethodImplementation>> impl = api
-				.lookupImplementationClass(request.getQualifiedName());
+			Optional<Class<? extends MethodImplementation>> impl = api.lookupImplementationClass(
+				request.getQualifiedName()
+			);
 
 			Validate.isPresent(impl);
 
@@ -301,8 +388,9 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 
 			Validate.notNull(callContext);
 
-			Optional<MethodSecurity<TAppContext, TCallContext>> security = api
-				.lookupSecurity(request.getQualifiedName());
+			Optional<MethodSecurity<TAppContext, TCallContext>> security = api.lookupSecurity(
+				request.getQualifiedName()
+			);
 
 			Validate.isPresent(security);
 
@@ -317,32 +405,39 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			} else {
 				logger.info("Not authorized checkSecurity()");
 
-				outputBuilder
-					.status(ResponseStatus.NOT_AUTHORIZED)
+				outputBuilder.status(ResponseStatus.NOT_AUTHORIZED)
 					.errorMessage(Optional.ofNullable(appContext.getIsDevelopmentInstance() ? "Not authorized" : null));
 			}
 
 		} catch (Throwable t) {
-			logger.error("Error during checkSecurity() method={} uuid={}", request.getQualifiedName(),
-				request.getRequestUuid(), t);
+			logger.error(
+				"Error during checkSecurity() method={} uuid={}",
+				request.getQualifiedName(),
+				request.getRequestUuid(),
+				t
+			);
 
 			appContext.reportException(t);
 
-			outputBuilder
-				.status(ResponseStatus.INTERNAL_ERROR_ON_SECURITY)
-				.errorMessage(Optional.ofNullable(appContext.getIsDevelopmentInstance()
-					? ExceptionUtils.extractStacktrace("Internal error during execution", t)
-					: null));
+			outputBuilder.status(ResponseStatus.INTERNAL_ERROR_ON_SECURITY)
+				.errorMessage(
+					Optional.ofNullable(
+						appContext.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace(
+							"Internal error during execution",
+							t
+						) : null
+					)
+				);
 		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({
+		"rawtypes", "unchecked"
+	})
 	private void clearProhibitedInputFields(TAppContext appContext, Builder outputBuilder, Object rawInput,
-		MethodImplementation instance,
-		TCallContext callContext, MethodSecurity<TAppContext, TCallContext> security, MethodDefinition def,
-		JsonRequest request, boolean securityPassed, ObjectMapper objectMapper,
-		MethodMetadata<TAppContext, TCallContext> meta,
-		BiConsumer<Object, ObjectPathsTree> block) {
+		MethodImplementation instance, TCallContext callContext, MethodSecurity<TAppContext, TCallContext> security,
+		MethodDefinition def, JsonRequest request, boolean securityPassed, ObjectMapper objectMapper,
+		MethodMetadata<TAppContext, TCallContext> meta, BiConsumer<Object, ObjectPathsTree> block) {
 		try {
 			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(rawInput);
 
@@ -350,11 +445,13 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			boolean doCleaning = true;
 
 			if (security.getInputFieldsTypeSecurity().isPresent()) {
-				inputPathsTree = security.getInputFieldsTypeSecurity().get().getAllowedPaths(appContext, callContext,
-					fullPathsTree);
+				inputPathsTree = security.getInputFieldsTypeSecurity()
+					.get()
+					.getAllowedPaths(appContext, callContext, fullPathsTree);
 			} else if (security.getInputFieldsObjectSecurity().isPresent()) {
 				ObjectFieldsSecurity<TAppContext, TCallContext> dynamicFieldsSecurity = new ObjectFieldsSecurity<TAppContext, TCallContext>(
-					security.getInputFieldsObjectSecurity().get());
+					security.getInputFieldsObjectSecurity().get()
+				);
 
 				inputPathsTree = dynamicFieldsSecurity.getAllowedPaths(appContext, callContext, fullPathsTree);
 			} else {
@@ -363,11 +460,13 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			}
 
 			if (!securityPassed) {
-				Validate.isEmpty(inputPathsTree.getItems(),
+				Validate.isEmpty(
+					inputPathsTree.getItems(),
 					StringUtils.subst(
 						"If this request did not passed through security check, there should be no allowed fields! Namely:\n{}",
-						inputPathsTree.toPaths().stream().map(p -> "\t" + p.toDebug())
-							.collect(Collectors.joining("\n"))));
+						inputPathsTree.toPaths().stream().map(p -> "\t" + p.toDebug()).collect(Collectors.joining("\n"))
+					)
+				);
 			}
 
 			if (!meta.getDisableAllowedFields()) {
@@ -389,27 +488,35 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 
 				block.accept(input, inputPathsTree);
 			} else {
-				outputBuilder
-					.status(ResponseStatus.SUCCESS);
+				outputBuilder.status(ResponseStatus.SUCCESS);
 			}
 		} catch (Throwable t) {
-			logger.error("Error during clearProhibitedInputFields() method={} uuid={}", request.getQualifiedName(),
-				request.getRequestUuid(), t);
+			logger.error(
+				"Error during clearProhibitedInputFields() method={} uuid={}",
+				request.getQualifiedName(),
+				request.getRequestUuid(),
+				t
+			);
 
 			appContext.reportException(t);
 
-			outputBuilder
-				.status(ResponseStatus.INTERNAL_ERROR_ON_CLEARING_INPUT)
-				.errorMessage(Optional.ofNullable(appContext.getIsDevelopmentInstance()
-					? ExceptionUtils.extractStacktrace("Internal error during cleaning prohibited input fields", t)
-					: null));
+			outputBuilder.status(ResponseStatus.INTERNAL_ERROR_ON_CLEARING_INPUT)
+				.errorMessage(
+					Optional.ofNullable(
+						appContext.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace(
+							"Internal error during cleaning prohibited input fields",
+							t
+						) : null
+					)
+				);
 		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({
+		"rawtypes", "unchecked"
+	})
 	private void validate(TAppContext appContext, JsonRequest request, Builder outputBuilder, Object input,
-		MethodImplementation instance,
-		ObjectPathsTree inputPathsTree, TCallContext callContext, Runnable onSuccess) {
+		MethodImplementation instance, ObjectPathsTree inputPathsTree, TCallContext callContext, Runnable onSuccess) {
 		try {
 			TValidator validator = validatorProvider.apply(appContext, callContext, inputPathsTree);
 
@@ -419,18 +526,18 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 
 			Validate.notNull(validationResult);
 
-			outputBuilder
-				.validation(validationResult);
+			outputBuilder.validation(validationResult);
 
 			if (request.getRequestType() == RequestType.VALIDATE) {
-				outputBuilder
-					.status(ResponseStatus.SUCCESS);
+				outputBuilder.status(ResponseStatus.SUCCESS);
 			} else if (request.getRequestType() == RequestType.EXECUTE) {
 				if (!validationResult.getOverallSuccess()) {
-					outputBuilder
-						.status(ResponseStatus.INVALID_INPUT)
-						.errorMessage(Optional
-							.ofNullable(appContext.getIsDevelopmentInstance() ? "Input validation problem" : null));
+					outputBuilder.status(ResponseStatus.INVALID_INPUT)
+						.errorMessage(
+							Optional.ofNullable(
+								appContext.getIsDevelopmentInstance() ? "Input validation problem" : null
+							)
+						);
 				} else {
 					onSuccess.run();
 				}
@@ -438,45 +545,63 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				throw new RuntimeException(StringUtils.subst("Unknown type: {}", request.getRequestType()));
 			}
 		} catch (Throwable t) {
-			logger.error("Error during validate() method={} uuid={}", request.getQualifiedName(),
-				request.getRequestUuid(), t);
+			logger.error(
+				"Error during validate() method={} uuid={}",
+				request.getQualifiedName(),
+				request.getRequestUuid(),
+				t
+			);
 
 			appContext.reportException(t);
 
-			outputBuilder
-				.status(ResponseStatus.INTERNAL_ERROR_ON_VALIDATION)
-				.errorMessage(Optional.ofNullable(appContext.getIsDevelopmentInstance()
-					? ExceptionUtils.extractStacktrace("Internal error during validation", t)
-					: null));
+			outputBuilder.status(ResponseStatus.INTERNAL_ERROR_ON_VALIDATION)
+				.errorMessage(
+					Optional.ofNullable(
+						appContext.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace(
+							"Internal error during validation",
+							t
+						) : null
+					)
+				);
 		}
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({
+		"unchecked", "rawtypes"
+	})
 	private void execute(TAppContext appContext, JsonRequest request, Builder outputBuilder, Object input,
-		MethodImplementation instance,
-		Consumer<Object> onSuccess) {
+		MethodImplementation instance, Consumer<Object> onSuccess) {
 		try {
 			Object output = instance.execute(input);
 
 			onSuccess.accept(output);
 		} catch (Throwable t) {
-			logger.error("Error during execute() method={} uuid={}", request.getQualifiedName(),
-				request.getRequestUuid(), t);
+			logger.error(
+				"Error during execute() method={} uuid={}",
+				request.getQualifiedName(),
+				request.getRequestUuid(),
+				t
+			);
 
 			appContext.reportException(t);
 
-			outputBuilder
-				.status(ResponseStatus.INTERNAL_ERROR_ON_EXECUTION)
-				.errorMessage(Optional.ofNullable(appContext.getIsDevelopmentInstance()
-					? ExceptionUtils.extractStacktrace("Internal error during execution", t)
-					: null));
+			outputBuilder.status(ResponseStatus.INTERNAL_ERROR_ON_EXECUTION)
+				.errorMessage(
+					Optional.ofNullable(
+						appContext.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace(
+							"Internal error during execution",
+							t
+						) : null
+					)
+				);
 		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({
+		"rawtypes", "unchecked"
+	})
 	private void clearProhibitedOutputFields(JsonRequest request, TAppContext appContext, Builder outputBuilder,
-		Object rawOutput,
-		MethodImplementation instance, TCallContext callContext, ExecutionContext executionContext,
+		Object rawOutput, MethodImplementation instance, TCallContext callContext, ExecutionContext executionContext,
 		MethodDefinition def, ObjectMapper objectMapper, MethodSecurity<TAppContext, TCallContext> security,
 		MethodMetadata<TAppContext, TCallContext> meta) {
 		try {
@@ -486,11 +611,13 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 			boolean doCleaning = true;
 
 			if (security.getOutputFieldsTypeSecurity().isPresent()) {
-				outputPathsTree = security.getOutputFieldsTypeSecurity().get().getAllowedPaths(appContext, callContext,
-					fullPathsTree);
+				outputPathsTree = security.getOutputFieldsTypeSecurity()
+					.get()
+					.getAllowedPaths(appContext, callContext, fullPathsTree);
 			} else if (security.getOutputFieldsObjectSecurity().isPresent()) {
 				ObjectFieldsSecurity<TAppContext, TCallContext> dynamicFieldsSecurity = new ObjectFieldsSecurity<TAppContext, TCallContext>(
-					security.getOutputFieldsObjectSecurity().get());
+					security.getOutputFieldsObjectSecurity().get()
+				);
 
 				outputPathsTree = dynamicFieldsSecurity.getAllowedPaths(appContext, callContext, fullPathsTree);
 			} else {
@@ -514,20 +641,26 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				output = rawOutput;
 			}
 
-			outputBuilder
-				.status(ResponseStatus.SUCCESS)
-				.output(objectMapper.valueToTree(output));
+			outputBuilder.status(ResponseStatus.SUCCESS).output(objectMapper.valueToTree(output));
 		} catch (Throwable t) {
-			logger.error("Error during clearProhibitedOutputFields() method={} uuid={}", request.getQualifiedName(),
-				request.getRequestUuid(), t);
+			logger.error(
+				"Error during clearProhibitedOutputFields() method={} uuid={}",
+				request.getQualifiedName(),
+				request.getRequestUuid(),
+				t
+			);
 
 			appContext.reportException(t);
 
-			outputBuilder
-				.status(ResponseStatus.INTERNAL_ERROR_ON_CLEARING_OUTPUT)
-				.errorMessage(Optional.ofNullable(appContext.getIsDevelopmentInstance()
-					? ExceptionUtils.extractStacktrace("Internal error during cleaning prohibited output fields", t)
-					: null));
+			outputBuilder.status(ResponseStatus.INTERNAL_ERROR_ON_CLEARING_OUTPUT)
+				.errorMessage(
+					Optional.ofNullable(
+						appContext.getIsDevelopmentInstance() ? ExceptionUtils.extractStacktrace(
+							"Internal error during cleaning prohibited output fields",
+							t
+						) : null
+					)
+				);
 		}
 	}
 }

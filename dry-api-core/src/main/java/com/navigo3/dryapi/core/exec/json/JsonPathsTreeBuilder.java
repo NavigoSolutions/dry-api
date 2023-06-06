@@ -18,28 +18,28 @@ import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
 
 public class JsonPathsTreeBuilder {
-	
+
 	public static ObjectPathsTree fromObject(Object o) {
 		ObjectMapper mapper = JacksonUtils.createJsonMapper();
-		
+
 		return fromTree(mapper.valueToTree(o));
 	}
-	
+
 	public static ObjectPathsTree fromTree(JsonNode jsonNode) {
 		List<ObjectPathsTreeNode> items = new ArrayList<>();
-		
+
 		fillContainer(items, jsonNode);
-		
+
 		return ImmutableObjectPathsTree.builder().items(items).build();
 	}
-	
+
 	private static void fillContainer(List<ObjectPathsTreeNode> items, JsonNode jsonNode) {
 		Validate.isTrue(jsonNode.isContainerNode());
-		
+
 		if (jsonNode.isArray()) {
-			fillArray(items, (ArrayNode)jsonNode);
+			fillArray(items, (ArrayNode) jsonNode);
 		} else if (jsonNode.isObject()) {
-			fillObject(items, (ObjectNode)jsonNode);
+			fillObject(items, (ObjectNode) jsonNode);
 		} else {
 			throw new RuntimeException(StringUtils.subst("Unsupported node type {}", jsonNode.getNodeType().name()));
 		}
@@ -49,20 +49,17 @@ public class JsonPathsTreeBuilder {
 		Validate.notNull(items);
 		Validate.notNull(object);
 		Validate.isTrue(object.isObject());
-		
-		object.fieldNames().forEachRemaining(key->{
-			Builder itemBuilder = ImmutableObjectPathsTreeNode
-				.builder()
-				.type(StructureSelectorType.KEY)
-				.key(key);
-		
+
+		object.fieldNames().forEachRemaining(key -> {
+			Builder itemBuilder = ImmutableObjectPathsTreeNode.builder().type(StructureSelectorType.KEY).key(key);
+
 			JsonNode subJsonNode = object.get(key);
-			
+
 			if (subJsonNode.isContainerNode()) {
 				List<ObjectPathsTreeNode> subitems = new ArrayList<>();
-				
+
 				fillContainer(subitems, subJsonNode);
-				
+
 				items.add(itemBuilder.items(subitems).build());
 			} else {
 				items.add(itemBuilder.build());
@@ -74,20 +71,17 @@ public class JsonPathsTreeBuilder {
 		Validate.notNull(items);
 		Validate.notNull(array);
 		Validate.isTrue(array.isArray());
-		
-		for (int i=0;i<array.size();++i) {
-			Builder itemBuilder = ImmutableObjectPathsTreeNode
-				.builder()
-				.type(StructureSelectorType.INDEX)
-				.index(i);
-		
+
+		for (int i = 0; i < array.size(); ++i) {
+			Builder itemBuilder = ImmutableObjectPathsTreeNode.builder().type(StructureSelectorType.INDEX).index(i);
+
 			JsonNode subJsonNode = array.get(i);
-			
+
 			if (subJsonNode.isContainerNode()) {
 				List<ObjectPathsTreeNode> subitems = new ArrayList<>();
-				
+
 				fillContainer(subitems, subJsonNode);
-				
+
 				items.add(itemBuilder.items(subitems).build());
 			} else {
 				items.add(itemBuilder.build());

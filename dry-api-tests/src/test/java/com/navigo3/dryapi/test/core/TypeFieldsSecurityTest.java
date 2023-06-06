@@ -33,34 +33,36 @@ public class TypeFieldsSecurityTest {
 	public static void setUpBeforeClass() throws Exception {
 		appContext = new TestAppContext(true);
 		callContext = new TestCallContext();
-		
+
 		data = Person.createSampleData();
-		
-		schema = TypeSchema.build(new TypeReference<Person>(){});
-		
+
+		schema = TypeSchema.build(new TypeReference<Person>() {
+		});
+
 		pathsTree = JsonPathsTreeBuilder.fromObject(data);
 	}
 
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
-		
+
 	}
-	
+
 	@Test
-	public void test() {		
-		TypeFieldsSecurity<TestAppContext, TestCallContext> typeFieldsSecurity = TypeFieldsSecurityBuilder.<TestAppContext, TestCallContext>build(schema, builder->{
-			SecurityCheck<TestAppContext, TestCallContext> everyone = new True<>();
-			SecurityCheck<TestAppContext, TestCallContext> nobody = new False<>();
-			
-			builder.add(TypePath.field("name"), everyone);
-			builder.add(TypePath.field("surname"), everyone);
-			builder.add(TypePath.field("age"), everyone);
-			builder.add(TypePath.field("secretNumber"), nobody);
-			builder.add(TypePath.field("colorsToFavoriteNumbers").addKey().addIndex(), everyone);
-		});
-		
+	public void test() {
+		TypeFieldsSecurity<TestAppContext, TestCallContext> typeFieldsSecurity = TypeFieldsSecurityBuilder
+			.<TestAppContext, TestCallContext>build(schema, builder -> {
+				SecurityCheck<TestAppContext, TestCallContext> everyone = new True<>();
+				SecurityCheck<TestAppContext, TestCallContext> nobody = new False<>();
+
+				builder.add(TypePath.field("name"), everyone);
+				builder.add(TypePath.field("surname"), everyone);
+				builder.add(TypePath.field("age"), everyone);
+				builder.add(TypePath.field("secretNumber"), nobody);
+				builder.add(TypePath.field("colorsToFavoriteNumbers").addKey().addIndex(), everyone);
+			});
+
 		ObjectPathsTree clearanceTree = typeFieldsSecurity.getAllowedPaths(appContext, callContext, pathsTree);
-		
+
 		assertTrue(clearanceTree.keyExists(StructurePath.key("name")));
 		assertTrue(clearanceTree.keyExists(StructurePath.key("surname")));
 		assertTrue(clearanceTree.keyExists(StructurePath.key("age")));
@@ -69,7 +71,7 @@ public class TypeFieldsSecurityTest {
 		assertTrue(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers").addKey("red").addIndex(0)));
 		assertTrue(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers").addKey("red").addIndex(1)));
 		assertTrue(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers").addKey("red").addIndex(2)));
-		
+
 		assertFalse(clearanceTree.keyExists(StructurePath.key("xxx")));
 		assertFalse(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers")));
 		assertFalse(clearanceTree.keyExists(StructurePath.key("colorsToFavoriteNumbers").addKey("green").addIndex(0)));

@@ -24,98 +24,94 @@ import com.navigo3.dryapi.core.validation.Validator;
 
 public class DryApi<TAppContext extends AppContext, TCallContext extends CallContext, TValidator extends Validator> {
 	private static final Logger logger = LoggerFactory.getLogger(DryApi.class);
-	
+
 	public static final String IDENTIFIER_PATTERN = "[a-z](([A-Za-z0-9]-)*[A-Za-z0-9])*";
 	public static final String PATH_PATTERN = StringUtils.subst("({}/)*({})", IDENTIFIER_PATTERN, IDENTIFIER_PATTERN);
-	
+
 	@Value.Immutable
 	public interface Entry<TAppContext extends AppContext, TCallContext extends CallContext> {
 		@SuppressWarnings("rawtypes")
 		MethodDefinition getDefinition();
-		
+
 		@SuppressWarnings("rawtypes")
 		Class<? extends MethodImplementation> getImplementationClass();
-		
+
 		MethodSecurity<TAppContext, TCallContext> getSecurity();
-		
+
 		MethodMetadata<TAppContext, TCallContext> getMetadata();
 	}
 
 	private Map<String, Entry<TAppContext, TCallContext>> entries = new HashMap<>();
 
-	public <TInput, TOutput> void register(
-			MethodInterface<TInput, TOutput> interf, 
-			Class<? extends MethodImplementation<TInput, TOutput, ? extends MethodInterface<TInput, TOutput>, TAppContext, TCallContext, TValidator>> implClass
-	) {
+	public <TInput, TOutput> void register(MethodInterface<TInput, TOutput> interf,
+		Class<? extends MethodImplementation<TInput, TOutput, ? extends MethodInterface<TInput, TOutput>, TAppContext, TCallContext, TValidator>> implClass) {
 		logger.debug("Registering {}", interf.getQualifiedName());
-	
+
 		MethodDefinition<TInput, TOutput> definition = new MethodDefinition<>(interf);
 
 		Validate.notNull(implClass);
 
 		definition.initialize();
-		
+
 		String qualifiedName = definition.getQualifiedName();
 
 		Validate.passRegex(qualifiedName, PATH_PATTERN);
 		Validate.keyNotContained(entries, qualifiedName);
-		
-		MethodImplementation<TInput, TOutput, ? extends MethodInterface<TInput, TOutput>, TAppContext, TCallContext, TValidator> implementation = 
-				ReflectionUtils.createInstance(implClass);
-		
+
+		MethodImplementation<TInput, TOutput, ? extends MethodInterface<TInput, TOutput>, TAppContext, TCallContext, TValidator> implementation = ReflectionUtils
+			.createInstance(implClass);
+
 		Validate.notNull(implementation);
-		
+
 		implementation.setDefinition(definition);
-		
-		ImmutableEntry.Builder<TAppContext, TCallContext> builder = ImmutableEntry
-			.<TAppContext, TCallContext>builder()
+
+		ImmutableEntry.Builder<TAppContext, TCallContext> builder = ImmutableEntry.<TAppContext, TCallContext>builder()
 			.definition(definition)
 			.implementationClass(implClass);
-		
-		MethodSecurityBuilder<TAppContext, TCallContext> securityBuilder = new MethodSecurityBuilder<>(definition.getInputSchema(), definition.getOutputSchema());
-		
+
+		MethodSecurityBuilder<TAppContext, TCallContext> securityBuilder = new MethodSecurityBuilder<>(
+			definition.getInputSchema(),
+			definition.getOutputSchema()
+		);
+
 		implementation.fillClassSecurity(securityBuilder);
-		
+
 		MethodSecurity<TAppContext, TCallContext> security = securityBuilder.build();
-		
+
 		builder.security(security);
-		
+
 		implementation.setSecurity(security);
-		
+
 		MethodMetadataBuilder<TAppContext, TCallContext> metadataBuilder = new MethodMetadataBuilder<>();
-		
+
 		implementation.fillClassMetadata(metadataBuilder);
-		
+
 		MethodMetadata<TAppContext, TCallContext> metadata = metadataBuilder.build();
-		
+
 		builder.metadata(metadata);
-		
+
 		entries.put(qualifiedName, builder.build());
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	public Optional<MethodDefinition> lookupDefinition(String qualifiedName) {
 		return Optional.ofNullable(entries.get(qualifiedName)).map(Entry::getDefinition);
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	public Optional<Class<? extends MethodImplementation>> lookupImplementationClass(String qualifiedName) {
 		return Optional.ofNullable(entries.get(qualifiedName)).map(Entry::getImplementationClass);
 	}
-	
+
 	public Optional<MethodSecurity<TAppContext, TCallContext>> lookupSecurity(String qualifiedName) {
 		return Optional.ofNullable(entries.get(qualifiedName)).map(Entry::getSecurity);
 	}
-	
+
 	public Optional<MethodMetadata<TAppContext, TCallContext>> lookupFlags(String qualifiedName) {
 		return Optional.ofNullable(entries.get(qualifiedName)).map(Entry::getMetadata);
 	}
-	
+
 	public List<String> getAllQualifiedNames() {
-		return entries
-			.keySet()
-			.stream()
-			.sorted()
-			.collect(Collectors.toList());
+		return entries.keySet().stream().sorted().collect(Collectors.toList());
 	}
 }

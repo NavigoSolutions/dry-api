@@ -9,12 +9,12 @@ import com.navigo3.dryapi.core.util.Validate;
 public class Not<TAppContext extends AppContext, TCallContext extends CallContext> extends NestedSecurityCheck<TAppContext, TCallContext> {
 
 	@SuppressWarnings("unchecked")
-	public Not(SecurityCheck<TAppContext, TCallContext>...items) {
+	public Not(SecurityCheck<TAppContext, TCallContext>... items) {
 		super(items);
-		
+
 		Validate.equals(items.length, 1);
 	}
-	
+
 	@Override
 	public boolean pass(TAppContext appContext, TCallContext callContext) {
 		return !getChildren().get(0).pass(appContext, callContext);

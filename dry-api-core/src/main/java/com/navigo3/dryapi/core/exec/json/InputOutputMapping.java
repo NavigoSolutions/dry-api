@@ -11,7 +11,8 @@ import com.navigo3.dryapi.core.path.StructurePath;
 @JsonDeserialize(as = ImmutableInputOutputMapping.class)
 public interface InputOutputMapping {
 	String getFromUuid();
+
 	StructurePath getFromPath();
-	
+
 	StructurePath getToPath();
 }

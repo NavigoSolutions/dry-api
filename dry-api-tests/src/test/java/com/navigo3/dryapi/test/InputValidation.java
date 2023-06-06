@@ -23,11 +23,10 @@ public class InputValidation {
 	public static void tearDownAfterClass() throws Exception {
 		env.stop();
 	}
-	
+
 	@Test
 	public void testAllSeverities() {
-		Person input = ImmutablePerson
-			.builder()
+		Person input = ImmutablePerson.builder()
 			.name("James")
 			.surname("")
 			.age(10)
@@ -36,11 +35,11 @@ public class InputValidation {
 			.putColorsToFavoriteNumbers("blue", Arrays.asList(42))
 			.putColorsToFavoriteNumbers("green", Arrays.asList(2, 10, 15, 78))
 			.build();
-		
-		/*ValidationData output = */env.getApi().validateBlocking(new FormUpsertEndpoint(), input);
-		
+
+		/* ValidationData output = */env.getApi().validateBlocking(new FormUpsertEndpoint(), input);
+
 //		JsonUtils.prettyPrint(output);
-		
-		//TODO
+
+		// TODO
 	}
 }

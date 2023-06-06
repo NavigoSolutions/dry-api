@@ -7,13 +7,13 @@ import com.navigo3.dryapi.core.security.core.SecurityCheck;
 
 public class And<TAppContext extends AppContext, TCallContext extends CallContext> extends NestedSecurityCheck<TAppContext, TCallContext> {
 	@SafeVarargs
-	public And(SecurityCheck<TAppContext, TCallContext>...items) {
+	public And(SecurityCheck<TAppContext, TCallContext>... items) {
 		super(items);
 	}
-	
+
 	@Override
 	public boolean pass(TAppContext appContext, TCallContext callContext) {
-		return getChildren().stream().allMatch(i->i.pass(appContext, callContext));
+		return getChildren().stream().allMatch(i -> i.pass(appContext, callContext));
 	}
 
 	@Override

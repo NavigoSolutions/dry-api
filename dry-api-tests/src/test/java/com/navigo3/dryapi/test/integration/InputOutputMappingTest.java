@@ -34,64 +34,64 @@ public class InputOutputMappingTest {
 	public static void tearDownAfterClass() throws Exception {
 		env.stop();
 	}
-	
+
 	@Test
 	public void test() {
-		//calculate 1+1
+		// calculate 1+1
 		ModifiableRequestData<IntegerOperands, IntegerResult> first = ModifiableRequestData
 			.<IntegerOperands, IntegerResult>create()
 			.setUuid(UUID.randomUUID().toString())
 			.setInput(ImmutableIntegerOperands.builder().a(1).b(1).build())
 			.setMethod(new MethodDefinition<>(new AddIntegersEndpoint()))
 			.setRequestType(RequestType.EXECUTE);
-		
-		//calculate 40 + ?
+
+		// calculate 40 + ?
 		ModifiableRequestData<IntegerOperands, IntegerResult> second = ModifiableRequestData
 			.<IntegerOperands, IntegerResult>create()
 			.setInput(ImmutableIntegerOperands.builder().a(40).build())
 			.setMethod(new MethodDefinition<>(new AddIntegersEndpoint()))
 			.setRequestType(RequestType.EXECUTE);
-		
-		//set result of first to ? in second
-		second.addInputOutputMappings(ImmutableInputOutputMapping
-			.builder()
-			.fromUuid(first.getUuid())
-			.fromPath(StructurePath.key("res"))
-			.toPath(StructurePath.key("b"))
-			.build()
+
+		// set result of first to ? in second
+		second.addInputOutputMappings(
+			ImmutableInputOutputMapping.builder()
+				.fromUuid(first.getUuid())
+				.fromPath(StructurePath.key("res"))
+				.toPath(StructurePath.key("b"))
+				.build()
 		);
-		
+
 		env.getApi().callBlockingRaw(ImmutableRequestsBatchData.builder().addRequests(first, second).id("42").build());
 
 		assertEquals(42, second.getOutput().get().getRes().get().intValue());
 	}
-	
+
 	@Test
 	public void test2() {
-		//calculate 1+1
+		// calculate 1+1
 		ModifiableRequestData<IntegerOperands, IntegerResult> first = ModifiableRequestData
 			.<IntegerOperands, IntegerResult>create()
 			.setUuid(UUID.randomUUID().toString())
 			.setInput(ImmutableIntegerOperands.builder().a(1).b(1).build())
 			.setMethod(new MethodDefinition<>(new AddIntegersEndpoint()))
 			.setRequestType(RequestType.EXECUTE);
-		
-		//calculate - ?
+
+		// calculate - ?
 		ModifiableRequestData<IntegerResult, IntegerResult> second = ModifiableRequestData
 			.<IntegerResult, IntegerResult>create()
 			.setInput(ImmutableIntegerResult.builder().build())
 			.setMethod(new MethodDefinition<>(new NegateIntegersEndpoint()))
 			.setRequestType(RequestType.EXECUTE);
-		
-		//set result of first to ? in second
-		second.addInputOutputMappings(ImmutableInputOutputMapping
-			.builder()
-			.fromUuid(first.getUuid())
-			.fromPath(StructurePath.empty())
-			.toPath(StructurePath.empty())
-			.build()
+
+		// set result of first to ? in second
+		second.addInputOutputMappings(
+			ImmutableInputOutputMapping.builder()
+				.fromUuid(first.getUuid())
+				.fromPath(StructurePath.empty())
+				.toPath(StructurePath.empty())
+				.build()
 		);
-		
+
 		env.getApi().callBlockingRaw(ImmutableRequestsBatchData.builder().addRequests(first, second).id("42").build());
 
 		assertEquals(-2, second.getOutput().get().getRes().get().intValue());

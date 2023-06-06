@@ -31,8 +31,7 @@ public class Sandbox {
 	@Test
 	@Ignore
 	public void test() {
-		Person input = ImmutablePerson
-			.builder()
+		Person input = ImmutablePerson.builder()
 			.name("James")
 			.surname("Hook")
 			.age(100)
@@ -41,16 +40,17 @@ public class Sandbox {
 			.putColorsToFavoriteNumbers("blue", Arrays.asList(42))
 			.putColorsToFavoriteNumbers("green", Arrays.asList(2, 10, 15, 78))
 			.build();
-		
-		/*IdResult output = */env.getApi().executeBlocking(new FormUpsertEndpoint(), input);
+
+		/* IdResult output = */env.getApi().executeBlocking(new FormUpsertEndpoint(), input);
 //		JsonUtils.prettyPrint(output);
 	}
-	
+
 	@Test
 	@Ignore
 	public void test2() {
-		/*IntegerResult output2 = */env.getApi().executeBlocking(new SolveEverythingEndpoint(), TopAddressInput.createSampleData());
-	
+		/* IntegerResult output2 = */env.getApi()
+			.executeBlocking(new SolveEverythingEndpoint(), TopAddressInput.createSampleData());
+
 //		JsonUtils.prettyPrint(output2);
 	}
 }

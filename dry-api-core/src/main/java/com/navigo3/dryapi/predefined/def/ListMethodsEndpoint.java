@@ -13,13 +13,15 @@ import com.navigo3.dryapi.predefined.def.ListMethodsEndpoint.MethodBasicDescript
 import com.navigo3.dryapi.predefined.params.EmptyResponseParam;
 
 public class ListMethodsEndpoint implements MethodInterface<EmptyResponseParam, List<MethodBasicDescription>> {
-	
+
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableMethodBasicDescription.class)
 	@JsonDeserialize(as = ImmutableMethodBasicDescription.class)
 	public interface MethodBasicDescription {
 		String getQualifiedName();
+
 		String getDescription();
+
 		Set<String> getFlags();
 	}
 
@@ -35,12 +37,13 @@ public class ListMethodsEndpoint implements MethodInterface<EmptyResponseParam, 
 
 	@Override
 	public IOTypeReference<EmptyResponseParam> getInputType() {
-		return new IOTypeReference<EmptyResponseParam>(){};
+		return new IOTypeReference<EmptyResponseParam>() {
+		};
 	}
 
 	@Override
 	public IOTypeReference<List<MethodBasicDescription>> getOutputType() {
-		return new IOTypeReference<List<MethodBasicDescription>>(){};
+		return new IOTypeReference<List<MethodBasicDescription>>() {
+		};
 	}
 }
-	

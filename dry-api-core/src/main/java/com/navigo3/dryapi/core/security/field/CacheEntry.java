@@ -9,5 +9,6 @@ import com.navigo3.dryapi.core.security.core.SecurityCheck;
 @Value.Immutable
 public interface CacheEntry<TAppContext extends AppContext, TCallContext extends CallContext> {
 	SecurityCheck<TAppContext, TCallContext> getSecurityCheck();
+
 	boolean getPassed();
 }

@@ -16,12 +16,12 @@ public class NegateIntegersImpl extends MethodImplementation<IntegerResult, Inte
 	@Override
 	public void fillClassMetadata(MethodMetadataBuilder<TestAppContext, TestCallContext> metadata) {
 	}
-	
+
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
 		security.authorization(new True<>());
 	}
-	
+
 	@Override
 	public TestCallContext prepareCallContext(IntegerResult input) {
 		return new TestCallContext();
@@ -30,12 +30,9 @@ public class NegateIntegersImpl extends MethodImplementation<IntegerResult, Inte
 	@Override
 	public void validate(IntegerResult input, TestValidator validator) {
 	}
-	
+
 	@Override
 	public IntegerResult execute(IntegerResult input) {
-		return ImmutableIntegerResult
-			.builder()
-			.res(-input.getRes().orElse(0))
-			.build();
+		return ImmutableIntegerResult.builder().res(-input.getRes().orElse(0)).build();
 	}
 }

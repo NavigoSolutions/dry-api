@@ -20,7 +20,7 @@ public class ListPersonsImpl extends MethodImplementation<Map<String, List<Perso
 	@Override
 	public void fillClassMetadata(MethodMetadataBuilder<TestAppContext, TestCallContext> metadata) {
 	}
-	
+
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
 		security.authorization(new True<>());
@@ -38,8 +38,20 @@ public class ListPersonsImpl extends MethodImplementation<Map<String, List<Perso
 	@Override
 	public List<Person> execute(Map<String, List<Person>> input) {
 		return Arrays.asList(
-			ImmutablePerson.builder().name("One").surname("One").age(1).secretNumber(42).putColorsToFavoriteNumbers("red", Arrays.asList(1, 2, 3)).build(),
-			ImmutablePerson.builder().name("Two").surname("Two").age(2).secretNumber(666).putColorsToFavoriteNumbers("blue", Arrays.asList(7, 13)).build()
+			ImmutablePerson.builder()
+				.name("One")
+				.surname("One")
+				.age(1)
+				.secretNumber(42)
+				.putColorsToFavoriteNumbers("red", Arrays.asList(1, 2, 3))
+				.build(),
+			ImmutablePerson.builder()
+				.name("Two")
+				.surname("Two")
+				.age(2)
+				.secretNumber(666)
+				.putColorsToFavoriteNumbers("blue", Arrays.asList(7, 13))
+				.build()
 		);
 	}
 

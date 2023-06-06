@@ -20,49 +20,54 @@ public class SolveEverythingEndpoint implements MethodInterface<TopAddressInput,
 	@JsonDeserialize(as = ImmutableLowAddressInput.class)
 	public interface LowAddressInput {
 		Optional<String> getState();
+
 		String getCity();
+
 		String getStreet();
+
 		int getNumber();
+
 		Optional<String> getDoor();
 	}
-	
+
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableMiddleAddressInput.class)
 	@JsonDeserialize(as = ImmutableMiddleAddressInput.class)
 	public interface MiddleAddressInput {
 		String getContinent();
+
 		String getCountry();
-		
+
 		List<LowAddressInput> getLowAddresses();
-		
+
 		Map<String, Integer> getStringCodes();
-		
+
 		LocalDateTime getCurrentGalacticDateTime();
-		
+
 		Map<LocalDateTime, String> getCronicles();
-		
+
 		Optional<LowAddressInput> getMainAddress();
 	}
-	
+
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableTopAddressInput.class)
 	@JsonDeserialize(as = ImmutableTopAddressInput.class)
 	public interface TopAddressInput {
 		String getGalaxy();
+
 		String getCorner();
+
 		String getPlanet();
-		
+
 		MiddleAddressInput getMiddleAddress();
-		
+
 		public static TopAddressInput createSampleData() {
-			ImmutableLowAddressInput.Builder lowAddressBuilder = ImmutableLowAddressInput
-				.builder()
+			ImmutableLowAddressInput.Builder lowAddressBuilder = ImmutableLowAddressInput.builder()
 				.city("Brno")
 				.number(1245)
 				.street("Charvatska");
-			
-			ImmutableMiddleAddressInput.Builder middleAddressBuilder = ImmutableMiddleAddressInput
-				.builder()
+
+			ImmutableMiddleAddressInput.Builder middleAddressBuilder = ImmutableMiddleAddressInput.builder()
 				.continent("Europe")
 				.country("Czech republic")
 				.currentGalacticDateTime(LocalDateTime.now())
@@ -73,26 +78,27 @@ public class SolveEverythingEndpoint implements MethodInterface<TopAddressInput,
 				.mainAddress(lowAddressBuilder.build())
 				.addLowAddresses(lowAddressBuilder.build())
 				.addLowAddresses(lowAddressBuilder.build());
-			
-			ImmutableTopAddressInput.Builder topAddressBuilder = ImmutableTopAddressInput
-				.builder()
+
+			ImmutableTopAddressInput.Builder topAddressBuilder = ImmutableTopAddressInput.builder()
 				.corner("left")
 				.galaxy("Milky way")
 				.planet("Earth")
 				.middleAddress(middleAddressBuilder.build());
-			
+
 			return topAddressBuilder.build();
 		}
 	}
 
 	@Override
 	public IOTypeReference<TopAddressInput> getInputType() {
-		return new IOTypeReference<TopAddressInput>() {};
+		return new IOTypeReference<TopAddressInput>() {
+		};
 	}
 
 	@Override
 	public IOTypeReference<IntegerResult> getOutputType() {
-		return new IOTypeReference<IntegerResult>() {};
+		return new IOTypeReference<IntegerResult>() {
+		};
 	}
 
 	@Override

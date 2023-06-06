@@ -17,6 +17,7 @@ public class GetSystemMetadataEndpoint implements MethodInterface<EmptyResponseP
 	@JsonDeserialize(as = ImmutableSystemTypesDescription.class)
 	public interface SystemTypesDescription {
 		TypeSchema getRequestTypeSchema();
+
 		TypeSchema getResponseTypeSchema();
 	}
 
@@ -32,11 +33,13 @@ public class GetSystemMetadataEndpoint implements MethodInterface<EmptyResponseP
 
 	@Override
 	public IOTypeReference<EmptyResponseParam> getInputType() {
-		return new IOTypeReference<EmptyResponseParam>(){};
+		return new IOTypeReference<EmptyResponseParam>() {
+		};
 	}
 
 	@Override
 	public IOTypeReference<SystemTypesDescription> getOutputType() {
-		return new IOTypeReference<SystemTypesDescription>(){};
+		return new IOTypeReference<SystemTypesDescription>() {
+		};
 	}
 }

@@ -10,6 +10,7 @@ import com.navigo3.dryapi.core.utils.DownloadParamInterface;
 @JsonSerialize(as = ImmutableDownloadParam.class)
 @JsonDeserialize(as = ImmutableDownloadParam.class)
 public interface DownloadParam extends DownloadParamInterface {
-	//Must be empty! Only props from DownloadParamInterface are acceptable. Otherwise client will not sent complete data, because it sees only DownloadParamInterface.
+	// Must be empty! Only props from DownloadParamInterface are acceptable.
+	// Otherwise client will not sent complete data, because it sees only
+	// DownloadParamInterface.
 }
-

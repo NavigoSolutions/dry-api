@@ -75,7 +75,8 @@ public class StringUtils {
 				builder.append("_" + item.toLowerCase());
 			} else {
 				builder.append(
-					i == 0 ? withFirstLowercaseAndRestLowercase(item) : withFirstUppercaseAndRestLowercase(item));
+					i == 0 ? withFirstLowercaseAndRestLowercase(item) : withFirstUppercaseAndRestLowercase(item)
+				);
 			}
 		}
 

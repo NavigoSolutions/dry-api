@@ -13,25 +13,26 @@ import com.navigo3.dryapi.core.validation.ValidationItem.Severity;
 @Value.Immutable
 @JsonSerialize(as = ImmutableValidationData.class)
 @JsonDeserialize(as = ImmutableValidationData.class)
-@JsonIgnoreProperties(value={ "overallSuccess" }, allowGetters=true)
+@JsonIgnoreProperties(value = {
+	"overallSuccess"
+}, allowGetters = true)
 public interface ValidationData {
 	List<ValidationItem> getItems();
-	
+
 	default boolean getOverallSuccess() {
-		return getItems().stream().noneMatch(r->r.getSeverity()==Severity.ERROR);
+		return getItems().stream().noneMatch(r -> r.getSeverity() == Severity.ERROR);
 	}
-	
+
 	default String toDebug() {
 		if (getOverallSuccess()) {
 			return "Everything is perfectly valid!";
 		} else {
 			StringBuilder res = new StringBuilder("Validation issues:\n");
-	
-			
-			getItems().forEach(item->{
+
+			getItems().forEach(item -> {
 				res.append(StringUtils.subst("{}: {}\n", item.getPath().toDebug(), item.getMessage()));
 			});
-			
+
 			return res.toString();
 		}
 	}

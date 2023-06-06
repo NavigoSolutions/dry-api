@@ -11,10 +11,13 @@ import org.immutables.value.Value;
 public interface RequestsBatchData {
 	@SuppressWarnings("rawtypes")
 	List<ModifiableRequestData> getRequests();
+
 	Optional<Consumer<Throwable>> getOnFail();
+
 	String getId();
-	
-	@Value.Default default CompletableFuture<RequestsBatchData> getFuture() {
+
+	@Value.Default
+	default CompletableFuture<RequestsBatchData> getFuture() {
 		return new CompletableFuture<RequestsBatchData>();
 	}
 }

@@ -24,45 +24,46 @@ public interface ObjectPathsTreeNode {
 	Optional<Integer> getIndex();
 
 	Optional<List<ObjectPathsTreeNode>> getItems();
-	
-	@Value.Check default void check() {
-		if (getType()==StructureSelectorType.KEY) {
+
+	@Value.Check
+	default void check() {
+		if (getType() == StructureSelectorType.KEY) {
 			Validate.isPresent(getKey());
 			Validate.notBlank(getKey().get());
 			Validate.notPresent(getIndex());
-		} else if (getType()==StructureSelectorType.INDEX) {
+		} else if (getType() == StructureSelectorType.INDEX) {
 			Validate.isPresent(getIndex());
 			Validate.notPresent(getKey());
 		} else {
 			throw new RuntimeException(StringUtils.subst("Unknown type {}", getType()));
 		}
 	}
-	
+
 	default String toDebug() {
-		if (getType()==StructureSelectorType.KEY) {
+		if (getType() == StructureSelectorType.KEY) {
 			return StringUtils.subst("\"{}\"", getKey().get());
-		} else if (getType()==StructureSelectorType.INDEX) {
-			return StringUtils.subst("[{}]", getIndex().get());			
+		} else if (getType() == StructureSelectorType.INDEX) {
+			return StringUtils.subst("[{}]", getIndex().get());
 		} else {
 			throw new RuntimeException(StringUtils.subst("Unknown type {}", getType()));
 		}
 	}
-	
+
 	default void addToPaths(StructurePath basePath, List<StructurePath> res) {
 		StructurePath myPath;
-		
-		if (getType()==StructureSelectorType.KEY) {
+
+		if (getType() == StructureSelectorType.KEY) {
 			myPath = basePath.addKey(getKey().get());
-		} else if (getType()==StructureSelectorType.INDEX) {
+		} else if (getType() == StructureSelectorType.INDEX) {
 			myPath = basePath.addIndex(getIndex().get());
 		} else {
-			throw new RuntimeException("Unsupported key type "+getType());
+			throw new RuntimeException("Unsupported key type " + getType());
 		}
-		
+
 		if (!getItems().isPresent() || getItems().get().isEmpty()) {
 			res.add(myPath);
 		} else {
-			getItems().get().forEach(node->node.addToPaths(myPath, res));
+			getItems().get().forEach(node -> node.addToPaths(myPath, res));
 		}
 	}
 }

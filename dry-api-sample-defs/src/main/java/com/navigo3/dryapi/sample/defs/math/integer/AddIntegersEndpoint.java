@@ -12,15 +12,16 @@ import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOp
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
 
 public class AddIntegersEndpoint implements MethodInterface<IntegerOperands, IntegerResult> {
-	
+
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableIntegerOperands.class)
 	@JsonDeserialize(as = ImmutableIntegerOperands.class)
 	public interface IntegerOperands {
 		Optional<Integer> getA();
+
 		Optional<Integer> getB();
 	}
-	
+
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableIntegerResult.class)
 	@JsonDeserialize(as = ImmutableIntegerResult.class)
@@ -30,12 +31,14 @@ public class AddIntegersEndpoint implements MethodInterface<IntegerOperands, Int
 
 	@Override
 	public IOTypeReference<IntegerOperands> getInputType() {
-		return new IOTypeReference<IntegerOperands>() {};
+		return new IOTypeReference<IntegerOperands>() {
+		};
 	}
 
 	@Override
 	public IOTypeReference<IntegerResult> getOutputType() {
-		return new IOTypeReference<IntegerResult>() {};
+		return new IOTypeReference<IntegerResult>() {
+		};
 	}
 
 	@Override

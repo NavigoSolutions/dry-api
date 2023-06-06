@@ -7,5 +7,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 public interface ExtraHeaderParams {
 	Map<String, String> getHeaders();
+
 	Map<String, String> getCookies();
 }

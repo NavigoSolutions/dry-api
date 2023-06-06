@@ -15,25 +15,28 @@ import com.navigo3.dryapi.predefined.def.GetMethodMetadataEndpoint.MethodFullDes
 import com.navigo3.dryapi.predefined.params.QualifiedNameParam;
 
 public class GetMethodMetadataEndpoint implements MethodInterface<QualifiedNameParam, MethodFullDescription> {
-	
+
 	@Value.Immutable
 	public interface SecurityNode {
 		String getDescription();
+
 		Optional<List<SecurityNode>> getChildren();
 	}
-	
+
 	@Value.Immutable
 	@JsonSerialize(as = ImmutableMethodFullDescription.class)
 	@JsonDeserialize(as = ImmutableMethodFullDescription.class)
 	public interface MethodFullDescription {
 		String getQualifiedName();
+
 		String getDescription();
+
 		Set<String> getFlags();
-		
+
 		TypeSchema getInputTypeSchema();
-		
+
 		TypeSchema getOutputTypeSchema();
-		
+
 		Optional<SecurityNode> getAuthorization();
 	}
 
@@ -49,11 +52,13 @@ public class GetMethodMetadataEndpoint implements MethodInterface<QualifiedNameP
 
 	@Override
 	public IOTypeReference<QualifiedNameParam> getInputType() {
-		return new IOTypeReference<QualifiedNameParam>(){};
+		return new IOTypeReference<QualifiedNameParam>() {
+		};
 	}
 
 	@Override
 	public IOTypeReference<MethodFullDescription> getOutputType() {
-		return new IOTypeReference<MethodFullDescription>(){};
+		return new IOTypeReference<MethodFullDescription>() {
+		};
 	}
 }

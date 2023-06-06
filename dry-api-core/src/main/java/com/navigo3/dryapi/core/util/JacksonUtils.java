@@ -12,12 +12,12 @@ public class JacksonUtils {
 		objectMapper.registerModule(new DateTimeJsonModule());
 		objectMapper.registerModule(new DateTimeJsonKeyModule());
 		objectMapper.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-		
+
 		return objectMapper;
 	}
 
 	public static String prettyGet(Object o) {
-		return ExceptionUtils.withRuntimeException(()->{
+		return ExceptionUtils.withRuntimeException(() -> {
 			ObjectMapper objectMapper = JacksonUtils.createJsonMapper();
 			objectMapper.setSerializationInclusion(Include.NON_ABSENT);
 

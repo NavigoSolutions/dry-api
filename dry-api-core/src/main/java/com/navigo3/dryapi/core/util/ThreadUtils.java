@@ -7,7 +7,7 @@ public class ThreadUtils {
 		try {
 			Thread.sleep(duration.toMillis());
 		} catch (InterruptedException e) {
-			//ignore
+			// ignore
 		}
 	}
 }

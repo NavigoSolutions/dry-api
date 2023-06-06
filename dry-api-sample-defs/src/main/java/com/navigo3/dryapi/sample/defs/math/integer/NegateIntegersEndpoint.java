@@ -14,14 +14,16 @@ public class NegateIntegersEndpoint implements MethodInterface<IntegerResult, In
 	public String getDescription() {
 		return "Negate integer";
 	}
-	
+
 	@Override
 	public IOTypeReference<IntegerResult> getInputType() {
-		return new IOTypeReference<IntegerResult>() {};
+		return new IOTypeReference<IntegerResult>() {
+		};
 	}
 
 	@Override
 	public IOTypeReference<IntegerResult> getOutputType() {
-		return new IOTypeReference<IntegerResult>() {};
+		return new IOTypeReference<IntegerResult>() {
+		};
 	}
 }

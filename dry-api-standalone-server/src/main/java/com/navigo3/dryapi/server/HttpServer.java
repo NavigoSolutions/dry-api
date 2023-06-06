@@ -58,9 +58,7 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 
 		mounts = settings.getApiMounts().stream().collect(Collectors.toMap(ApiMount::getBasePath, ApiMount::getDryApi));
 
-		server = builder
-			.setHandler(this::handleRequest)
-			.build();
+		server = builder.setHandler(this::handleRequest).build();
 	}
 
 	public void start() {
@@ -126,11 +124,7 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 			HeaderValues contentTypeHeaders = exchange.getRequestHeaders().get(Headers.CONTENT_TYPE);
 			String rawContentType = contentTypeHeaders != null ? contentTypeHeaders.getFirst() : "";
 
-			String contentType = StringUtils
-				.defaultString(rawContentType)
-				.trim()
-				.replaceAll("\\s", "")
-				.toLowerCase();
+			String contentType = StringUtils.defaultString(rawContentType).trim().replaceAll("\\s", "").toLowerCase();
 
 			String outputContentType;
 
@@ -141,8 +135,14 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 
 				exchange.setStatusCode(415);
 				exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
-				exchange.getResponseSender().send(StringUtils.subst("Please use content type: '{}' instead of '{}'",
-					DryApiConstants.JSON_MIME, contentType));
+				exchange.getResponseSender()
+					.send(
+						StringUtils.subst(
+							"Please use content type: '{}' instead of '{}'",
+							DryApiConstants.JSON_MIME,
+							contentType
+						)
+					);
 
 				return;
 			}
@@ -166,31 +166,46 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 
 				logger.debug("Parsing request");
 
-				JsonBatchRequest batch = ExceptionUtils
-					.withRuntimeException(() -> objectMapper.readValue(content, new TypeReference<JsonBatchRequest>() {
-					}));
+				JsonBatchRequest batch = ExceptionUtils.withRuntimeException(
+					() -> objectMapper.readValue(content, new TypeReference<JsonBatchRequest>() {
+					})
+				);
 
 				appContext.start(
-					batch.getRequests().stream().map(r -> r.getQualifiedName()).collect(Collectors.toList()));
+					batch.getRequests().stream().map(r -> r.getQualifiedName()).collect(Collectors.toList())
+				);
 
-				logger.info("Executing:\n{}", batch
-					.getRequests()
-					.stream()
-					.map(r -> StringUtils.subst("\tuuid={} qualifiedName={} type={}", r.getRequestUuid(),
-						r.getQualifiedName(), r.getRequestType()))
-					.collect(Collectors.joining("\n")));
+				logger.info(
+					"Executing:\n{}",
+					batch.getRequests()
+						.stream()
+						.map(
+							r -> StringUtils.subst(
+								"\tuuid={} qualifiedName={} type={}",
+								r.getRequestUuid(),
+								r.getQualifiedName(),
+								r.getRequestType()
+							)
+						)
+						.collect(Collectors.joining("\n"))
+				);
 
-				JsonExecutor<TAppContext, TCallContext, TValidator> gate = new JsonExecutor<>(api, validatorProvider,
+				JsonExecutor<TAppContext, TCallContext, TValidator> gate = new JsonExecutor<>(
+					api,
+					validatorProvider,
 					(qualifiedName, duration, context) -> {
-					});
+					}
+				);
 
 				JsonBatchResponse res = gate.execute(appContext, batch, objectMapper);
 
-				logger.debug("Execution done:\n{}", res
-					.getResponses()
-					.stream()
-					.map(r -> StringUtils.subst("\tuuid={} status={}", r.getRequestUuid(), r.getStatus()))
-					.collect(Collectors.joining("\n")));
+				logger.debug(
+					"Execution done:\n{}",
+					res.getResponses()
+						.stream()
+						.map(r -> StringUtils.subst("\tuuid={} status={}", r.getRequestUuid(), r.getStatus()))
+						.collect(Collectors.joining("\n"))
+				);
 
 				logger.debug("Sending answer");
 

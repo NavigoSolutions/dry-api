@@ -19,11 +19,13 @@ public class DownloadPersonEndpoint implements MethodInterface<Person, DownloadP
 
 	@Override
 	public IOTypeReference<Person> getInputType() {
-		return new IOTypeReference<Person>(){};
+		return new IOTypeReference<Person>() {
+		};
 	}
 
 	@Override
 	public IOTypeReference<DownloadParam> getOutputType() {
-		return new IOTypeReference<DownloadParam>(){};
+		return new IOTypeReference<DownloadParam>() {
+		};
 	}
 }

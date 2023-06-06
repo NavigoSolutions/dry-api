@@ -17,24 +17,24 @@ import com.navigo3.dryapi.sample.impls.TestCallContext;
 import com.navigo3.dryapi.sample.impls.TestValidator;
 
 public class FormUpsertImpl extends MethodImplementation<Person, IdResult, FormUpsertEndpoint, TestAppContext, TestCallContext, TestValidator> {
-	
+
 	@Override
 	public void fillClassMetadata(MethodMetadataBuilder<TestAppContext, TestCallContext> metadata) {
 	}
-	
+
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
 		security.authorization(new True<>());
-		security.defineInputFieldsTypeSecurity(builder->{
+		security.defineInputFieldsTypeSecurity(builder -> {
 			builder.add(TypePath.field("name"), new True<>());
 			builder.add(TypePath.field("surname"), new True<>());
 			builder.add(TypePath.field("age"), new True<>());
-			
+
 			builder.add(TypePath.field("secretNumber"), new False<>());
 			builder.add(TypePath.field("colorsToFavoriteNumbers").addKey().addIndex(), new False<>());
 		});
 	}
-	
+
 	@Override
 	public TestCallContext prepareCallContext(Person input) {
 		return new TestCallContext();
@@ -44,8 +44,8 @@ public class FormUpsertImpl extends MethodImplementation<Person, IdResult, FormU
 	public void validate(Person input, TestValidator validator) {
 		validator.checkNotBlank(StructurePath.key("name"), input.getName());
 		validator.checkNotBlank(StructurePath.key("surname"), input.getSurname());
-		
-		if (input.getAge()<18) {
+
+		if (input.getAge() < 18) {
 			validator.addItem(Severity.WARNING, StructurePath.key("age"), "You should be of age 18 or more");
 		}
 	}

@@ -12,34 +12,34 @@ import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.util.Validate;
 
 public class TypeFieldsSecurityBuilder<TAppContext extends AppContext, TCallContext extends CallContext> {
-	public static <TAppContext extends AppContext, TCallContext extends CallContext> TypeFieldsSecurity<TAppContext, TCallContext> 
-		build(TypeSchema schema, Consumer<TypeFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
+	public static <TAppContext extends AppContext, TCallContext extends CallContext> TypeFieldsSecurity<TAppContext, TCallContext> build(
+		TypeSchema schema, Consumer<TypeFieldsSecurityBuilder<TAppContext, TCallContext>> block) {
 		TypeFieldsSecurityBuilder<TAppContext, TCallContext> builder = new TypeFieldsSecurityBuilder<>(schema);
-		
+
 		block.accept(builder);
-		
+
 		return builder.build();
 	}
 
 	private final TypeSchema schema;
-	
+
 	private Map<TypePath, SecurityCheck<TAppContext, TCallContext>> securityPerField = new HashMap<>();
 
 	private TypeFieldsSecurityBuilder(TypeSchema schema) {
 		this.schema = schema;
 	}
-	
+
 	private TypeFieldsSecurity<TAppContext, TCallContext> build() {
 		return new TypeFieldsSecurity<>(securityPerField);
 	}
-	
+
 	public void add(TypePath path, SecurityCheck<TAppContext, TCallContext> security) {
 		Validate.notNull(path);
 		Validate.notNull(security);
 		Validate.keyNotContained(securityPerField, path);
-		
+
 		schema.throwIfPathNotExists(path);
-		
+
 		securityPerField.put(path, security);
 	}
 }

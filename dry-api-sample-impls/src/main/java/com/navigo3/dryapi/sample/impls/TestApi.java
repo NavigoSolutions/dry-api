@@ -17,14 +17,14 @@ import com.navigo3.dryapi.sample.impls.philosophy.SolveEverythingImpl;
 public class TestApi {
 	public static DryApi<TestAppContext, TestCallContext, TestValidator> build() {
 		DryApi<TestAppContext, TestCallContext, TestValidator> res = new DryApi<>();
-		
+
 		res.register(new AddIntegersEndpoint(), AddIntegersImpl.class);
 		res.register(new NegateIntegersEndpoint(), NegateIntegersImpl.class);
 		res.register(new SolveEverythingEndpoint(), SolveEverythingImpl.class);
 		res.register(new FormUpsertEndpoint(), FormUpsertImpl.class);
 		res.register(new ListPersonsEndpoint(), ListPersonsImpl.class);
 		res.register(new DownloadPersonEndpoint(), DownloadPersonImpl.class);
-		
+
 		return res;
 	}
 }

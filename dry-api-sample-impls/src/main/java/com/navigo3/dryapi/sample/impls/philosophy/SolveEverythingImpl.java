@@ -13,16 +13,16 @@ import com.navigo3.dryapi.sample.impls.TestCallContext;
 import com.navigo3.dryapi.sample.impls.TestValidator;
 
 public class SolveEverythingImpl extends MethodImplementation<TopAddressInput, IntegerResult, SolveEverythingEndpoint, TestAppContext, TestCallContext, TestValidator> {
-	
+
 	@Override
 	public void fillClassMetadata(MethodMetadataBuilder<TestAppContext, TestCallContext> metadata) {
 	}
-	
+
 	@Override
 	public void fillClassSecurity(MethodSecurityBuilder<TestAppContext, TestCallContext> security) {
 		security.authorization(new True<>());
 	}
-	
+
 	@Override
 	public TestCallContext prepareCallContext(TopAddressInput input) {
 		return new TestCallContext();

@@ -24,94 +24,92 @@ public class TypeFieldsSecurity<TAppContext extends AppContext, TCallContext ext
 		this.securityPerField = securityPerField;
 	}
 
-	public ObjectPathsTree getAllowedPaths(TAppContext appContext, TCallContext callContext, ObjectPathsTree validPaths) {
+	public ObjectPathsTree getAllowedPaths(TAppContext appContext, TCallContext callContext,
+		ObjectPathsTree validPaths) {
 		List<CacheEntry<TAppContext, TCallContext>> cache = new ArrayList<>();
-		
-		List<TypePath> allowedTypePaths = securityPerField
-			.entrySet()
-			.stream()
-			.filter(e->{
-				Optional<CacheEntry<TAppContext, TCallContext>> cacheEntry = cache
-					.stream()
-					.filter(c->c.getSecurityCheck()==e.getValue()) //really, compare objects by identity!
-					.findFirst();
-				
-				if (cacheEntry.isPresent()) {
-					return cacheEntry.get().getPassed();
-				}
-				
-				boolean passed = e.getValue().pass(appContext, callContext);
-				
-				cache.add(ImmutableCacheEntry.<TAppContext, TCallContext>builder().securityCheck(e.getValue()).passed(passed).build());
-				
-				return passed;
-			})
-			.map(e->e.getKey())
-			.collect(Collectors.toList());
+
+		List<TypePath> allowedTypePaths = securityPerField.entrySet().stream().filter(e -> {
+			Optional<CacheEntry<TAppContext, TCallContext>> cacheEntry = cache.stream()
+				.filter(c -> c.getSecurityCheck() == e.getValue()) // really, compare objects by identity!
+				.findFirst();
+
+			if (cacheEntry.isPresent()) {
+				return cacheEntry.get().getPassed();
+			}
+
+			boolean passed = e.getValue().pass(appContext, callContext);
+
+			cache.add(
+				ImmutableCacheEntry.<TAppContext, TCallContext>builder()
+					.securityCheck(e.getValue())
+					.passed(passed)
+					.build()
+			);
+
+			return passed;
+		}).map(e -> e.getKey()).collect(Collectors.toList());
 
 		List<StructurePath> res = new ArrayList<>();
-		
-		validPaths.getItems().forEach(node->{
+
+		validPaths.getItems().forEach(node -> {
 			addLeafsPath(res, node, 0, filterMatching(allowedTypePaths, node, 0), StructurePath.empty());
-		});		
-		
+		});
+
 		return ObjectPathsTree.from(res);
 	}
 
-	private void addLeafsPath(List<StructurePath> res, ObjectPathsTreeNode node, int index, List<TypePath> allowedTypePaths, StructurePath path) {
+	private void addLeafsPath(List<StructurePath> res, ObjectPathsTreeNode node, int index,
+		List<TypePath> allowedTypePaths, StructurePath path) {
 		if (allowedTypePaths.isEmpty()) {
 			return;
 		}
-		
+
 		StructurePath currentPath;
-		
-		if (node.getType()==StructureSelectorType.INDEX) {
+
+		if (node.getType() == StructureSelectorType.INDEX) {
 			currentPath = path.addIndex(node.getIndex().get());
-		} else if (node.getType()==StructureSelectorType.KEY) {
+		} else if (node.getType() == StructureSelectorType.KEY) {
 			currentPath = path.addKey(node.getKey().get());
 		} else {
-			throw new RuntimeException("Unknown type "+node.getType());
+			throw new RuntimeException("Unknown type " + node.getType());
 		}
-		
+
 		if (!node.getItems().isPresent() || node.getItems().get().isEmpty()) {
 			res.add(currentPath);
 		}
-		
-		node.getItems().ifPresent(items->{
-			items.forEach(item->{
-				addLeafsPath(res, item, index+1, filterMatching(allowedTypePaths, item, index+1), currentPath);
+
+		node.getItems().ifPresent(items -> {
+			items.forEach(item -> {
+				addLeafsPath(res, item, index + 1, filterMatching(allowedTypePaths, item, index + 1), currentPath);
 			});
 		});
 	}
 
 	private List<TypePath> filterMatching(List<TypePath> allowedTypePaths, ObjectPathsTreeNode node, int index) {
-		return allowedTypePaths
-			.stream()
-			.filter(p->{
-				if (p.getItems().size()>index) {
-					TypePathItem item = p.getItems().get(index);
-					
-					if (item.getType()==TypeSelectorType.INDEX && node.getType()==StructureSelectorType.INDEX) {
-						return true;
-					} else if (item.getType()==TypeSelectorType.KEY && node.getType()==StructureSelectorType.KEY) {
-						return true;
-					} else if (item.getType()==TypeSelectorType.FIELD && node.getType()==StructureSelectorType.KEY) {
-						if (item.getFieldName().get().equals(node.getKey().get())) {
-							return true;
-						}
-					} else if (item.getType()==TypeSelectorType.KEEP_RECURSIVELY) {
+		return allowedTypePaths.stream().filter(p -> {
+			if (p.getItems().size() > index) {
+				TypePathItem item = p.getItems().get(index);
+
+				if (item.getType() == TypeSelectorType.INDEX && node.getType() == StructureSelectorType.INDEX) {
+					return true;
+				} else if (item.getType() == TypeSelectorType.KEY && node.getType() == StructureSelectorType.KEY) {
+					return true;
+				} else if (item.getType() == TypeSelectorType.FIELD && node.getType() == StructureSelectorType.KEY) {
+					if (item.getFieldName().get().equals(node.getKey().get())) {
 						return true;
 					}
-					
-					return false;
-				} else {
-					if (p.getItems().get(p.getItems().size()-1).getType()==TypeSelectorType.KEEP_RECURSIVELY) {
-						return true;
-					} else {
-						return false;
-					}
+				} else if (item.getType() == TypeSelectorType.KEEP_RECURSIVELY) {
+					return true;
 				}
-			})
-			.collect(Collectors.toList());
+
+				return false;
+			} else {
+				if (p.getItems().get(p.getItems().size() - 1).getType() == TypeSelectorType.KEEP_RECURSIVELY) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}).collect(Collectors.toList());
 	}
 }

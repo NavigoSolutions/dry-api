@@ -13,13 +13,16 @@ import com.navigo3.dryapi.core.exec.json.JsonResponse;
 @Value.Modifiable
 public interface RequestData<TInput, TOutput> {
 	MethodDefinition<TInput, TOutput> getMethod();
-	
+
 	String getUuid();
-	
+
 	TInput getInput();
+
 	RequestType getRequestType();
+
 	List<InputOutputMapping> getInputOutputMappings();
-	
+
 	Optional<TOutput> getOutput();
+
 	Optional<JsonResponse> getResponse();
 }

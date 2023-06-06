@@ -70,9 +70,9 @@ public class RemoteHttpDryApi {
 
 		thread = new Thread(this::handlingLoop);
 
-		httpClient = new OkHttpClient.Builder()
-			.connectionPool(new ConnectionPool(settings.getMaxExecutedInParallel(), 1, TimeUnit.MINUTES))
-			.build();
+		httpClient = new OkHttpClient.Builder().connectionPool(
+			new ConnectionPool(settings.getMaxExecutedInParallel(), 1, TimeUnit.MINUTES)
+		).build();
 	}
 
 	public void start(Function<OkHttpClient, ExtraHeaderParams> loginFunc) {
@@ -107,7 +107,9 @@ public class RemoteHttpDryApi {
 				resFuture.completeExceptionally(exception);
 			} else {
 				logger.debug("Validate - completed normally");
-				ValidationData val = res.getResponse().get().getValidation()
+				ValidationData val = res.getResponse()
+					.get()
+					.getValidation()
 					.orElseGet(() -> ImmutableValidationData.builder().build());
 				resFuture.complete(val);
 			}
@@ -162,15 +164,13 @@ public class RemoteHttpDryApi {
 		MethodInterface<TInput, TOutput> method, TInput input, RequestType type) {
 		CompletableFuture<RequestData<TInput, TOutput>> resFuture = new CompletableFuture<>();
 
-		ModifiableRequestData<TInput, TOutput> req = ModifiableRequestData
-			.<TInput, TOutput>create()
+		ModifiableRequestData<TInput, TOutput> req = ModifiableRequestData.<TInput, TOutput>create()
 			.setUuid(UUID.randomUUID().toString())
 			.setInput(input)
 			.setMethod(new MethodDefinition<>(method))
 			.setRequestType(type);
 
-		RequestsBatchData batch = ImmutableRequestsBatchData
-			.builder()
+		RequestsBatchData batch = ImmutableRequestsBatchData.builder()
 			.addRequests(req)
 			.id(UUID.randomUUID().toString())
 			.build();
@@ -208,8 +208,10 @@ public class RemoteHttpDryApi {
 	}
 
 	private void checkStarted() {
-		Validate.isTrue(thread.isAlive() && !shouldStop,
-			"Please start this API first by calling start() and do not forget shutdown by stop()!");
+		Validate.isTrue(
+			thread.isAlive() && !shouldStop,
+			"Please start this API first by calling start() and do not forget shutdown by stop()!"
+		);
 	}
 
 	private void handlingLoop() {
@@ -256,9 +258,7 @@ public class RemoteHttpDryApi {
 
 			RequestBody body = RequestBody.create(content, MediaType.get(mime));
 
-			Builder reqBuilder = new Request.Builder()
-				.url(apiUrl)
-				.post(body);
+			Builder reqBuilder = new Request.Builder().url(apiUrl).post(body);
 
 			extraHeaderParams.getHeaders().forEach((k, v) -> {
 				reqBuilder.addHeader(k, v);
@@ -266,15 +266,14 @@ public class RemoteHttpDryApi {
 
 			reqBuilder.addHeader(
 				"Cookie",
-				extraHeaderParams
-					.getCookies()
-					.entrySet()
-					.stream()
-					.map(e -> ExceptionUtils.withRuntimeException(() -> {
-						return StringUtils.subst("{}={}", URLEncoder.encode(e.getKey(), "UTF-8"),
-							URLEncoder.encode(e.getValue(), "UTF-8"));
-					}))
-					.collect(Collectors.joining("; ")));
+				extraHeaderParams.getCookies().entrySet().stream().map(e -> ExceptionUtils.withRuntimeException(() -> {
+					return StringUtils.subst(
+						"{}={}",
+						URLEncoder.encode(e.getKey(), "UTF-8"),
+						URLEncoder.encode(e.getValue(), "UTF-8")
+					);
+				})).collect(Collectors.joining("; "))
+			);
 
 			Request request = reqBuilder.build();
 
@@ -288,19 +287,24 @@ public class RemoteHttpDryApi {
 
 					try {
 						if (httpResponse.code() != 200) {
-							throw new RuntimeException(StringUtils.subst("Unexpected error code {}. Content:\n{}",
-								httpResponse.code(), httpResponse.body().string()));
+							throw new RuntimeException(
+								StringUtils.subst(
+									"Unexpected error code {}. Content:\n{}",
+									httpResponse.code(),
+									httpResponse.body().string()
+								)
+							);
 						}
 
 						JsonBatchResponse batchResponse = ExceptionUtils.withRuntimeException(
-							() -> objectMapper.readValue(httpResponse.body().string(), JsonBatchResponse.class));
+							() -> objectMapper.readValue(httpResponse.body().string(), JsonBatchResponse.class)
+						);
 
 						Validate.sameSize(batchResponse.getResponses(), requestsBatch.getRequests());
 
 						batchResponse.getResponses().forEach(response -> {
 							@SuppressWarnings("rawtypes")
-							Optional<? extends ModifiableRequestData> requestData = requestsBatch
-								.getRequests()
+							Optional<? extends ModifiableRequestData> requestData = requestsBatch.getRequests()
 								.stream()
 								.filter(r -> r.getUuid().equals(response.getRequestUuid()))
 								.findFirst();
@@ -310,9 +314,12 @@ public class RemoteHttpDryApi {
 							requestData.get().setResponse(response);
 
 							if (response.getOutput().isPresent() && !response.getOutput().get().isNull()) {
-								Object output = ExceptionUtils
-									.withRuntimeException(() -> objectMapper.convertValue(response.getOutput().get(),
-										requestData.get().getMethod().getOutputType()));
+								Object output = ExceptionUtils.withRuntimeException(
+									() -> objectMapper.convertValue(
+										response.getOutput().get(),
+										requestData.get().getMethod().getOutputType()
+									)
+								);
 
 								requestData.get().setOutput(Optional.of(output));
 							}
@@ -357,14 +364,15 @@ public class RemoteHttpDryApi {
 				request.setUuid(UUID.randomUUID().toString());
 			}
 
-			batchBuilder.addRequests(ImmutableJsonRequest
-				.builder()
-				.qualifiedName(request.getMethod().getQualifiedName())
-				.input(ExceptionUtils.withRuntimeException(() -> mapper.valueToTree(request.getInput())))
-				.requestType(request.getRequestType())
-				.requestUuid(request.getUuid())
-				.addAllInputMappings(request.getInputOutputMappings())
-				.build());
+			batchBuilder.addRequests(
+				ImmutableJsonRequest.builder()
+					.qualifiedName(request.getMethod().getQualifiedName())
+					.input(ExceptionUtils.withRuntimeException(() -> mapper.valueToTree(request.getInput())))
+					.requestType(request.getRequestType())
+					.requestUuid(request.getUuid())
+					.addAllInputMappings(request.getInputOutputMappings())
+					.build()
+			);
 		});
 
 		ImmutableJsonBatchRequest res = batchBuilder.build();

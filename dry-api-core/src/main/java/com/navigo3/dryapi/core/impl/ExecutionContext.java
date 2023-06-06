@@ -10,17 +10,17 @@ public class ExecutionContext<TAppContext extends AppContext, TCallContext exten
 
 	private TAppContext appContext;
 	private Optional<TCallContext> callContext = Optional.empty();
-	
+
 	public ExecutionContext(TAppContext appContext) {
 		Validate.notNull(appContext);
-		
+
 		this.appContext = appContext;
 	}
-	
+
 	public void setCallContext(TCallContext callContext) {
 		Validate.notNull(callContext);
 		Validate.isFalse(this.callContext.isPresent());
-		
+
 		this.callContext = Optional.of(callContext);
 	}
 
@@ -31,6 +31,6 @@ public class ExecutionContext<TAppContext extends AppContext, TCallContext exten
 
 	@Override
 	public Optional<TCallContext> getCallContext() {
-		return callContext ;
+		return callContext;
 	}
 }
