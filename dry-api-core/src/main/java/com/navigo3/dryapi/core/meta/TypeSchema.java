@@ -259,7 +259,7 @@ public class TypeSchema {
 			});
 
 			Optional.ofNullable(method.getAnnotation(ApiDocSecured.class)).ifPresent(a -> {
-				builder.comment(a.value());
+				builder.securityMessage(a.value());
 			});
 		});
 
