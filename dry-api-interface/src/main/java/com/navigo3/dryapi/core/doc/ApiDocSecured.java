@@ -5,8 +5,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.navigo3.dryapi.core.utils.Nullable;
+
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
+@Nullable
 public @interface ApiDocSecured {
-	String value();
+	String value() default "EXTRA RIGHTS REQUIRED";
 }
