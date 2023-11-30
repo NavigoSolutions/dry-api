@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.navigo3.dryapi.core.doc.ApiDocComment;
@@ -337,6 +338,11 @@ public class TypeSchema {
 
 			// has parameters
 			if (method.getParameters().length > 0) {
+				continue;
+			}
+
+			// ignored field
+			if (method.getAnnotation(JsonIgnore.class) != null) {
 				continue;
 			}
 
