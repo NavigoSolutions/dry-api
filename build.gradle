@@ -4,7 +4,7 @@ plugins {
 }
 
 ext {
-  libVersion = '0.0.63'
+  libVersion = '0.0.64'
 }
 
 println("Building version ${libVersion}")
@@ -16,8 +16,8 @@ subprojects {
   apply plugin: 'java-library'
   apply plugin: 'maven-publish'
 
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
 
   repositories {
     mavenCentral()

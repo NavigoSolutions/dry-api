@@ -3,17 +3,17 @@ package com.navigo3.dryapi.core.util;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 public class JacksonUtils {
 	public static ObjectMapper createJsonMapper() {
-		ObjectMapper objectMapper = new ObjectMapper();
-		objectMapper.registerModule(new Jdk8Module());
-		objectMapper.registerModule(new DateTimeJsonModule());
-		objectMapper.registerModule(new DateTimeJsonKeyModule());
-		objectMapper.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-
-		return objectMapper;
+		return JsonMapper.builder()
+			.addModule(new Jdk8Module())
+			.addModule(new DateTimeJsonModule())
+			.addModule(new DateTimeJsonKeyModule())
+			.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
+			.build();
 	}
 
 	public static String prettyGet(Object o) {
