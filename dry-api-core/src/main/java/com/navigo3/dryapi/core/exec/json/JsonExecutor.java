@@ -331,6 +331,16 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				}
 			});
 
+//			if (false) {
+//				List<ValidationItem> validationItems = checkNulls(request.getInput(), def.getInputSchema());
+//
+//				if (!validationItems.isEmpty()) {
+//					outputBuilder.status(ResponseStatus.INVALID_INPUT)
+//						.validation(ImmutableValidationData.builder().items(validationItems).build());
+//					return;
+//				}
+//			}
+
 			Object rawInput = objectMapper.convertValue(request.getInput(), def.getInputType());
 
 			ExecutionContext<TAppContext, TCallContext> executionContext = new ExecutionContext<>(appContext);
@@ -367,6 +377,27 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 				);
 		}
 	}
+
+//	private List<ValidationItem> checkNulls(JsonNode input, TypeSchema inputSchema) {
+//		var res = new ArrayList<ValidationItem>();
+//
+//		var type = inputSchema.getRoot();
+//
+//		checkNullsRec(res, input, type);
+//
+//		return res;
+//	}
+
+//	private void checkNullsRec(List<ValidationItem> res, JsonNode object, NodeMetadata type) {
+// 		DO THE MAGIC HERE!
+//		res.add(
+//			ImmutableValidationItem.builder()
+//				.severity(Severity.ERROR)
+//				.path(StructurePath.key("id"))
+//				.message("Ho ho ho!")
+//				.build()
+//		);
+//	}
 
 	@SuppressWarnings({
 		"unchecked", "rawtypes"
