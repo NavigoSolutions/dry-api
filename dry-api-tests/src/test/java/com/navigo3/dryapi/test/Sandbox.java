@@ -35,7 +35,6 @@ public class Sandbox {
 	}
 
 	@Test
-	@Ignore
 	public void test() {
 		Person input = ImmutablePerson.builder()
 			.name("James")

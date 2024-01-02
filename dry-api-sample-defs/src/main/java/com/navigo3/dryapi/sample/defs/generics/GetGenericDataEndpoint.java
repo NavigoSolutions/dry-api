@@ -8,6 +8,11 @@ import com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint.GenericDat
 
 public class GetGenericDataEndpoint implements MethodInterface<Integer, GenericData> {
 
+	@Value.Immutable
+	public interface SomeGenericData {
+		String getName();
+	}
+	
 	public interface GenericDataBase<T> {
 		T getData();
 	}
@@ -16,7 +21,7 @@ public class GetGenericDataEndpoint implements MethodInterface<Integer, GenericD
 	}
 
 	@Value.Immutable
-	public interface GenericData extends GenericDataBase2<Integer> {
+	public interface GenericData extends GenericDataBase2<SomeGenericData> {
 
 	}
 

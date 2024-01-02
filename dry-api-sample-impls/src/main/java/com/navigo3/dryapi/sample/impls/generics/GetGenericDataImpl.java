@@ -7,6 +7,7 @@ import com.navigo3.dryapi.core.security.logic.True;
 import com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint;
 import com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint.GenericData;
 import com.navigo3.dryapi.sample.defs.generics.ImmutableGenericData;
+import com.navigo3.dryapi.sample.defs.generics.ImmutableSomeGenericData;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
 import com.navigo3.dryapi.sample.impls.TestValidator;
@@ -33,7 +34,7 @@ public class GetGenericDataImpl extends MethodImplementation<Integer, GenericDat
 
 	@Override
 	public GenericData execute(Integer input) {
-		return ImmutableGenericData.builder().data(input).build();
+		return ImmutableGenericData.builder().data(ImmutableSomeGenericData.builder().name("Hello, world").build()).build();
 	}
 
 }
