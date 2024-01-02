@@ -28,7 +28,7 @@ public class Sandbox {
 	public static void tearDownAfterClass() throws Exception {
 		env.stop();
 	}
-	
+
 	@Test
 	public void testGenerics() {
 		env.getApi().executeBlocking(new GetGenericDataEndpoint(), 1);

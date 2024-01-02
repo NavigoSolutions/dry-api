@@ -28,9 +28,12 @@ public class RemoteCallsEnvironment {
 	private RemoteHttpDryApi api;
 
 	public static SSLContext buildSslContext() {
-		String httpsKey = "/home/vitek/Navigo3/git-production/wildcard-certs/navigo3.com.key";
-		String httpsCert = "/home/vitek/Navigo3/git-production/wildcard-certs/navigo3.com.cer";
-		String httpsCA = "/home/vitek/Navigo3/git-production/wildcard-certs/ca.cer";
+		var username = System.getProperty("user.name");
+		var basepath = "/home/" + username + "/Navigo3/git-production/wildcard-certs/";
+
+		String httpsKey = basepath + "navigo3.com.key";
+		String httpsCert = basepath + "navigo3.com.cer";
+		String httpsCA = basepath + "ca.cer";
 
 		X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(Paths.get(httpsCert), Paths.get(httpsKey));
 		X509ExtendedTrustManager trustManager = PemUtils.loadTrustMaterial(Paths.get(httpsCA));
@@ -44,13 +47,15 @@ public class RemoteCallsEnvironment {
 	}
 
 	public void start() {
-		
-		
 
 		server = new HttpServer<>(
 			ImmutableHttpsServerSettings.<TestAppContext, TestCallContext, TestValidator>builder()
 				.addHttpsInterfaces(
-					ImmutableHttpsInterface.builder().host("localhost.navigo3.com").port(PORT).sslContext(buildSslContext()).build()
+					ImmutableHttpsInterface.builder()
+						.host("localhost.navigo3.com")
+						.port(PORT)
+						.sslContext(buildSslContext())
+						.build()
 				)
 				.addApiMounts(
 					ImmutableApiMount.<TestAppContext, TestCallContext, TestValidator>builder()
@@ -58,7 +63,7 @@ public class RemoteCallsEnvironment {
 						.dryApi(TestApi.build())
 						.build()
 				)
-				
+
 				.appContextProvider(exch -> new TestAppContext(true))
 				.build(),
 			(appContext, callContext, allowedPaths) -> new TestValidator(allowedPaths)
@@ -70,7 +75,7 @@ public class RemoteCallsEnvironment {
 			"https://localhost.navigo3.com:" + PORT + "/test/xxx",
 			ImmutableRemoteHttpDryApiSettings.builder().build()
 		);
-		
+
 		api.start(httpClient -> ImmutableExtraHeaderParams.builder().build());
 	}
 
