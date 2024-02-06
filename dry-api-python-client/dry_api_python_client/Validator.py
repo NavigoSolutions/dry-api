@@ -3,7 +3,7 @@ class Validator:
     def check_only_one_present(values: list, message=None):
         present = False
         for value in values:
-            if present and value != None:
+            if present and value is not None:
                 raise ValueError(message or "Expected only one value to be present")
             present = value != None
 

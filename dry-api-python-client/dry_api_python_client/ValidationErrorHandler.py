@@ -23,20 +23,20 @@ class ValidationErrorHandler:
 
             error = ValidationErrorHandler.get_console_validation_string(
                 resp["qualifiedName"],
-                resp["validation"]["items"] if resp["validation"] != None else {},
+                resp["validation"]["items"] if resp["validation"] is not None else {},
                 "ERROR",
             )
 
             warn = ValidationErrorHandler.get_console_validation_string(
                 resp["qualifiedName"],
-                resp["validation"]["items"] if resp["validation"] != None else {},
+                resp["validation"]["items"] if resp["validation"] is not None else {},
                 "WARNING",
             )
 
-            if error != None:
+            if error is not None:
                 errors += f"\n{prefix(i)}{error}\n"
 
-            if warn != None:
+            if warn is not None:
                 warns += f"\n{prefix(i)}{warn}\n"
 
         return [errors, warns]
@@ -53,7 +53,7 @@ class ValidationErrorHandler:
             for item in errors:
                 path = []
                 for key in item["path"]["items"]:
-                    path.append(key["key"] if key["key"] != None else key["index"])
+                    path.append(key["key"] if key["key"] is not None else key["index"])
 
                 error += f"\n\t{path}:    {item['message']}"
 
