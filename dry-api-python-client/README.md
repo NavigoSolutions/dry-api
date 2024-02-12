@@ -1,3 +1,13 @@
+# This package here is archived - use the new repo
+
+Use the new `navigo-apy-connector` repository, where the real python package is placed and developed. This is
+
+This is kept here fo historical reasons.
+
+**[https://github.com/NavigoSolutions/navigo-apy-connector](https://github.com/NavigoSolutions/navigo-apy-connector)**
+
+---
+
 # dry_api_python_client
 
 Python client for DryAPI apps
