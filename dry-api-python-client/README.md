@@ -4,7 +4,7 @@ Use the new `navigo-apy-connector` repository, where the real python package is 
 
 This is kept here fo historical reasons.
 
-**[https://github.com/NavigoSolutions/dry-apy-connector](https://github.com/NavigoSolutions/navigo-apy-connector)**
+**[https://github.com/NavigoSolutions/dry-apy-connector](https://github.com/NavigoSolutions/dry-apy-connector)**
 
 ---
 
