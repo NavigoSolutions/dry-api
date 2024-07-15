@@ -10,7 +10,6 @@ import org.junit.Test;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.defs.form.ImmutablePerson;
-import com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 import com.navigo3.dryapi.test.helpers.RemoteCallsEnvironment;
@@ -27,11 +26,6 @@ public class Sandbox {
 	@AfterClass
 	public static void tearDownAfterClass() throws Exception {
 		env.stop();
-	}
-
-	@Test
-	public void testGenerics() {
-		env.getApi().executeBlocking(new GetGenericDataEndpoint(), 1);
 	}
 
 	@Test

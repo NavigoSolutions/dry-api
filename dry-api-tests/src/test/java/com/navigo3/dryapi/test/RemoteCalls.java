@@ -9,6 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.navigo3.dryapi.core.validation.ValidationData;
+import com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOperands;
 import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerResult;
@@ -70,5 +71,10 @@ public class RemoteCalls {
 		ValidationData output = env.getApi().validateBlocking(new AddIntegersEndpoint(), input);
 
 		assertEquals(1, output.getItems().size());
+	}
+
+	@Test
+	public void testGenerics() {
+		env.getApi().executeBlocking(new GetGenericDataEndpoint(), 1);
 	}
 }
