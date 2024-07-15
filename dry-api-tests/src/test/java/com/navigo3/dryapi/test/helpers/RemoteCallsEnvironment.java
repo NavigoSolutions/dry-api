@@ -28,25 +28,42 @@ public class RemoteCallsEnvironment {
 	private RemoteHttpDryApi api;
 
 	public static SSLContext buildSslContext() {
-		var username = System.getProperty("user.name");
-		var basepath = "/home/" + username + "/Navigo3/git-production/wildcard-certs/";
-
-		String httpsKey = basepath + "navigo3.com.key";
-		String httpsCert = basepath + "navigo3.com.cer";
-		String httpsCA = basepath + "ca.cer";
-
-		X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(Paths.get(httpsCert), Paths.get(httpsKey));
-		X509ExtendedTrustManager trustManager = PemUtils.loadTrustMaterial(Paths.get(httpsCA));
 
 		SSLFactory sslFactory = SSLFactory.builder()
-			.withIdentityMaterial(keyManager)
-			.withTrustMaterial(trustManager)
+			.withIdentityMaterial(buildKeyManager())
+			.withTrustMaterial(buildTrustManager())
 			.build();
 
 		return sslFactory.getSslContext();
 	}
 
+	public static String getCertsBasepath() {
+		var username = System.getProperty("user.name");
+		var basepath = "/home/" + username + "/Navigo3/git-production/wildcard-certs/";
+
+		return basepath;
+	}
+
+	public static X509ExtendedKeyManager buildKeyManager() {
+		String httpsKey = getCertsBasepath() + "navigo3.com.key";
+		String httpsCert = getCertsBasepath() + "navigo3.com.cer";
+
+		X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(Paths.get(httpsCert), Paths.get(httpsKey));
+
+		return keyManager;
+	}
+
+	public static X509ExtendedTrustManager buildTrustManager() {
+		String httpsCA = getCertsBasepath() + "ca.cer";
+
+		X509ExtendedTrustManager trustManager = PemUtils.loadTrustMaterial(Paths.get(httpsCA));
+
+		return trustManager;
+	}
+
 	public void start() {
+
+		var sslContext = buildSslContext();
 
 		server = new HttpServer<>(
 			ImmutableHttpsServerSettings.<TestAppContext, TestCallContext, TestValidator>builder()
@@ -54,27 +71,22 @@ public class RemoteCallsEnvironment {
 					ImmutableHttpsInterface.builder()
 						.host("localhost.navigo3.com")
 						.port(PORT)
-						.sslContext(buildSslContext())
-						.build()
-				)
+						.sslContext(sslContext)
+						.build())
 				.addApiMounts(
 					ImmutableApiMount.<TestAppContext, TestCallContext, TestValidator>builder()
 						.basePath("/test/xxx")
 						.dryApi(TestApi.build())
-						.build()
-				)
-
+						.build())
 				.appContextProvider(exch -> new TestAppContext(true))
 				.build(),
-			(appContext, callContext, allowedPaths) -> new TestValidator(allowedPaths)
-		);
+			(appContext, callContext, allowedPaths) -> new TestValidator(allowedPaths));
 
 		server.start();
 
 		api = new RemoteHttpDryApi(
 			"https://localhost.navigo3.com:" + PORT + "/test/xxx",
-			ImmutableRemoteHttpDryApiSettings.builder().build()
-		);
+			ImmutableRemoteHttpDryApiSettings.builder().build(), sslContext, buildTrustManager());
 
 		api.start(httpClient -> ImmutableExtraHeaderParams.builder().build());
 	}

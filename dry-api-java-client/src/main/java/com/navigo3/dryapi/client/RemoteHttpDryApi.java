@@ -17,6 +17,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.X509TrustManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +66,8 @@ public class RemoteHttpDryApi {
 
 	private ExtraHeaderParams extraHeaderParams;
 
-	public RemoteHttpDryApi(String apiUrlStr, RemoteHttpDryApiSettings settings) {
+	public RemoteHttpDryApi(String apiUrlStr, RemoteHttpDryApiSettings settings, SSLContext sslContext,
+		X509TrustManager trustManager) {
 		apiUrl = HttpUrl.parse(apiUrlStr);
 
 		this.settings = settings;
@@ -71,8 +75,9 @@ public class RemoteHttpDryApi {
 		thread = new Thread(this::handlingLoop);
 
 		httpClient = new OkHttpClient.Builder().connectionPool(
-			new ConnectionPool(settings.getMaxExecutedInParallel(), 1, TimeUnit.MINUTES)
-		).build();
+			new ConnectionPool(settings.getMaxExecutedInParallel(), 1, TimeUnit.MINUTES))
+			.sslSocketFactory(sslContext.getSocketFactory(), trustManager)
+			.build();
 	}
 
 	public void start(Function<OkHttpClient, ExtraHeaderParams> loginFunc) {
@@ -210,8 +215,7 @@ public class RemoteHttpDryApi {
 	private void checkStarted() {
 		Validate.isTrue(
 			thread.isAlive() && !shouldStop,
-			"Please start this API first by calling start() and do not forget shutdown by stop()!"
-		);
+			"Please start this API first by calling start() and do not forget shutdown by stop()!");
 	}
 
 	private void handlingLoop() {
@@ -270,10 +274,8 @@ public class RemoteHttpDryApi {
 					return StringUtils.subst(
 						"{}={}",
 						URLEncoder.encode(e.getKey(), "UTF-8"),
-						URLEncoder.encode(e.getValue(), "UTF-8")
-					);
-				})).collect(Collectors.joining("; "))
-			);
+						URLEncoder.encode(e.getValue(), "UTF-8"));
+				})).collect(Collectors.joining("; ")));
 
 			Request request = reqBuilder.build();
 
@@ -291,14 +293,11 @@ public class RemoteHttpDryApi {
 								StringUtils.subst(
 									"Unexpected error code {}. Content:\n{}",
 									httpResponse.code(),
-									httpResponse.body().string()
-								)
-							);
+									httpResponse.body().string()));
 						}
 
 						JsonBatchResponse batchResponse = ExceptionUtils.withRuntimeException(
-							() -> objectMapper.readValue(httpResponse.body().string(), JsonBatchResponse.class)
-						);
+							() -> objectMapper.readValue(httpResponse.body().string(), JsonBatchResponse.class));
 
 						Validate.sameSize(batchResponse.getResponses(), requestsBatch.getRequests());
 
@@ -317,9 +316,7 @@ public class RemoteHttpDryApi {
 								Object output = ExceptionUtils.withRuntimeException(
 									() -> objectMapper.convertValue(
 										response.getOutput().get(),
-										requestData.get().getMethod().getOutputType()
-									)
-								);
+										requestData.get().getMethod().getOutputType()));
 
 								requestData.get().setOutput(Optional.of(output));
 							}
@@ -371,8 +368,7 @@ public class RemoteHttpDryApi {
 					.requestType(request.getRequestType())
 					.requestUuid(request.getUuid())
 					.addAllInputMappings(request.getInputOutputMappings())
-					.build()
-			);
+					.build());
 		});
 
 		ImmutableJsonBatchRequest res = batchBuilder.build();
