@@ -20,6 +20,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.navigo3.dryapi.core.meta.TypeSchema;
+import com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint.GenericData;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 
 public class TypeSchemaTest {
@@ -172,6 +173,15 @@ public class TypeSchemaTest {
 		compareWithStored("/TypeSchema/dataWithJson.txt");
 	}
 
+	@Test
+	public void testDerivedGeneric() throws IOException {
+		TypeSchema type = TypeSchema.build(new TypeReference<GenericData>() {
+		});
+		type.debugPrint(ps);
+
+		compareWithStored("/TypeSchema/derivedGeneric.txt");
+	}
+
 	private void compareWithStored(String resourcePath) throws IOException {
 		String correct = IOUtils.toString(getClass().getResourceAsStream(resourcePath), StandardCharsets.UTF_8).trim();
 		String current = os.toString(StandardCharsets.UTF_8.name()).trim();
@@ -179,16 +189,13 @@ public class TypeSchemaTest {
 		if (!Objects.equals(correct, current)) {
 			System.out.println(resourcePath);
 			System.out.println(
-				"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-			);
+				"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			System.out.println(correct);
 			System.out.println(
-				"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-			);
+				"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			System.out.println(current);
 			System.out.println(
-				"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-			);
+				"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		}
 
 		assertEquals(correct, current);
