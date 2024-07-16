@@ -75,6 +75,8 @@ public class RemoteCalls {
 
 	@Test
 	public void testGenerics() {
-		env.getApi().executeBlocking(new GetGenericDataEndpoint(), 1);
+		var input = ImmutableIntegerOperands.builder().a(40).b(2).build();
+
+		env.getApi().executeBlocking(new GetGenericDataEndpoint(), input);
 	}
 }

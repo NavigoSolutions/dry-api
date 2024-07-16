@@ -1,16 +1,4 @@
-OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Colls
-    [] plainArray
-        OBJECT com.navigo3.dryapi.test.helpers.TypeSchemaTest$Plain
-            ENUMERABLE[A, B, C] abc
-            NUMBER bigDecimal
-            BOOL boolean
-            NUMBER integer
-            STRING string
-    [] stringArray
-        STRING
-    [] stringList
-        STRING
-    {STRING} stringMap
-        NUMBER
-    (?) stringOptional
-        STRING
+OBJECT com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint$GenericData
+    OBJECT com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint$SomeGenericData data
+        STRING name
+    NUMBER test

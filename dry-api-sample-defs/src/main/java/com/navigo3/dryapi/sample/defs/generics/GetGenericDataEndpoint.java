@@ -2,17 +2,20 @@ package com.navigo3.dryapi.sample.defs.generics;
 
 import org.immutables.value.Value;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.navigo3.dryapi.core.def.IOTypeReference;
 import com.navigo3.dryapi.core.def.MethodInterface;
 import com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint.GenericData;
+import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOperands;
 
-public class GetGenericDataEndpoint implements MethodInterface<Integer, GenericData> {
+public class GetGenericDataEndpoint implements MethodInterface<IntegerOperands, GenericData> {
 
 	@Value.Immutable
+	@JsonDeserialize(as = ImmutableSomeGenericData.class)
 	public interface SomeGenericData {
 		String getName();
 	}
-	
+
 	public interface GenericDataBase<T> {
 		T getData();
 	}
@@ -21,8 +24,9 @@ public class GetGenericDataEndpoint implements MethodInterface<Integer, GenericD
 	}
 
 	@Value.Immutable
+	@JsonDeserialize(as = ImmutableGenericData.class)
 	public interface GenericData extends GenericDataBase2<SomeGenericData> {
-
+		int getTest();
 	}
 
 	@Override
@@ -36,8 +40,8 @@ public class GetGenericDataEndpoint implements MethodInterface<Integer, GenericD
 	}
 
 	@Override
-	public IOTypeReference<Integer> getInputType() {
-		return new IOTypeReference<Integer>() {
+	public IOTypeReference<IntegerOperands> getInputType() {
+		return new IOTypeReference<IntegerOperands>() {
 		};
 	}
 

@@ -103,8 +103,7 @@ public class TypeSchema {
 					item.getFieldName().get(),
 					"Unknown field {}, possibilities are: {}",
 					item.getFieldName().get(),
-					actNode.getFields().keySet().stream().collect(Collectors.joining(","))
-				);
+					actNode.getFields().keySet().stream().collect(Collectors.joining(",")));
 
 				actNode = actNode.getFields().get(item.getFieldName().get());
 			} else if (item.getType() == TypeSelectorType.INDEX) {
@@ -113,8 +112,7 @@ public class TypeSchema {
 					actNode.getContainerType().get(),
 					ContainerType.LIST,
 					"Expected array at path {}",
-					fullPath
-				);
+					fullPath);
 
 				actNode = actNode.getItemType().get();
 			} else if (item.getType() == TypeSelectorType.KEY) {
@@ -123,8 +121,7 @@ public class TypeSchema {
 					actNode.getContainerType().get(),
 					ContainerType.MAP,
 					"Expected map at path {}",
-					fullPath
-				);
+					fullPath);
 
 				actNode = actNode.getItemType().get();
 			} else if (item.getType() == TypeSelectorType.KEEP_RECURSIVELY) {
@@ -225,12 +222,6 @@ public class TypeSchema {
 
 		Class<?> klass = ExceptionUtils.withRuntimeException(() -> Class.forName(klassReal.split("<")[0]));
 
-		Map<String, String> templateParams = new HashMap<>();
-
-		CollectionUtils.eachWithIndex(ReflectionUtils.parseTemplateParams(klassReal), (param, i) -> {
-			templateParams.put(klass.getTypeParameters()[i].getName(), param);
-		});
-
 		if (alreadyVisited.contains(klass)) {
 			return ImmutableNodeMetadata.builder().valueType(ValueType.RECURSIVE).javaType(klassReal).build();
 		}
@@ -245,8 +236,7 @@ public class TypeSchema {
 					Stream.of(klass.getEnumConstants())
 						.map(o -> ((Enum<?>) o).name())
 						.sorted()
-						.collect(Collectors.toList())
-				);
+						.collect(Collectors.toList()));
 			}
 		});
 
@@ -288,14 +278,12 @@ public class TypeSchema {
 				String paramClassNameK = params.get(0).split("<")[0];
 
 				Optional<ValueType> keyType = ExceptionUtils.withRuntimeException(
-					() -> classToValueType(Class.forName(paramClassNameK))
-				);
+					() -> classToValueType(Class.forName(paramClassNameK)));
 
 				if (!keyType.isPresent()) {
 					logger.warn(
 						"Implausible map key type '{}'. Are you sure it has correct toString() method?",
-						paramClassNameK
-					);
+						paramClassNameK);
 				}
 
 				builder.keyType(keyType.orElse(ValueType.OBJECT));
@@ -306,6 +294,27 @@ public class TypeSchema {
 
 				alreadyVisited.add(klass);
 
+				Map<String, Map<String, String>> templateParams = new HashMap<>();
+
+				CollectionUtils.eachWithIndex(ReflectionUtils.parseTemplateParams(klassReal), (param, i) -> {
+					templateParams.computeIfAbsent(klassReal.split("<")[0], k -> new HashMap<String, String>())
+						.put(klass.getTypeParameters()[i].getName(), param);
+				});
+
+				if (klass.getGenericSuperclass() != null) {
+					addDeclTypesRec(
+						templateParams,
+						klass.getGenericSuperclass().getTypeName(),
+						templateParams.getOrDefault(klassReal, Map.of()));
+				}
+
+				for (Type intType : klass.getGenericInterfaces()) {
+					addDeclTypesRec(
+						templateParams,
+						intType.getTypeName(),
+						templateParams.getOrDefault(klassReal, Map.of()));
+				}
+
 				fillFields(builder, klass, templateParams, alreadyVisited);
 
 				alreadyVisited.remove(klass);
@@ -315,11 +324,49 @@ public class TypeSchema {
 		return builder.build();
 	}
 
-	private void fillFields(Builder builder, Class<?> klass, Map<String, String> templateParams,
+	private void addDeclTypesRec(Map<String, Map<String, String>> res, String klassReal,
+		Map<String, String> derivedClassMapping) {
+		Class<?> klass = ExceptionUtils.withRuntimeException(() -> Class.forName(klassReal.split("<")[0]));
+
+		CollectionUtils.eachWithIndex(ReflectionUtils.parseTemplateParams(klassReal), (param, i) -> {
+			String actualVal;
+
+			// we expect that java class name contains a dot
+			if (param.contains(".")) {
+				actualVal = param;
+			} else {
+				Validate.keyContained(
+					derivedClassMapping,
+					klass.getTypeParameters()[i].getName(),
+					StringUtils.subst(
+						"Unexpected state - template parameter not materialized '{}' ?!?",
+						klass.getTypeParameters()[i].getName()));
+
+				actualVal = derivedClassMapping.get(klass.getTypeParameters()[i].getName());
+			}
+
+			res.computeIfAbsent(klass.getName(), k -> new HashMap<String, String>())
+				.put(klass.getTypeParameters()[i].getName(), actualVal);
+		});
+
+		if (klass.getGenericSuperclass() != null) {
+			addDeclTypesRec(
+				res,
+				klass.getGenericSuperclass().getTypeName(),
+				res.getOrDefault(klass.getName(), Map.of()));
+		}
+
+		for (Type intType : klass.getGenericInterfaces()) {
+			addDeclTypesRec(res, intType.getTypeName(), res.getOrDefault(klass.getName(), Map.of()));
+		}
+	}
+
+	private void fillFields(Builder builder, Class<?> klass, Map<String, Map<String, String>> templateParams,
 		Set<Class<?>> alreadyVisited) {
 		Set<String> uniquenessNameCheck = new HashSet<>();
 
 		for (Method method : klass.getMethods()) {
+
 			// core packages
 			if (method.getDeclaringClass().getName().startsWith("sun.")
 				|| method.getDeclaringClass().getName().startsWith("java.")) {
@@ -361,9 +408,13 @@ public class TypeSchema {
 		}
 	}
 
-	private void fillField(Builder builder, String name, Method method, Map<String, String> templateParams,
+	private void fillField(Builder builder, String name, Method method, Map<String, Map<String, String>> templateParams,
 		Set<Class<?>> alreadyVisited) {
-		String klassReal = substituteTemplateParams(method.getGenericReturnType().getTypeName(), templateParams);
+
+		String klassReal = substituteTemplateParams(
+			method.getGenericReturnType().getTypeName(),
+			templateParams,
+			method.getDeclaringClass().getName());
 
 		Class<?> klass = loadClassOrDefault(klassReal.split("<")[0], method.getReturnType());
 
@@ -395,10 +446,17 @@ public class TypeSchema {
 		}
 	}
 
-	private String substituteTemplateParams(String typeName, Map<String, String> templateParams) {
+	private String substituteTemplateParams(String typeName, Map<String, Map<String, String>> templateParams,
+		String declaringName) {
 		String res = typeName;
 
-		for (Entry<String, String> entry : templateParams.entrySet()) {
+		if (!templateParams.containsKey(declaringName)) {
+			return res;
+		}
+
+		Validate.keyContained(templateParams, declaringName);
+
+		for (Entry<String, String> entry : templateParams.get(declaringName).entrySet()) {
 			String regex = StringUtils.subst("(?<![a-zA-Z_]){}(?![a-zA-Z0-9_])", Pattern.quote(entry.getKey()));
 
 			res = res.replaceAll(regex, Matcher.quoteReplacement(entry.getValue()));

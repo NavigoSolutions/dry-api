@@ -8,11 +8,12 @@ import com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint;
 import com.navigo3.dryapi.sample.defs.generics.GetGenericDataEndpoint.GenericData;
 import com.navigo3.dryapi.sample.defs.generics.ImmutableGenericData;
 import com.navigo3.dryapi.sample.defs.generics.ImmutableSomeGenericData;
+import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerOperands;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
 import com.navigo3.dryapi.sample.impls.TestValidator;
 
-public class GetGenericDataImpl extends MethodImplementation<Integer, GenericData, GetGenericDataEndpoint, TestAppContext, TestCallContext, TestValidator> {
+public class GetGenericDataImpl extends MethodImplementation<IntegerOperands, GenericData, GetGenericDataEndpoint, TestAppContext, TestCallContext, TestValidator> {
 
 	@Override
 	public void fillClassMetadata(MethodMetadataBuilder<TestAppContext, TestCallContext> metadata) {
@@ -24,17 +25,19 @@ public class GetGenericDataImpl extends MethodImplementation<Integer, GenericDat
 	}
 
 	@Override
-	public TestCallContext prepareCallContext(Integer input) {
+	public TestCallContext prepareCallContext(IntegerOperands input) {
 		return new TestCallContext();
 	}
 
 	@Override
-	public void validate(Integer input, TestValidator validator) {
+	public void validate(IntegerOperands input, TestValidator validator) {
 	}
 
 	@Override
-	public GenericData execute(Integer input) {
-		return ImmutableGenericData.builder().data(ImmutableSomeGenericData.builder().name("Hello, world").build()).build();
+	public GenericData execute(IntegerOperands input) {
+		return ImmutableGenericData.builder().test(42)
+			.data(ImmutableSomeGenericData.builder().name("Hello, world").build())
+			.build();
 	}
 
 }
