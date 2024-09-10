@@ -45,6 +45,7 @@ export class ApiConnector {
         .then(async response => {
           if (response?.status != 200 && !(response?.status == 400 && onValidationError)) {
             this._criticalErrorHandler("status", response)
+            reject(response)
           } else {
             const json = await response.json()
 
