@@ -1,7 +1,7 @@
 {
   "name": "@navigo3/dry-api-js-client",
   "author": "Jaroslav Kuboš",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": false,
   "type": "module",
   "main": "src/ApiConnector.js",
