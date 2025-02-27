@@ -13,12 +13,28 @@ import com.navigo3.dryapi.core.util.Validate;
 @JsonSerialize(as = ImmutableStructurePathItem.class)
 @JsonDeserialize(as = ImmutableStructurePathItem.class)
 public interface StructurePathItem {
-	static StructurePathItem createKey(String key) {
+
+	/**
+	 * 
+	 * @param key
+	 * @param convertToCamelCase historically this method did not have this
+	 *                           parameter and it was automatically converted key
+	 *                           into camel case. This feature is helpful for
+	 *                           example when names of database fields are being
+	 *                           used as validation keys, but it was probably bad
+	 *                           idea to implement it directly into dry-api.
+	 */
+	@Deprecated
+	static StructurePathItem createKey(String key, boolean convertToCamelCase) {
 		Validate.notBlank(key);
 
-		String camelCaseKey = StringUtils.underscoreToCamelCase(key);
+		String resultKey = key;
 
-		return ImmutableStructurePathItem.builder().type(StructureSelectorType.KEY).key(camelCaseKey).build();
+		if (convertToCamelCase) {
+			resultKey = StringUtils.underscoreToCamelCase(key);
+		}
+
+		return ImmutableStructurePathItem.builder().type(StructureSelectorType.KEY).key(resultKey).build();
 	}
 
 	static StructurePathItem createIndex(int index) {

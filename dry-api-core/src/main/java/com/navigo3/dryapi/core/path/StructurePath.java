@@ -20,9 +20,23 @@ public interface StructurePath {
 	}
 
 	public static StructurePath key(String key) {
+		return key(key, true);
+	}
+
+	/**
+	 * 
+	 * @param key
+	 * @param convertToCamelCase historically this method did not have this
+	 *                           parameter and it was automatically converted key
+	 *                           into camel case. This feature is helpful for
+	 *                           example when names of database fields are being
+	 *                           used as validation keys, but it was probably bad
+	 *                           idea to implement it directly into dry-api.
+	 */
+	public static StructurePath key(String key, boolean convertToCamelCase) {
 		Validate.notBlank(key);
 
-		return ImmutableStructurePath.builder().addItems(StructurePathItem.createKey(key)).build();
+		return ImmutableStructurePath.builder().addItems(StructurePathItem.createKey(key, convertToCamelCase)).build();
 	}
 
 	public static StructurePath index(int index) {
@@ -51,11 +65,25 @@ public interface StructurePath {
 	}
 
 	default StructurePath addKey(String key) {
+		return addKey(key, true);
+	}
+
+	/**
+	 * 
+	 * @param key
+	 * @param convertToCamelCase historically this method did not have this
+	 *                           parameter and it was automatically converted key
+	 *                           into camel case. This feature is helpful for
+	 *                           example when names of database fields are being
+	 *                           used as validation keys, but it was probably bad
+	 *                           idea to implement it directly into dry-api.
+	 */
+	default StructurePath addKey(String key, boolean convertToCamelCase) {
 		Validate.notBlank(key);
 
 		return ImmutableStructurePath.builder()
 			.addAllItems(getItems())
-			.addItems(StructurePathItem.createKey(key))
+			.addItems(StructurePathItem.createKey(key, convertToCamelCase))
 			.build();
 	}
 
