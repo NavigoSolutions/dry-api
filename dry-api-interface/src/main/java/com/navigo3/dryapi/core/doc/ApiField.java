@@ -31,9 +31,9 @@ public @interface ApiField {
 
 	// Numeric
 
-	double min() default Double.NaN;
+	String min() default "";
 
-	double max() default Double.NaN;
+	String max() default "";
 
 	// Enum-like
 

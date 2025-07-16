@@ -253,12 +253,12 @@ public class TypeSchema {
 				break;
 			case NUMBER:
 				apiFieldAnnotation.ifPresent(a -> {
-					if (!Double.isNaN(a.min())) {
-						builder.minValue(BigDecimal.valueOf(a.min()));
+					if (!a.min().isBlank()) {
+						builder.minValue(new BigDecimal(a.min()));
 					}
 
-					if (!Double.isNaN(a.min())) {
-						builder.maxValue(BigDecimal.valueOf(a.max()));
+					if (!a.max().isBlank()) {
+						builder.maxValue(new BigDecimal(a.max()));
 					}
 				});
 				break;
