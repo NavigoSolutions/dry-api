@@ -1,5 +1,6 @@
 package com.navigo3.dryapi.core.meta;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,9 +44,26 @@ public interface NodeMetadata {
 
 	Optional<String> getDefaultValue();
 
-	Optional<String> getComment();
+	Optional<String> getDescription();
 
 	Optional<String> getSecurityMessage();
+
+	Optional<Integer> getMinLength();
+
+	Optional<Integer> getMaxLength();
+
+	Optional<String> getFormat();
+
+	Optional<String> getPattern();
+
+	Optional<BigDecimal> getMinValue();
+
+	Optional<BigDecimal> getMaxValue();
+
+	@Value.Default
+	default boolean getDeprecated() {
+		return false;
+	}
 
 	// container data
 	Optional<ContainerType> getContainerType();

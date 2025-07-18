@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,9 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.navigo3.dryapi.core.doc.ApiDocComment;
-import com.navigo3.dryapi.core.doc.ApiDocDefault;
-import com.navigo3.dryapi.core.doc.ApiDocSecured;
+import com.navigo3.dryapi.core.doc.ApiField;
 import com.navigo3.dryapi.core.meta.ImmutableNodeMetadata.Builder;
 import com.navigo3.dryapi.core.meta.NodeMetadata.ContainerType;
 import com.navigo3.dryapi.core.meta.NodeMetadata.ValueType;
@@ -41,6 +40,7 @@ import com.navigo3.dryapi.core.path.TypePath;
 import com.navigo3.dryapi.core.path.TypePathItem;
 import com.navigo3.dryapi.core.path.TypeSelectorType;
 import com.navigo3.dryapi.core.util.CollectionUtils;
+import com.navigo3.dryapi.core.util.DryApiConstants;
 import com.navigo3.dryapi.core.util.ExceptionUtils;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
@@ -103,7 +103,8 @@ public class TypeSchema {
 					item.getFieldName().get(),
 					"Unknown field {}, possibilities are: {}",
 					item.getFieldName().get(),
-					actNode.getFields().keySet().stream().collect(Collectors.joining(",")));
+					actNode.getFields().keySet().stream().collect(Collectors.joining(","))
+				);
 
 				actNode = actNode.getFields().get(item.getFieldName().get());
 			} else if (item.getType() == TypeSelectorType.INDEX) {
@@ -112,7 +113,8 @@ public class TypeSchema {
 					actNode.getContainerType().get(),
 					ContainerType.LIST,
 					"Expected array at path {}",
-					fullPath);
+					fullPath
+				);
 
 				actNode = actNode.getItemType().get();
 			} else if (item.getType() == TypeSelectorType.KEY) {
@@ -121,7 +123,8 @@ public class TypeSchema {
 					actNode.getContainerType().get(),
 					ContainerType.MAP,
 					"Expected map at path {}",
-					fullPath);
+					fullPath
+				);
 
 				actNode = actNode.getItemType().get();
 			} else if (item.getType() == TypeSelectorType.KEEP_RECURSIVELY) {
@@ -211,6 +214,14 @@ public class TypeSchema {
 
 		Builder builder = ImmutableNodeMetadata.builder();
 		builder.javaType(klassReal);
+		var apiFieldAnnotation = optMethod.flatMap(method -> Optional.ofNullable(method.getAnnotation(ApiField.class)));
+
+		apiFieldAnnotation.ifPresent(
+			a -> builder.defaultValue(a.defaultValue())
+				.securityMessage(a.extraSecurity())
+				.description(a.description())
+				.deprecated(a.deprecated())
+		);
 
 		if (klassReal.endsWith("[]")) {
 			builder.containerType(ContainerType.LIST);
@@ -229,29 +240,65 @@ public class TypeSchema {
 		Optional<ValueType> optValueType = classToValueType(klass);
 
 		optValueType.ifPresent(valueType -> {
+
+			switch (valueType) {
+			case DATE:
+				builder.format(DryApiConstants.DATE_FORMAT);
+				break;
+			case DATETIME:
+				builder.format(DryApiConstants.DATETIME_FORMAT);
+				break;
+			case TIME:
+				builder.format(DryApiConstants.TIME_FORMAT);
+				break;
+			case NUMBER:
+				apiFieldAnnotation.ifPresent(a -> {
+					if (!a.min().isBlank()) {
+						builder.minValue(new BigDecimal(a.min()));
+					}
+
+					if (!a.max().isBlank()) {
+						builder.maxValue(new BigDecimal(a.max()));
+					}
+				});
+				break;
+			case STRING:
+				apiFieldAnnotation.ifPresent(a -> {
+					if (a.minLength() != -1) {
+						builder.minLength(a.minLength());
+					}
+
+					if (a.maxLength() != -1) {
+						builder.maxLength(a.maxLength());
+					}
+
+					if (!a.pattern().isBlank()) {
+						builder.pattern(a.pattern());
+					}
+
+					if (!a.format().isBlank()) {
+						builder.format(a.format());
+					}
+				});
+				break;
+
+			default:
+				break;
+
+			}
+
 			builder.valueType(valueType);
 
 			if (valueType == ValueType.ENUMERABLE) {
+				var allowedValues = apiFieldAnnotation.map(a -> Arrays.asList(a.allowedValues())).orElse(List.of());
 				builder.enumItems(
 					Stream.of(klass.getEnumConstants())
+						.filter(key -> allowedValues.isEmpty() || allowedValues.contains(key))
 						.map(o -> ((Enum<?>) o).name())
 						.sorted()
-						.collect(Collectors.toList()));
+						.collect(Collectors.toList())
+				);
 			}
-		});
-
-		optMethod.ifPresent(method -> {
-			Optional.ofNullable(method.getAnnotation(ApiDocDefault.class)).ifPresent(a -> {
-				builder.defaultValue(a.value());
-			});
-
-			Optional.ofNullable(method.getAnnotation(ApiDocComment.class)).ifPresent(a -> {
-				builder.comment(a.value());
-			});
-
-			Optional.ofNullable(method.getAnnotation(ApiDocSecured.class)).ifPresent(a -> {
-				builder.securityMessage(a.value());
-			});
 		});
 
 		if (!optValueType.isPresent()) {
@@ -278,12 +325,14 @@ public class TypeSchema {
 				String paramClassNameK = params.get(0).split("<")[0];
 
 				Optional<ValueType> keyType = ExceptionUtils.withRuntimeException(
-					() -> classToValueType(Class.forName(paramClassNameK)));
+					() -> classToValueType(Class.forName(paramClassNameK))
+				);
 
 				if (!keyType.isPresent()) {
 					logger.warn(
 						"Implausible map key type '{}'. Are you sure it has correct toString() method?",
-						paramClassNameK);
+						paramClassNameK
+					);
 				}
 
 				builder.keyType(keyType.orElse(ValueType.OBJECT));
@@ -305,14 +354,16 @@ public class TypeSchema {
 					addDeclTypesRec(
 						templateParams,
 						klass.getGenericSuperclass().getTypeName(),
-						templateParams.getOrDefault(klassReal, Map.of()));
+						templateParams.getOrDefault(klassReal, Map.of())
+					);
 				}
 
 				for (Type intType : klass.getGenericInterfaces()) {
 					addDeclTypesRec(
 						templateParams,
 						intType.getTypeName(),
-						templateParams.getOrDefault(klassReal, Map.of()));
+						templateParams.getOrDefault(klassReal, Map.of())
+					);
 				}
 
 				fillFields(builder, klass, templateParams, alreadyVisited);
@@ -331,7 +382,7 @@ public class TypeSchema {
 		CollectionUtils.eachWithIndex(ReflectionUtils.parseTemplateParams(klassReal), (param, i) -> {
 			String actualVal;
 
-			// we expect that java class name contains a dot
+// we expect that java class name contains a dot
 			if (param.contains(".")) {
 				actualVal = param;
 			} else {
@@ -340,7 +391,9 @@ public class TypeSchema {
 					klass.getTypeParameters()[i].getName(),
 					StringUtils.subst(
 						"Unexpected state - template parameter not materialized '{}' ?!?",
-						klass.getTypeParameters()[i].getName()));
+						klass.getTypeParameters()[i].getName()
+					)
+				);
 
 				actualVal = derivedClassMapping.get(klass.getTypeParameters()[i].getName());
 			}
@@ -353,7 +406,8 @@ public class TypeSchema {
 			addDeclTypesRec(
 				res,
 				klass.getGenericSuperclass().getTypeName(),
-				res.getOrDefault(klass.getName(), Map.of()));
+				res.getOrDefault(klass.getName(), Map.of())
+			);
 		}
 
 		for (Type intType : klass.getGenericInterfaces()) {
@@ -367,35 +421,35 @@ public class TypeSchema {
 
 		for (Method method : klass.getMethods()) {
 
-			// core packages
+// core packages
 			if (method.getDeclaringClass().getName().startsWith("sun.")
 				|| method.getDeclaringClass().getName().startsWith("java.")) {
 				continue;
 			}
 
-			// is not public
+// is not public
 			if ((method.getModifiers() & Modifier.PUBLIC) == 0) {
 				continue;
 			}
 
-			// is static
+// is static
 			if ((method.getModifiers() & Modifier.STATIC) != 0) {
 				continue;
 			}
 
-			// has parameters
+// has parameters
 			if (method.getParameters().length > 0) {
 				continue;
 			}
 
-			// ignored field
+// ignored field
 			if (method.getAnnotation(JsonIgnore.class) != null) {
 				continue;
 			}
 
 			Optional<String> finalName = ReflectionUtils.convertGetterToCamelcaseField(method.getName());
 
-			// not using POJO naming conventions
+// not using POJO naming conventions
 			if (!finalName.isPresent()) {
 				continue;
 			}
@@ -414,7 +468,8 @@ public class TypeSchema {
 		String klassReal = substituteTemplateParams(
 			method.getGenericReturnType().getTypeName(),
 			templateParams,
-			method.getDeclaringClass().getName());
+			method.getDeclaringClass().getName()
+		);
 
 		Class<?> klass = loadClassOrDefault(klassReal.split("<")[0], method.getReturnType());
 
