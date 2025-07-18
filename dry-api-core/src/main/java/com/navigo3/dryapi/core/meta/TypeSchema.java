@@ -216,13 +216,6 @@ public class TypeSchema {
 		builder.javaType(klassReal);
 		var apiFieldAnnotation = optMethod.flatMap(method -> Optional.ofNullable(method.getAnnotation(ApiField.class)));
 
-		apiFieldAnnotation.ifPresent(
-			a -> builder.defaultValue(a.defaultValue())
-				.securityMessage(a.extraSecurity())
-				.description(a.description())
-				.deprecated(a.deprecated())
-		);
-
 		if (klassReal.endsWith("[]")) {
 			builder.containerType(ContainerType.LIST);
 
@@ -238,6 +231,16 @@ public class TypeSchema {
 		}
 
 		Optional<ValueType> optValueType = classToValueType(klass);
+
+		apiFieldAnnotation.ifPresent(
+			a -> builder.defaultValue(
+				Optional.of(a.defaultValue())
+					.filter(v -> !v.isEmpty() || optValueType.map(ValueType.STRING::equals).orElse(false))
+			)
+				.securityMessage(Optional.of(a.extraSecurity()).filter(m -> !m.isBlank()))
+				.description(Optional.of(a.description()).filter(m -> !m.isBlank()))
+				.deprecated(a.deprecated())
+		);
 
 		optValueType.ifPresent(valueType -> {
 
