@@ -232,15 +232,19 @@ public class TypeSchema {
 
 		Optional<ValueType> optValueType = classToValueType(klass);
 
-		apiFieldAnnotation.ifPresent(
-			a -> builder.defaultValue(
-				Optional.of(a.defaultValue())
-					.filter(v -> !v.isEmpty() || optValueType.map(ValueType.STRING::equals).orElse(false))
-			)
-				.securityMessage(Optional.of(a.extraSecurity()).filter(m -> !m.isBlank()))
+		boolean hasDefaultValue = apiFieldAnnotation.isPresent()
+			&& (!apiFieldAnnotation.get().defaultValue().isEmpty()
+				|| optValueType.map(ValueType.STRING::equals).orElse(false));
+
+		apiFieldAnnotation.ifPresent(a -> {
+			if (hasDefaultValue) {
+				builder.defaultValue(a.defaultValue());
+			}
+
+			builder.securityMessage(Optional.of(a.extraSecurity()).filter(m -> !m.isBlank()))
 				.description(Optional.of(a.description()).filter(m -> !m.isBlank()))
-				.deprecated(a.deprecated())
-		);
+				.deprecated(a.deprecated());
+		});
 
 		optValueType.ifPresent(valueType -> {
 
@@ -252,14 +256,19 @@ public class TypeSchema {
 					.collect(Collectors.toList());
 
 				apiFieldAnnotation.ifPresent(a -> {
+					if (hasDefaultValue) {
+						Validate.contained(enumItems, a.defaultValue());
+					}
+
 					var allowedValues = Set.of(a.allowedValues());
 					allowedValues.forEach(key -> Validate.contained(enumItems, key));
-					if (allowedValues.isEmpty()) {
-						builder.enumItems(enumItems);
-					} else {
-						builder.enumItems(allowedValues);
+
+					if (!allowedValues.isEmpty()) {
+						enumItems.removeIf(k -> !allowedValues.contains(k));
 					}
 				});
+
+				builder.enumItems(enumItems);
 
 				break;
 			case DATE:
@@ -273,8 +282,8 @@ public class TypeSchema {
 				break;
 			case NUMBER:
 				apiFieldAnnotation.ifPresent(a -> {
-					applyIfNotBlank(a.min(), BigDecimal::new);
-					applyIfNotBlank(a.max(), BigDecimal::new);
+					applyIfNotBlank(a.min(), v -> builder.minValue(new BigDecimal(v)));
+					applyIfNotBlank(a.max(), v -> builder.maxValue(new BigDecimal(v)));
 				});
 				break;
 			case STRING:
@@ -287,6 +296,7 @@ public class TypeSchema {
 				break;
 
 			default:
+
 				break;
 
 			}
