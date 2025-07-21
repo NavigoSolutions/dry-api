@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,6 +20,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -245,6 +245,18 @@ public class TypeSchema {
 		optValueType.ifPresent(valueType -> {
 
 			switch (valueType) {
+			case ENUMERABLE:
+				var allowedValues = apiFieldAnnotation.map(a -> Set.of(a.allowedValues())).orElse(Set.of());
+
+				builder.addAllEnumItems(
+					Stream.of(klass.getEnumConstants())
+						.map(o -> ((Enum<?>) o).name())
+						.filter(key -> allowedValues.isEmpty() || allowedValues.contains(key))
+						.sorted()
+						.toList()
+				);
+
+				break;
 			case DATE:
 				builder.format(DryApiConstants.DATE_FORMAT);
 				break;
@@ -256,32 +268,16 @@ public class TypeSchema {
 				break;
 			case NUMBER:
 				apiFieldAnnotation.ifPresent(a -> {
-					if (!a.min().isBlank()) {
-						builder.minValue(new BigDecimal(a.min()));
-					}
-
-					if (!a.max().isBlank()) {
-						builder.maxValue(new BigDecimal(a.max()));
-					}
+					applyIfNotBlank(a.min(), BigDecimal::new);
+					applyIfNotBlank(a.max(), BigDecimal::new);
 				});
 				break;
 			case STRING:
 				apiFieldAnnotation.ifPresent(a -> {
-					if (a.minLength() != -1) {
-						builder.minLength(a.minLength());
-					}
-
-					if (a.maxLength() != -1) {
-						builder.maxLength(a.maxLength());
-					}
-
-					if (!a.pattern().isBlank()) {
-						builder.pattern(a.pattern());
-					}
-
-					if (!a.format().isBlank()) {
-						builder.format(a.format());
-					}
+					applyIfSet(a.minLength(), builder::minLength);
+					applyIfSet(a.maxLength(), builder::maxLength);
+					applyIfNotBlank(a.pattern(), builder::pattern);
+					applyIfNotBlank(a.format(), builder::format);
 				});
 				break;
 
@@ -291,17 +287,6 @@ public class TypeSchema {
 			}
 
 			builder.valueType(valueType);
-
-			if (valueType == ValueType.ENUMERABLE) {
-				var allowedValues = apiFieldAnnotation.map(a -> Arrays.asList(a.allowedValues())).orElse(List.of());
-				builder.enumItems(
-					Stream.of(klass.getEnumConstants())
-						.filter(key -> allowedValues.isEmpty() || allowedValues.contains(key))
-						.map(o -> ((Enum<?>) o).name())
-						.sorted()
-						.collect(Collectors.toList())
-				);
-			}
 		});
 
 		if (!optValueType.isPresent()) {
@@ -556,4 +541,17 @@ public class TypeSchema {
 			return Optional.empty();
 		}
 	}
+
+	private static void applyIfNotBlank(String value, Consumer<String> setter) {
+		if (!value.isBlank()) {
+			setter.accept(value);
+		}
+	}
+
+	private static void applyIfSet(int value, Consumer<Integer> setter) {
+		if (value != -1) {
+			setter.accept(value);
+		}
+	}
+
 }
