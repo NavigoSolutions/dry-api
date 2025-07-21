@@ -246,15 +246,20 @@ public class TypeSchema {
 
 			switch (valueType) {
 			case ENUMERABLE:
-				var allowedValues = apiFieldAnnotation.map(a -> Set.of(a.allowedValues())).orElse(Set.of());
+				var enumItems = Stream.of(klass.getEnumConstants())
+					.map(o -> ((Enum<?>) o).name())
+					.sorted()
+					.collect(Collectors.toList());
 
-				builder.addAllEnumItems(
-					Stream.of(klass.getEnumConstants())
-						.map(o -> ((Enum<?>) o).name())
-						.filter(key -> allowedValues.isEmpty() || allowedValues.contains(key))
-						.sorted()
-						.toList()
-				);
+				apiFieldAnnotation.ifPresent(a -> {
+					var allowedValues = Set.of(a.allowedValues());
+					allowedValues.forEach(key -> Validate.contained(enumItems, key));
+					if (allowedValues.isEmpty()) {
+						builder.enumItems(enumItems);
+					} else {
+						builder.enumItems(allowedValues);
+					}
+				});
 
 				break;
 			case DATE:
