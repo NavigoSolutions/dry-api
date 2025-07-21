@@ -256,15 +256,16 @@ public class TypeSchema {
 					.collect(Collectors.toList());
 
 				apiFieldAnnotation.ifPresent(a -> {
-					if (hasDefaultValue) {
-						Validate.contained(enumItems, a.defaultValue());
-					}
 
 					var allowedValues = Set.of(a.allowedValues());
 					allowedValues.forEach(key -> Validate.contained(enumItems, key));
 
 					if (!allowedValues.isEmpty()) {
 						enumItems.removeIf(k -> !allowedValues.contains(k));
+					}
+
+					if (hasDefaultValue) {
+						Validate.contained(enumItems, a.defaultValue());
 					}
 				});
 
