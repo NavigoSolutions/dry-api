@@ -33,7 +33,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.navigo3.dryapi.core.doc.ApiField;
-import com.navigo3.dryapi.core.meta.ImmutableNodeMetadata.Builder;
 import com.navigo3.dryapi.core.meta.NodeMetadata.ContainerType;
 import com.navigo3.dryapi.core.meta.NodeMetadata.ValueType;
 import com.navigo3.dryapi.core.path.TypePath;
@@ -212,14 +211,24 @@ public class TypeSchema {
 			return ImmutableNodeMetadata.builder().valueType(ValueType.JSON).javaType(klassReal).build();
 		}
 
-		Builder builder = ImmutableNodeMetadata.builder();
+		ImmutableNodeMetadata.Builder builder = ImmutableNodeMetadata.builder();
 		builder.javaType(klassReal);
 		var apiFieldAnnotation = optMethod.flatMap(method -> Optional.ofNullable(method.getAnnotation(ApiField.class)));
+		apiFieldAnnotation.ifPresent(
+			a -> builder.securityMessage(Optional.of(a.extraSecurity()).filter(m -> !m.isBlank()))
+				.description(Optional.of(a.description()).filter(m -> !m.isBlank()))
+				.deprecated(a.deprecated())
+		);
 
 		if (klassReal.endsWith("[]")) {
 			builder.containerType(ContainerType.LIST);
 
 			builder.itemType(prepareNode(klassReal.split("\\[")[0], alreadyVisited, Optional.empty()));
+
+			apiFieldAnnotation.ifPresent(a -> {
+				applyIfSet(a.minLength(), builder::minLength);
+				applyIfSet(a.maxLength(), builder::maxLength);
+			});
 
 			return builder.build();
 		}
@@ -240,10 +249,6 @@ public class TypeSchema {
 			if (hasDefaultValue) {
 				builder.defaultValue(a.defaultValue());
 			}
-
-			builder.securityMessage(Optional.of(a.extraSecurity()).filter(m -> !m.isBlank()))
-				.description(Optional.of(a.description()).filter(m -> !m.isBlank()))
-				.deprecated(a.deprecated());
 		});
 
 		optValueType.ifPresent(valueType -> {
@@ -419,8 +424,8 @@ public class TypeSchema {
 		}
 	}
 
-	private void fillFields(Builder builder, Class<?> klass, Map<String, Map<String, String>> templateParams,
-		Set<Class<?>> alreadyVisited) {
+	private void fillFields(ImmutableNodeMetadata.Builder builder, Class<?> klass,
+		Map<String, Map<String, String>> templateParams, Set<Class<?>> alreadyVisited) {
 		Set<String> uniquenessNameCheck = new HashSet<>();
 
 		for (Method method : klass.getMethods()) {
@@ -466,8 +471,8 @@ public class TypeSchema {
 		}
 	}
 
-	private void fillField(Builder builder, String name, Method method, Map<String, Map<String, String>> templateParams,
-		Set<Class<?>> alreadyVisited) {
+	private void fillField(ImmutableNodeMetadata.Builder builder, String name, Method method,
+		Map<String, Map<String, String>> templateParams, Set<Class<?>> alreadyVisited) {
 
 		String klassReal = substituteTemplateParams(
 			method.getGenericReturnType().getTypeName(),
