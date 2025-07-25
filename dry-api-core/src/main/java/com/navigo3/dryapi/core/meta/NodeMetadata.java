@@ -65,6 +65,8 @@ public interface NodeMetadata {
 		return false;
 	}
 
+	Optional<String> getDeprecatedComment();
+
 	// container data
 	Optional<ContainerType> getContainerType();
 

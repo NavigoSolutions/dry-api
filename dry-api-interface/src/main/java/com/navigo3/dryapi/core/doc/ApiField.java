@@ -19,6 +19,8 @@ public @interface ApiField {
 
 	boolean deprecated() default false;
 
+	String deprecatedComment() default "";
+
 	// String-specific
 
 	int minLength() default -1;

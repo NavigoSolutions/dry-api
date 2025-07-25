@@ -214,11 +214,15 @@ public class TypeSchema {
 		ImmutableNodeMetadata.Builder builder = ImmutableNodeMetadata.builder();
 		builder.javaType(klassReal);
 		var apiFieldAnnotation = optMethod.flatMap(method -> Optional.ofNullable(method.getAnnotation(ApiField.class)));
-		apiFieldAnnotation.ifPresent(
-			a -> builder.securityMessage(Optional.of(a.extraSecurity()).filter(m -> !m.isBlank()))
+
+		apiFieldAnnotation.ifPresent(a -> {
+			Validate.isFalse(!a.deprecated() && !a.deprecatedComment().isEmpty());
+
+			builder.securityMessage(Optional.of(a.extraSecurity()).filter(m -> !m.isBlank()))
 				.description(Optional.of(a.description()).filter(m -> !m.isBlank()))
 				.deprecated(a.deprecated())
-		);
+				.deprecatedComment(Optional.of(a.deprecatedComment()).filter(v -> !v.isEmpty()));
+		});
 
 		if (klassReal.endsWith("[]")) {
 			builder.containerType(ContainerType.LIST);
