@@ -19,7 +19,7 @@ import com.navigo3.dryapi.server.ImmutableHttpsInterface;
 import com.navigo3.dryapi.server.ImmutableHttpsServerSettings;
 
 import nl.altindag.ssl.SSLFactory;
-import nl.altindag.ssl.util.PemUtils;
+import nl.altindag.ssl.pem.util.PemUtils;
 
 public class RemoteCallsEnvironment {
 	private static final int PORT = 8777;
