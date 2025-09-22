@@ -26,7 +26,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -346,6 +345,16 @@ public class TypeSchema {
 						"Implausible map key type '{}'. Are you sure it has correct toString() method?",
 						paramClassNameK
 					);
+				}
+
+				if (keyType.orElseThrow() == ValueType.ENUMERABLE) {
+
+					var enumItems = Stream.of(Class.forName(paramClassNameK).getEnumConstants())
+						.map(o -> ((Enum<?>) o).name())
+						.sorted()
+						.collect(Collectors.toList());
+
+					builder.enumItems(enumItems);
 				}
 
 				builder.keyType(keyType.orElse(ValueType.OBJECT));
