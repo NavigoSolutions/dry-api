@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -349,10 +350,9 @@ public class TypeSchema {
 
 				if (keyType.orElseThrow() == ValueType.ENUMERABLE) {
 
-					var enumItems = Stream.of(Class.forName(paramClassNameK).getEnumConstants())
-						.map(o -> ((Enum<?>) o).name())
-						.sorted()
-						.collect(Collectors.toList());
+					var enumItems = Stream.of(
+						ExceptionUtils.withRuntimeException(() -> Class.forName(paramClassNameK).getEnumConstants())
+					).map(o -> ((Enum<?>) o).name()).sorted().collect(Collectors.toList());
 
 					builder.enumItems(enumItems);
 				}
