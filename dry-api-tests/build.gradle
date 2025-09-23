@@ -1,8 +1,11 @@
 dependencies {
+	testImplementation project(':dry-api-sample-defs')
+	testImplementation project(':dry-api-core')
 	testImplementation project(':dry-api-sample-impls')
 	testImplementation project(':dry-api-java-client')
 	testImplementation project(':dry-api-standalone-server')
 	testImplementation project(':dry-api-servlet')
+	
 
 	testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.0'
 	testImplementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.0'
