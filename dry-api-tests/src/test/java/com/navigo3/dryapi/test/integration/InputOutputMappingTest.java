@@ -20,10 +20,11 @@ import com.navigo3.dryapi.sample.defs.math.integer.AddIntegersEndpoint.IntegerRe
 import com.navigo3.dryapi.sample.defs.math.integer.ImmutableIntegerOperands;
 import com.navigo3.dryapi.sample.defs.math.integer.ImmutableIntegerResult;
 import com.navigo3.dryapi.sample.defs.math.integer.NegateIntegersEndpoint;
+import com.navigo3.dryapi.test.Main;
 import com.navigo3.dryapi.test.helpers.RemoteCallsEnvironment;
 
 public class InputOutputMappingTest {
-	private static RemoteCallsEnvironment env = new RemoteCallsEnvironment();
+	private static RemoteCallsEnvironment env = new RemoteCallsEnvironment(Main.SSL_TEST_CERTS_PATHS);
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {

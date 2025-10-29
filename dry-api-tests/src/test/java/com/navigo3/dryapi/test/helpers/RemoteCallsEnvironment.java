@@ -1,7 +1,5 @@
 package com.navigo3.dryapi.test.helpers;
 
-import java.util.Set;
-
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -10,7 +8,6 @@ import com.navigo3.dryapi.client.ImmutableExtraHeaderParams;
 import com.navigo3.dryapi.client.ImmutableRemoteHttpDryApiSettings;
 import com.navigo3.dryapi.client.RemoteHttpDryApi;
 import com.navigo3.dryapi.core.context.DryApiSslUtils;
-import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.sample.impls.TestApi;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
@@ -21,18 +18,27 @@ import com.navigo3.dryapi.server.ImmutableHttpsInterface;
 import com.navigo3.dryapi.server.ImmutableHttpsServerSettings;
 
 public class RemoteCallsEnvironment {
+
+	public record SSlCertPaths(String httpsCertPath, String pkcs8KeyPath, String httpsCAPath) {
+
+	}
+
 	private static final int PORT = 8777;
 
 	private HttpServer<TestAppContext, TestCallContext, TestValidator> server;
 	private RemoteHttpDryApi api;
 
-	public static SSLContext buildSslContext() throws Exception {
+	private final SSlCertPaths certPaths;
 
-		String keyPath = getNavigoCertPath("navigo3.com.key");
-		String certPath = getNavigoCertPath("navigo3.com.cer");
+	public RemoteCallsEnvironment(SSlCertPaths certPaths) {
+		this.certPaths = certPaths;
 
-		var keyManager = DryApiSslUtils.buildKeyManager(keyPath, certPath);
-		var trustManager = DryApiSslUtils.buildTrustManager(certPath);
+	}
+
+	public SSLContext buildSslContext() throws Exception {
+
+		var keyManager = DryApiSslUtils.buildKeyManager(certPaths.pkcs8KeyPath(), certPaths.httpsCertPath());
+		var trustManager = DryApiSslUtils.buildTrustManager(certPaths.httpsCAPath());
 
 		var sslContext = SSLContext.getInstance("TLS");
 		sslContext.init(new KeyManager[] {
@@ -42,16 +48,6 @@ public class RemoteCallsEnvironment {
 		}, null);
 
 		return sslContext;
-	}
-
-	public static String getNavigoCertPath(String filename) {
-		Validate.isTrue(filename.endsWith(".cer") || filename.endsWith(".key"));
-		Validate.contained(Set.of("navigo3.com.cer", "navigo3.com.key", "ca.cer"), filename);
-
-		var username = System.getProperty("user.name");
-		var basepath = "/home/" + username + "/Navigo3/git-production/wildcard-certs/";
-
-		return basepath + filename;
 	}
 
 	public void start() throws Exception {
@@ -84,7 +80,7 @@ public class RemoteCallsEnvironment {
 			"https://localhost.navigo3.com:" + PORT + "/test/xxx",
 			ImmutableRemoteHttpDryApiSettings.builder().build(),
 			sslContext,
-			DryApiSslUtils.buildTrustManager(getNavigoCertPath("ca.cer"))
+			DryApiSslUtils.buildTrustManager(certPaths.httpsCAPath())
 		);
 
 		api.start(httpClient -> ImmutableExtraHeaderParams.builder().build());
