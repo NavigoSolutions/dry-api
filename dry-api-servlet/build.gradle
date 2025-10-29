@@ -4,9 +4,6 @@ dependencies {
 	compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
 }
 
-group = 'com.navigo3'
-version = jar.version
-
 publishing {
     publications {
         myLibrary(MavenPublication) {

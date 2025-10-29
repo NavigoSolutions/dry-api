@@ -1,14 +1,11 @@
 dependencies {
     api project(':dry-api-interface')
 	
-    api group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.0'
-    api group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: '2.13.0'
-    api group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.13.0'
-    api group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: '2.13.0'
+    api group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.20.0'
+    api group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: '2.20.0'
+    api group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.20.0'
+    api group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version: '2.20.0'
 }
-
-group = 'com.navigo3'
-version = jar.version
 
 publishing {
     publications {

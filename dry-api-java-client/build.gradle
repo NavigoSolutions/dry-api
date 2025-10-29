@@ -4,10 +4,6 @@ dependencies {
 	api group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.3'
 }
 
-
-group = 'com.navigo3'
-version = jar.version
-
 publishing {
     publications {
         myLibrary(MavenPublication) {

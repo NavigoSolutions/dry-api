@@ -4,9 +4,6 @@ dependencies {
 	api group: 'io.undertow', name: 'undertow-core', version: '2.2.14.Final'
 }
 
-group = 'com.navigo3'
-version = jar.version
-
 publishing {
     publications {
         myLibrary(MavenPublication) {
