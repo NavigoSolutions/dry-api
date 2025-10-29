@@ -13,7 +13,7 @@ import com.navigo3.dryapi.test.helpers.RemoteCallsEnvironment;
 public class Main {
 	private static final int PORT = 8443;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		HttpServer<TestAppContext, TestCallContext, TestValidator> server = new HttpServer<>(
 			ImmutableHttpsServerSettings.<TestAppContext, TestCallContext, TestValidator>builder()
 				.addHttpsInterfaces(

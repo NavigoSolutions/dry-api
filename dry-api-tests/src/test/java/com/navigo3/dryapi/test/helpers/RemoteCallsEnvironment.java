@@ -1,14 +1,16 @@
 package com.navigo3.dryapi.test.helpers;
 
-import java.nio.file.Paths;
+import java.util.Set;
 
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.X509ExtendedKeyManager;
-import javax.net.ssl.X509ExtendedTrustManager;
+import javax.net.ssl.TrustManager;
 
 import com.navigo3.dryapi.client.ImmutableExtraHeaderParams;
 import com.navigo3.dryapi.client.ImmutableRemoteHttpDryApiSettings;
 import com.navigo3.dryapi.client.RemoteHttpDryApi;
+import com.navigo3.dryapi.core.context.DryApiSslUtils;
+import com.navigo3.dryapi.core.util.Validate;
 import com.navigo3.dryapi.sample.impls.TestApi;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
@@ -18,50 +20,41 @@ import com.navigo3.dryapi.server.ImmutableApiMount;
 import com.navigo3.dryapi.server.ImmutableHttpsInterface;
 import com.navigo3.dryapi.server.ImmutableHttpsServerSettings;
 
-import nl.altindag.ssl.SSLFactory;
-import nl.altindag.ssl.util.PemUtils;
-
 public class RemoteCallsEnvironment {
 	private static final int PORT = 8777;
 
 	private HttpServer<TestAppContext, TestCallContext, TestValidator> server;
 	private RemoteHttpDryApi api;
 
-	public static SSLContext buildSslContext() {
+	public static SSLContext buildSslContext() throws Exception {
 
-		SSLFactory sslFactory = SSLFactory.builder()
-			.withIdentityMaterial(buildKeyManager())
-			.withTrustMaterial(buildTrustManager())
-			.build();
+		String keyPath = getNavigoCertPath("navigo3.com.key");
+		String certPath = getNavigoCertPath("navigo3.com.cer");
 
-		return sslFactory.getSslContext();
+		var keyManager = DryApiSslUtils.buildKeyManager(keyPath, certPath);
+		var trustManager = DryApiSslUtils.buildTrustManager(certPath);
+
+		var sslContext = SSLContext.getInstance("TLS");
+		sslContext.init(new KeyManager[] {
+			keyManager
+		}, new TrustManager[] {
+			trustManager
+		}, null);
+
+		return sslContext;
 	}
 
-	public static String getCertsBasepath() {
+	public static String getNavigoCertPath(String filename) {
+		Validate.isTrue(filename.endsWith(".cer") || filename.endsWith(".key"));
+		Validate.contained(Set.of("navigo3.com.cer", "navigo3.com.key", "ca.cer"), filename);
+
 		var username = System.getProperty("user.name");
 		var basepath = "/home/" + username + "/Navigo3/git-production/wildcard-certs/";
 
-		return basepath;
+		return basepath + filename;
 	}
 
-	public static X509ExtendedKeyManager buildKeyManager() {
-		String httpsKey = getCertsBasepath() + "navigo3.com.key";
-		String httpsCert = getCertsBasepath() + "navigo3.com.cer";
-
-		X509ExtendedKeyManager keyManager = PemUtils.loadIdentityMaterial(Paths.get(httpsCert), Paths.get(httpsKey));
-
-		return keyManager;
-	}
-
-	public static X509ExtendedTrustManager buildTrustManager() {
-		String httpsCA = getCertsBasepath() + "ca.cer";
-
-		X509ExtendedTrustManager trustManager = PemUtils.loadTrustMaterial(Paths.get(httpsCA));
-
-		return trustManager;
-	}
-
-	public void start() {
+	public void start() throws Exception {
 
 		var sslContext = buildSslContext();
 
@@ -72,21 +65,27 @@ public class RemoteCallsEnvironment {
 						.host("localhost.navigo3.com")
 						.port(PORT)
 						.sslContext(sslContext)
-						.build())
+						.build()
+				)
 				.addApiMounts(
 					ImmutableApiMount.<TestAppContext, TestCallContext, TestValidator>builder()
 						.basePath("/test/xxx")
 						.dryApi(TestApi.build())
-						.build())
+						.build()
+				)
 				.appContextProvider(exch -> new TestAppContext(true))
 				.build(),
-			(appContext, callContext, allowedPaths) -> new TestValidator(allowedPaths));
+			(appContext, callContext, allowedPaths) -> new TestValidator(allowedPaths)
+		);
 
 		server.start();
 
 		api = new RemoteHttpDryApi(
 			"https://localhost.navigo3.com:" + PORT + "/test/xxx",
-			ImmutableRemoteHttpDryApiSettings.builder().build(), sslContext, buildTrustManager());
+			ImmutableRemoteHttpDryApiSettings.builder().build(),
+			sslContext,
+			DryApiSslUtils.buildTrustManager(getNavigoCertPath("ca.cer"))
+		);
 
 		api.start(httpClient -> ImmutableExtraHeaderParams.builder().build());
 	}
