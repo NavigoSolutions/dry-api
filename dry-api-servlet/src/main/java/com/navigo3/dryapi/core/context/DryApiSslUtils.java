@@ -9,7 +9,6 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
@@ -22,8 +21,8 @@ public class DryApiSslUtils {
 
 	public static X509ExtendedKeyManager buildKeyManager(String httpsKeyCertPath, String httpsCertPath)
 		throws Exception {
-		Validate.isTrue(httpsKeyCertPath.endsWith(".key"));
-		Validate.isTrue(httpsCertPath.endsWith(".cer"));
+		Validate.isTrue(httpsKeyCertPath.endsWith(".der"), "Key must be in DER format");
+		Validate.isTrue(httpsCertPath.endsWith(".cer"), "Invalid certificate format");
 
 		CertificateFactory cf = CertificateFactory.getInstance("X.509");
 		X509Certificate cert;
@@ -32,12 +31,7 @@ public class DryApiSslUtils {
 		}
 
 		byte[] keyBytes = Files.readAllBytes(Paths.get(httpsKeyCertPath));
-		String keyPem = new String(keyBytes).replaceAll("-----BEGIN (.*)-----", "")
-			.replaceAll("-----END (.*)-----", "")
-			.replaceAll("\\s", "");
-
-		byte[] decoded = Base64.getDecoder().decode(keyPem);
-		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decoded);
+		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
 		KeyFactory kf = KeyFactory.getInstance("RSA");
 		PrivateKey privateKey = kf.generatePrivate(keySpec);
 

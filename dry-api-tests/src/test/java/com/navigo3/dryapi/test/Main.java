@@ -19,12 +19,12 @@ public class Main {
 
 	public static final SSlCertPaths SSL_TEST_CERTS_PATHS = new SSlCertPaths(
 		getNavigoCertPath("navigo3.com.cer"),
-		getNavigoCertPath("navigo3.com-pkcs8.key"),
+		getNavigoCertPath("navigo3.com-pkcs8.der"),
 		getNavigoCertPath("ca.cer")
 	);
 
 	private static String getNavigoCertPath(String filename) {
-		Validate.contained(Set.of("navigo3.com.cer", "navigo3.com-pkcs8.key", "ca.cer"), filename);
+		Validate.contained(Set.of("navigo3.com.cer", "navigo3.com-pkcs8.der", "ca.cer"), filename);
 
 		var username = System.getProperty("user.name");
 		var basepath = "/home/" + username + "/Navigo3/git-production/wildcard-certs/";
