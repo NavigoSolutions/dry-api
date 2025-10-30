@@ -1,4 +1,4 @@
-package com.navigo3.dryapi.core.context;
+package com.navigo3.dryapi.core.util;
 
 import java.io.FileInputStream;
 import java.nio.file.Files;
@@ -14,8 +14,6 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509ExtendedKeyManager;
 import javax.net.ssl.X509ExtendedTrustManager;
-
-import com.navigo3.dryapi.core.util.Validate;
 
 public class DryApiSslUtils {
 

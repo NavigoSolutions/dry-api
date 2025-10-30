@@ -7,7 +7,7 @@ import javax.net.ssl.TrustManager;
 import com.navigo3.dryapi.client.ImmutableExtraHeaderParams;
 import com.navigo3.dryapi.client.ImmutableRemoteHttpDryApiSettings;
 import com.navigo3.dryapi.client.RemoteHttpDryApi;
-import com.navigo3.dryapi.core.context.DryApiSslUtils;
+import com.navigo3.dryapi.core.util.DryApiSslUtils;
 import com.navigo3.dryapi.sample.impls.TestApi;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
