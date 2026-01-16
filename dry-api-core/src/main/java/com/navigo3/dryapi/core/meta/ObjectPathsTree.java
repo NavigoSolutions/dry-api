@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.immutables.value.Value;
@@ -40,10 +41,16 @@ public interface ObjectPathsTree {
 	}
 
 	default boolean throwIfPathDoesNotExists(StructurePath path) {
+		return checkPathExistence(path, err -> {
+			throw new RuntimeException(err);
+		});
+	}
+
+	default boolean checkPathExistence(StructurePath path, Consumer<String> errorHandler) {
 		StringBuilder errorMessage = new StringBuilder();
 
 		if (!keyExists(path, Optional.of(errorMessage), true)) {
-			throw new RuntimeException(errorMessage.toString());
+			errorHandler.accept(errorMessage.toString());
 		}
 
 		return true;

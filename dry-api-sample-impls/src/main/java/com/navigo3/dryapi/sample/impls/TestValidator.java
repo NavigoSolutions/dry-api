@@ -9,7 +9,7 @@ import com.navigo3.dryapi.core.validation.Validator;
 
 public class TestValidator extends Validator {
 	public TestValidator(ObjectPathsTree allowedPaths) {
-		super(allowedPaths);
+		super(allowedPaths, true, Optional.empty());
 		// TODO Auto-generated constructor stub
 	}
 
