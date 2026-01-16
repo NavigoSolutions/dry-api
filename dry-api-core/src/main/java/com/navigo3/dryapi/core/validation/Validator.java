@@ -45,13 +45,15 @@ public abstract class Validator {
 	private void addItem(Severity severity, StructurePath path, String message, boolean checkPathExistence,
 		Optional<JsonNode> extData) {
 
-		allowedPaths.checkPathExistence(path, err -> {
-			if (strictPathExistenceChecking && checkPathExistence) {
-				throw new RuntimeException(err);
-			} else {
-				this.logger.error(err);
-			}
-		});
+		if (checkPathExistence) {
+			allowedPaths.checkPathExistence(path, err -> {
+				if (strictPathExistenceChecking) {
+					throw new RuntimeException(err);
+				} else {
+					this.logger.error(err);
+				}
+			});
+		}
 
 		items.add(
 			ImmutableValidationItem.builder().severity(severity).path(path).message(message).extData(extData).build()
