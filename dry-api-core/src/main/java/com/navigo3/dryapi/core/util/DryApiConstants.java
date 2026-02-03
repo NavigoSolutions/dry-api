@@ -14,4 +14,7 @@ public class DryApiConstants {
 	public static final DateTimeFormatter DATETIME_FORMATER = DateTimeFormatter.ofPattern(DATETIME_FORMAT);
 
 	public static final String JSON_MIME = "application/json;charset=utf-8";
+
+	public static final int DEFAULT_MAX_SERIALIZABLE_STRING_LENGTH = 25 * 1024 * 1024;
+
 }

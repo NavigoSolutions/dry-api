@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.immutables.value.Value;
@@ -17,6 +18,7 @@ import com.navigo3.dryapi.core.impl.MethodMetadata;
 import com.navigo3.dryapi.core.impl.MethodMetadataBuilder;
 import com.navigo3.dryapi.core.impl.MethodSecurity;
 import com.navigo3.dryapi.core.impl.MethodSecurityBuilder;
+import com.navigo3.dryapi.core.util.DryApiConstants;
 import com.navigo3.dryapi.core.util.ReflectionUtils;
 import com.navigo3.dryapi.core.util.StringUtils;
 import com.navigo3.dryapi.core.util.Validate;
@@ -27,6 +29,7 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 
 	public static final String IDENTIFIER_PATTERN = "[a-z](([A-Za-z0-9]-)*[A-Za-z0-9])*";
 	public static final String PATH_PATTERN = StringUtils.subst("({}/)*({})", IDENTIFIER_PATTERN, IDENTIFIER_PATTERN);
+	private DryApiConfig config;
 
 	@Value.Immutable
 	public interface Entry<TAppContext extends AppContext, TCallContext extends CallContext> {
@@ -41,7 +44,23 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 		MethodMetadata<TAppContext, TCallContext> getMetadata();
 	}
 
+	@Value.Immutable
+	public interface DryApiConfig {
+		int getMaxSerializableStringLength();
+	}
+
 	private Map<String, Entry<TAppContext, TCallContext>> entries = new HashMap<>();
+
+	public DryApi() {
+		this(
+			cfgBuilder -> cfgBuilder.maxSerializableStringLength(DryApiConstants.DEFAULT_MAX_SERIALIZABLE_STRING_LENGTH)
+				.build()
+		);
+	}
+
+	public DryApi(Function<ImmutableDryApiConfig.Builder, DryApiConfig> configSupplier) {
+		this.config = configSupplier.apply(ImmutableDryApiConfig.builder());
+	}
 
 	public <TInput, TOutput> void register(MethodInterface<TInput, TOutput> interf,
 		Class<? extends MethodImplementation<TInput, TOutput, ? extends MethodInterface<TInput, TOutput>, TAppContext, TCallContext, TValidator>> implClass) {
@@ -113,5 +132,9 @@ public class DryApi<TAppContext extends AppContext, TCallContext extends CallCon
 
 	public List<String> getAllQualifiedNames() {
 		return entries.keySet().stream().sorted().collect(Collectors.toList());
+	}
+
+	public DryApiConfig getConfig() {
+		return config;
 	}
 }

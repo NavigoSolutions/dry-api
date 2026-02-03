@@ -7,6 +7,7 @@ import org.junit.Test;
 import com.navigo3.dryapi.core.exec.json.JsonPathsTreeBuilder;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.path.StructurePath;
+import com.navigo3.dryapi.core.util.DryApiConstants;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
 
 public class ObjectPathsTreeTest {
@@ -14,7 +15,10 @@ public class ObjectPathsTreeTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		objectPathsTree = JsonPathsTreeBuilder.fromObject(TopAddressInput.createSampleData());
+		objectPathsTree = JsonPathsTreeBuilder.fromObject(
+			TopAddressInput.createSampleData(),
+			DryApiConstants.DEFAULT_MAX_SERIALIZABLE_STRING_LENGTH
+		);
 	}
 
 	@AfterClass

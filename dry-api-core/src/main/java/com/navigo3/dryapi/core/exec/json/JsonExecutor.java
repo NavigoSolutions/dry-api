@@ -470,7 +470,10 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		MethodDefinition def, JsonRequest request, boolean securityPassed, ObjectMapper objectMapper,
 		MethodMetadata<TAppContext, TCallContext> meta, BiConsumer<Object, ObjectPathsTree> block) {
 		try {
-			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(rawInput);
+			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(
+				rawInput,
+				api.getConfig().getMaxSerializableStringLength()
+			);
 
 			ObjectPathsTree inputPathsTree;
 			boolean doCleaning = true;
@@ -636,7 +639,10 @@ public class JsonExecutor<TAppContext extends AppContext, TCallContext extends C
 		MethodDefinition def, ObjectMapper objectMapper, MethodSecurity<TAppContext, TCallContext> security,
 		MethodMetadata<TAppContext, TCallContext> meta) {
 		try {
-			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(rawOutput);
+			ObjectPathsTree fullPathsTree = JsonPathsTreeBuilder.fromObject(
+				rawOutput,
+				api.getConfig().getMaxSerializableStringLength()
+			);
 
 			ObjectPathsTree outputPathsTree;
 			boolean doCleaning = true;

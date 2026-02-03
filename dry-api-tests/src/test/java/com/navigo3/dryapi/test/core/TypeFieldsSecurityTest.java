@@ -18,6 +18,7 @@ import com.navigo3.dryapi.core.security.field.TypeFieldsSecurity;
 import com.navigo3.dryapi.core.security.field.TypeFieldsSecurityBuilder;
 import com.navigo3.dryapi.core.security.logic.False;
 import com.navigo3.dryapi.core.security.logic.True;
+import com.navigo3.dryapi.core.util.DryApiConstants;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
@@ -39,7 +40,7 @@ public class TypeFieldsSecurityTest {
 		schema = TypeSchema.build(new TypeReference<Person>() {
 		});
 
-		pathsTree = JsonPathsTreeBuilder.fromObject(data);
+		pathsTree = JsonPathsTreeBuilder.fromObject(data, DryApiConstants.DEFAULT_MAX_SERIALIZABLE_STRING_LENGTH);
 	}
 
 	@AfterClass

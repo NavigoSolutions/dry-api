@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.navigo3.dryapi.core.meta.ObjectPathsTree;
 import com.navigo3.dryapi.core.path.StructurePath;
+import com.navigo3.dryapi.core.util.DryApiConstants;
 import com.navigo3.dryapi.core.util.JacksonUtils;
 import com.navigo3.dryapi.core.util.JsonAccessor;
 import com.navigo3.dryapi.sample.defs.philosophy.SolveEverythingEndpoint.TopAddressInput;
@@ -21,7 +22,8 @@ public class JsonAccessorTest {
 
 	@Before
 	public void setUp() throws Exception {
-		rootNode = JacksonUtils.createJsonMapper().valueToTree(TopAddressInput.createSampleData());
+		rootNode = JacksonUtils.createJsonMapper(DryApiConstants.DEFAULT_MAX_SERIALIZABLE_STRING_LENGTH)
+			.valueToTree(TopAddressInput.createSampleData());
 	}
 
 	@Test
@@ -135,7 +137,8 @@ public class JsonAccessorTest {
 
 		JsonAccessor.cleanMissingFields(futureTree, rootNode);
 
-		String outputJson = JacksonUtils.createJsonMapper().writeValueAsString(rootNode);
+		String outputJson = JacksonUtils.createJsonMapper(DryApiConstants.DEFAULT_MAX_SERIALIZABLE_STRING_LENGTH)
+			.writeValueAsString(rootNode);
 
 		JSONAssert.assertEquals(
 			outputJson,

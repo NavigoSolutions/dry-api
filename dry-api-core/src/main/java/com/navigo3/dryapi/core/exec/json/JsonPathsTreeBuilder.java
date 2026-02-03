@@ -19,8 +19,8 @@ import com.navigo3.dryapi.core.util.Validate;
 
 public class JsonPathsTreeBuilder {
 
-	public static ObjectPathsTree fromObject(Object o) {
-		ObjectMapper mapper = JacksonUtils.createJsonMapper();
+	public static ObjectPathsTree fromObject(Object o, int maxSerializableStringLength) {
+		ObjectMapper mapper = JacksonUtils.createJsonMapper(maxSerializableStringLength);
 
 		return fromTree(mapper.valueToTree(o));
 	}

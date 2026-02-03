@@ -162,7 +162,7 @@ public class HttpServer<TAppContext extends AppContext, TCallContext extends Cal
 
 				String content = ExceptionUtils.withRuntimeException(() -> new String(data, "utf-8"));
 
-				ObjectMapper objectMapper = JacksonUtils.createJsonMapper();
+				ObjectMapper objectMapper = JacksonUtils.createJsonMapper(api.getConfig().getMaxSerializableStringLength());
 
 				logger.debug("Parsing request");
 

@@ -14,6 +14,7 @@ import com.navigo3.dryapi.core.security.core.SecurityCheck;
 import com.navigo3.dryapi.core.security.field.ObjectFieldsSecurity;
 import com.navigo3.dryapi.core.security.logic.False;
 import com.navigo3.dryapi.core.security.logic.True;
+import com.navigo3.dryapi.core.util.DryApiConstants;
 import com.navigo3.dryapi.sample.defs.form.FormUpsertEndpoint.Person;
 import com.navigo3.dryapi.sample.impls.TestAppContext;
 import com.navigo3.dryapi.sample.impls.TestCallContext;
@@ -34,7 +35,7 @@ public class ObjectFieldsSecurityTest {
 
 //		schema = TypeSchema.build(new TypeReference<TopAddressInput>(){});
 
-		pathsTree = JsonPathsTreeBuilder.fromObject(data);
+		pathsTree = JsonPathsTreeBuilder.fromObject(data, DryApiConstants.DEFAULT_MAX_SERIALIZABLE_STRING_LENGTH);
 	}
 
 	@AfterClass
