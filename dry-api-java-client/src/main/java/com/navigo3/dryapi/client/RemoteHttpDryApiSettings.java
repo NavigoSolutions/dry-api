@@ -6,8 +6,16 @@ import java.util.function.Consumer;
 
 import org.immutables.value.Value;
 
+import com.navigo3.dryapi.core.util.DryApiConstants;
+
 @Value.Immutable
 public interface RemoteHttpDryApiSettings {
+
+	@Value.Default
+	default int getMaxSerializableStringLength() {
+		return DryApiConstants.DEFAULT_MAX_SERIALIZABLE_STRING_LENGTH;
+	}
+
 	@Value.Default
 	default int getMaxExecutedInParallel() {
 		return 10;

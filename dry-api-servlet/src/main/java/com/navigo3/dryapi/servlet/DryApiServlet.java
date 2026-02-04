@@ -90,7 +90,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 
 			String body = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
 
-			ObjectMapper objectMapper = JacksonUtils.createJsonMapper();
+			ObjectMapper objectMapper = JacksonUtils.createJsonMapper(api.getConfig().getMaxSerializableStringLength());
 
 			logger.debug("Parsing request");
 
@@ -123,7 +123,7 @@ public class DryApiServlet<TAppContext extends AppContext, TCallContext extends 
 		logger.debug("Handling GET request");
 
 		safelyHandleRequest(req, resp, appContext -> {
-			ObjectMapper objectMapper = JacksonUtils.createJsonMapper();
+			ObjectMapper objectMapper = JacksonUtils.createJsonMapper(api.getConfig().getMaxSerializableStringLength());
 
 			logger.debug("Extracting params");
 
