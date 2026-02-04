@@ -8,6 +8,11 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 public class JacksonUtils {
+
+	public static ObjectMapper createJsonMapper() {
+		return createJsonMapper(DryApiConstants.DEFAULT_MAX_SERIALIZABLE_STRING_LENGTH);
+	}
+
 	public static ObjectMapper createJsonMapper(int maxSerializableStringLength) {
 		var mapper = JsonMapper.builder()
 			.addModule(new Jdk8Module())
