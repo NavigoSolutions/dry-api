@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.navigo3.dryapi.core.meta.ImmutableObjectPathsTree;
@@ -19,13 +18,9 @@ import com.navigo3.dryapi.core.util.Validate;
 
 public class JsonPathsTreeBuilder {
 
-	public static ObjectPathsTree fromObject(Object o) {
-		var mapper = JacksonUtils.createJsonMapper();
-		return fromObject(mapper);
-	}
-
-	public static ObjectPathsTree fromObject(Object o, ObjectMapper objectMapper) {
-		return fromTree(objectMapper.valueToTree(o));
+	public static ObjectPathsTree fromObject(Object o, int maxSerializableStringLength) {
+		var mapper = JacksonUtils.createJsonMapper(maxSerializableStringLength);
+		return fromTree(mapper.valueToTree(o));
 	}
 
 	public static ObjectPathsTree fromTree(JsonNode jsonNode) {
