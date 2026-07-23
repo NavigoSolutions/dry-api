@@ -1,12 +1,23 @@
 {
   "name": "@navigo3/dry-api-js-client",
   "author": "Jaroslav Kuboš",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": false,
   "type": "module",
-  "main": "src/ApiConnector.js",
+  "main": "dist/ApiConnector.js",
+  "types": "dist/ApiConnector.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
   "dependencies": {
     "uuid": "9.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/uuid": "^9.0.0",
+    "typescript": "^5.0.0"
+  }
 }
